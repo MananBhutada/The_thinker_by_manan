@@ -5,7 +5,7 @@
    ============================================================ */
 
 const Chat = (() => {
-  let currentMode = 'auto';
+  let currentMode = 'founder';
   let busy = false;
   let lastQuestion = '';
   let pendingImage = null; // data URL
@@ -278,7 +278,7 @@ const Chat = (() => {
   function reset() {
     getContainer().innerHTML = '';
     App.currentDecision = null;
-    setMode('auto');
+    setMode('founder');
   }
 
   return { init, setMode, getMode, reset };
