@@ -1,7 +1,7 @@
 /* ============================================================
-   Archive — 决策档案
-   职责：列表 / 详情 / 删除 / executed/regret 标记 / 分页
-   依赖：API, Brief, MODES, I18N, App
+   Archive — English text
+   English textEnglish text / English text / English text / executed/regret English text / English text
+   English textAPI, Brief, MODES, I18N, App
    ============================================================ */
 
 const Archive = (() => {
@@ -37,7 +37,7 @@ const Archive = (() => {
       return;
     }
     items.forEach(d => list.appendChild(renderCard(d)));
-    // 分页器
+    // English text
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     if (totalPages > 1) list.appendChild(renderPager(totalPages));
   }
@@ -71,7 +71,7 @@ const Archive = (() => {
     q.textContent = d.question;
     header.appendChild(q);
 
-    // 模式 pill
+    // English text pill
     const m = MODES.get(d.mode) || MODES.get('auto');
     const pill = document.createElement('span');
     pill.className = 'pill';
@@ -81,7 +81,7 @@ const Archive = (() => {
     header.appendChild(pill);
     card.appendChild(header);
 
-    // 摘要判断
+    // English text
     const verdict = (d.brief && d.brief.summary) || (d.result && (d.result.conclusion || d.result.signal || d.result.suggestion));
     if (verdict) {
       const v = document.createElement('div');
@@ -90,7 +90,7 @@ const Archive = (() => {
       card.appendChild(v);
     }
 
-    // 标记
+    // English text
     if (d.executed || d.regret) {
       const row = document.createElement('div');
       row.className = 'mark-row';
@@ -99,7 +99,7 @@ const Archive = (() => {
       card.appendChild(row);
     }
 
-    // 元信息
+    // English text
     const meta = document.createElement('div');
     meta.className = 'archive-meta';
     const time = document.createElement('span');
@@ -190,12 +190,12 @@ const Archive = (() => {
     time.textContent = formatTime(d.createdAt);
     body.appendChild(time);
 
-    // 简报卡
+    // English text
     if (d.brief || d.result) {
       body.appendChild(Brief.fromStored(d));
     }
 
-    // 操作区
+    // English text
     const actions = document.createElement('div');
     actions.className = 'detail-actions';
     const execBtn = document.createElement('button');
@@ -235,7 +235,7 @@ const Archive = (() => {
       }
       return;
     }
-    // executed / regret 切换
+    // executed / regret English text
     const d = App.currentDecision;
     if (!d) return;
     const next = !d[action];
@@ -263,7 +263,7 @@ const Archive = (() => {
     const d = new Date(ts);
     const now = new Date();
     const diff = (now - d) / 1000;
-    if (diff < 60) return '刚刚';
+    if (diff < 60) return 'English text';
     if (diff < 3600) return Math.floor(diff / 60) + ' min';
     if (diff < 86400) return Math.floor(diff / 3600) + ' h';
     const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
