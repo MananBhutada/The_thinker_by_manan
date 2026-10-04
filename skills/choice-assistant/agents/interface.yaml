@@ -1,7 +1,7 @@
 interface:
-  display_name: "别纠结决策辅助"
-  short_description: "把纠结拆成证据、风险和下一步的本地决策工具"
-  default_prompt: "使用 $choice-assistant 把这个选择拆成可比较的理由、风险和一个可以先做的下一步，不替我做最终决定。"
+  display_name: "English text"
+  short_description: "English textEnglish text"
+  default_prompt: "English text $choice-assistant English textEnglish textEnglish text"
 compatibility:
   canonical_format: "agent-skills"
   adapter_targets:
