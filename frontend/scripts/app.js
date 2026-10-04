@@ -1,7 +1,7 @@
 /* ============================================================
-   App — 主控制器
-   职责：Tab 切换 / 路由 / 全局状态 / Toast / Modal / 主题 / 初始化
-   依赖：I18N, API, Chat, Archive, Stats, Settings
+   App — English text
+   English textTab English text / English text / English text / Toast / Modal / English text / English text
+   English textI18N, API, Chat, Archive, Stats, Settings
    ============================================================ */
 
 const App = (() => {
@@ -43,7 +43,7 @@ const App = (() => {
     overlay.classList.remove('show');
     overlay.setAttribute('aria-hidden', 'true');
   }
-  // 点击遮罩关闭
+  // English text
   function bindModal() {
     const overlay = $('modalOverlay');
     overlay.addEventListener('click', (e) => {
@@ -54,7 +54,7 @@ const App = (() => {
     });
   }
 
-  /* ---------- 确认对话框（替代 confirm） ---------- */
+  /* ---------- English textEnglish text confirm ---------- */
   function confirm(message) {
     return new Promise((resolve) => {
       const body = document.createElement('div');
@@ -79,7 +79,7 @@ const App = (() => {
     });
   }
 
-  /* ---------- Tab 切换（桌面端：决策=主区，其他=右侧抽屉） ---------- */
+  /* ---------- Tab English textEnglish textEnglish text=English textEnglish text=English text ---------- */
   function switchTab(tab) {
     if (tab === 'chat') {
       closeDrawer();
@@ -88,13 +88,13 @@ const App = (() => {
         const active = t.getAttribute('data-tab') === 'chat';
         t.classList.toggle('active', active);
       });
-      // 面包屑
+      // English text
       const crumb = $('crumb');
       if (crumb) crumb.textContent = I18N.t('nav.chat') + ' / ' + I18N.t('mode.auto');
       if (navigator.vibrate) navigator.vibrate(10);
       return;
     }
-    // archive / stats / settings → 打开右侧抽屉
+    // archive / stats / settings → English text
     currentTab = tab;
     document.querySelectorAll('.nav-item').forEach(t => {
       t.classList.toggle('active', t.getAttribute('data-tab') === tab);
@@ -103,7 +103,7 @@ const App = (() => {
     if (navigator.vibrate) navigator.vibrate(10);
   }
 
-  /* ---------- 右侧抽屉 ---------- */
+  /* ---------- English text ---------- */
   let drawerType = null;
 
   function openDrawer(type) {
@@ -112,19 +112,19 @@ const App = (() => {
     const overlay = $('drawerOverlay');
     const title = $('drawerTitle');
     const body = $('drawerBody');
-    // 切换显示对应的 page
+    // English text page
     body.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const page = $('page-' + type);
     if (page) page.classList.add('active');
     const titleMap = { archive: I18N.t('nav.archive'), stats: I18N.t('nav.stats'), settings: I18N.t('nav.settings') };
     title.textContent = titleMap[type] || '';
-    // 面包屑
+    // English text
     const crumb = $('crumb');
     if (crumb) crumb.textContent = I18N.t('nav.chat') + ' / ' + (titleMap[type] || '');
     drawer.classList.add('open');
     overlay.classList.add('open');
     drawer.setAttribute('aria-hidden', 'false');
-    // 懒加载内容
+    // English text
     if (type === 'archive') Archive.load();
     if (type === 'stats') Stats.load(true);
   }
@@ -136,7 +136,7 @@ const App = (() => {
     overlay.classList.remove('open');
     drawer.setAttribute('aria-hidden', 'true');
     drawerType = null;
-    // 抽屉关闭后，nav 高亮回到 chat
+    // English textnav English text chat
     document.querySelectorAll('.nav-item').forEach(t => {
       t.classList.toggle('active', t.getAttribute('data-tab') === 'chat');
     });
@@ -151,7 +151,7 @@ const App = (() => {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && drawerType) closeDrawer();
     });
-    // 移动端菜单按钮
+    // English text
     const menuToggle = $('menuToggle');
     if (menuToggle) {
       menuToggle.addEventListener('click', () => {
@@ -166,7 +166,7 @@ const App = (() => {
     });
   }
 
-  /* ---------- 状态栏时间 ---------- */
+  /* ---------- English text ---------- */
   function updateStatusBarTime() {
     const node = $('statusTime');
     if (!node) return;
@@ -174,7 +174,7 @@ const App = (() => {
     node.textContent = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
   }
 
-  /* ---------- 主题 ---------- */
+  /* ---------- English text ---------- */
   function applyTheme(theme) {
     let eff = theme;
     if (theme === 'auto') {
@@ -194,7 +194,7 @@ const App = (() => {
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--paper').trim());
   }
-  // 监听系统主题变化
+  // English text
   function bindSystemTheme() {
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
       const prefs = App.prefs || {};
@@ -202,7 +202,7 @@ const App = (() => {
     });
   }
 
-  /* ---------- 语言 / 偏好应用 ---------- */
+  /* ---------- English text / English text ---------- */
   function applyPrefs(prefs) {
     App.prefs = prefs || {};
     if (prefs.language) {
@@ -218,11 +218,11 @@ const App = (() => {
       Chat.setMode(prefs.default_mode);
     }
     I18N.apply();
-    // 同步设置页显示
+    // English text
     Settings && Settings.refreshValues && Settings.refreshValues();
   }
 
-  /* ---------- 侧栏最近决策 ---------- */
+  /* ---------- English text ---------- */
   async function loadSidebarRecent() {
     const container = $('sidebarRecent');
     if (!container) return;
@@ -253,7 +253,7 @@ const App = (() => {
     }
   }
 
-  /* ---------- API Key 提示横幅 ---------- */
+  /* ---------- API Key English text ---------- */
   let banner = null;
   function ensureBanner() {
     if (banner) return banner;
@@ -301,39 +301,39 @@ const App = (() => {
     if (banner) banner.classList.remove('show');
   }
 
-  /* ---------- 初始化 ---------- */
+  /* ---------- English text ---------- */
   async function init() {
     bindTabs();
     bindDrawer();
     bindModal();
     bindSystemTheme();
 
-    // 模块初始化
+    // English text
     Chat.init();
     Archive.init();
     Stats.init();
     Settings.init();
 
-    // 加载偏好
+    // English text
     try {
       const prefs = await API.getPreferences();
       applyPrefs(prefs);
     } catch (e) {
-      // 偏好加载失败，用默认
+      // English textEnglish text
       applyPrefs({});
     }
-    // 检测 API Key 状态，若无 key 且未开启 demo_mode 则显示横幅
+    // English text API Key English textEnglish text key English text demo_mode English text
     try {
       const cfg = await API.getConfig();
       if (!cfg.hasLlm && !(App.prefs && App.prefs.demo_mode)) {
         showBanner();
       }
-    } catch (e) { /* 忽略 */ }
-    // 拉取模式列表（可选，用于校验）
-    try { await API.getModes(); } catch (e) { /* 忽略 */ }
-    // 加载最近决策到侧栏
+    } catch (e) { /* English text */ }
+    // English textEnglish textEnglish text
+    try { await API.getModes(); } catch (e) { /* English text */ }
+    // English text
     loadSidebarRecent();
-    // 初始化面包屑
+    // English text
     const crumb = $('crumb');
     if (crumb) crumb.textContent = I18N.t('nav.chat') + ' / ' + I18N.t('mode.auto');
   }
@@ -360,5 +360,5 @@ const App = (() => {
   };
 })();
 
-// 启动
+// English text
 document.addEventListener('DOMContentLoaded', () => App.init());
