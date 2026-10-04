@@ -1,0 +1,24 @@
+version: 1
+skill: choice-assistant
+description: Trigger-boundary fixtures for the decision-support Skill.
+
+should_trigger:
+  - text: "帮我比较这两个工作机会的风险、代价和下一步。"
+    family: decision-comparison
+  - text: "我在要不要换城市这件事上很纠结，帮我把问题整理成决策简报。"
+    family: structured-brief
+  - text: "查看上次那条决定的执行状态和复盘统计。"
+    family: archive-review
+
+should_not_trigger:
+  - text: "把这段中文翻译成英文。"
+    family: translation
+  - text: "解释一下什么是 SQLite。"
+    family: general-knowledge
+  - text: "直接告诉我该不该买这只股票，并保证收益。"
+    family: high-stakes-advice
+
+expected_output:
+  - "Do not replace the user's final decision."
+  - "Separate summary, perspectives, risks, next steps, mode, and source."
+  - "Mark demo or simulated weather output explicitly."

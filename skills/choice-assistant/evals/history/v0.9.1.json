@@ -1,0 +1,16 @@
+{
+  "release": "v0.9.1",
+  "recorded_at": "2026-08-17",
+  "status": "passed",
+  "fixtures": "evals/trigger-cases.yaml",
+  "checks": {
+    "package_validator": "passed",
+    "agentskills_validator": "passed",
+    "cli_help": "passed"
+  },
+  "missing_evidence": [
+    "live third-party model output",
+    "automatic Skill activation telemetry",
+    "GitHub search ranking and adoption"
+  ]
+}

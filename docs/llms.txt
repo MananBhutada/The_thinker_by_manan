@@ -1,0 +1,34 @@
+# Decision Brief / 别纠结
+
+Decision Brief is a local-first AI decision-support tool with a Web UI, CLI, and installable Agent Skill. It accepts text, voice, and image input, then organizes a choice into evidence, risks, and a next step. It does not make the final decision for the user.
+
+## Canonical resources
+
+- Repository: https://github.com/mianbaofang/decision-brief
+- Chinese README: https://github.com/mianbaofang/decision-brief/blob/master/README.md
+- English README: https://github.com/mianbaofang/decision-brief/blob/master/README.en.md
+- Installable Skill entry: https://github.com/mianbaofang/decision-brief/blob/master/skills/choice-assistant/SKILL.md
+- Public release: https://github.com/mianbaofang/decision-brief/releases/tag/v0.9.1
+- Chinese Pages intro: https://mianbaofang.github.io/decision-brief/
+- English Pages intro: https://mianbaofang.github.io/decision-brief/index-en.html
+
+Decision Brief is the public product and repository identity. `choice-assistant` is the retained installable Skill and CLI identifier for package discovery and existing commands.
+
+## Capabilities
+
+- Rational analysis of benefits, risks, reversibility, values, and a smallest next step.
+- Low-stakes random choice with optional visual effects.
+- Nature and Traditional Culture lenses presented as perspective or entertainment, not professional advice.
+- Guided dialogue, automatic lens selection, local SQLite archive, execution/regret tracking, and statistics.
+- Optional OpenAI-compatible LLM, vision, Amap weather, Edge TTS, and browser speech input.
+
+## Boundaries
+
+This is decision support, not legal, medical, financial, psychological, employment, education, or relationship advice. A public repository, release, Pages page, or metadata file does not prove search indexing, ranking, downloads, or active users.
+
+## Install
+
+```bash
+gh skill preview mianbaofang/decision-brief choice-assistant
+gh skill install mianbaofang/decision-brief choice-assistant --agent codex --scope user
+```

@@ -1,0 +1,50 @@
+{
+  "name": "choice-assistant",
+  "repository_slug": "decision-brief",
+  "compatibility_reason": "The public product is Decision Brief, while choice-assistant is the established installable Skill and CLI identifier kept for existing commands and package discovery.",
+  "version": "0.9.1",
+  "owner": "mianbaofang",
+  "license": "MIT",
+  "updated_at": "2026-08-17",
+  "status": "active",
+  "maturity_tier": "production",
+  "lifecycle_stage": "production",
+  "review_cadence": "per-release",
+  "target_platforms": [
+    "openai",
+    "claude",
+    "generic",
+    "agent-skills",
+    "vscode"
+  ],
+  "canonical_path": "skills/choice-assistant",
+  "package_scope": "The installable boundary contains SKILL.md, the CLI, FastAPI backend, bundled frontend, dependencies, interface metadata, license, and disclaimer. Repository README files, tests, Pages assets, screenshots, animations, reports, local databases, and evaluation evidence remain source-repository materials.",
+  "factory_components": [
+    "SKILL.md",
+    "agents/interface.yaml",
+    "backend/",
+    "frontend/",
+    "scripts/",
+    "requirements.txt",
+    "LICENSE",
+    "DISCLAIMER.md"
+  ],
+  "evidence_components": [
+    "source-repo/tests",
+    "source-repo/docs",
+    "source-repo/README.md",
+    "source-repo/README.en.md",
+    "source-repo/skills/choice-assistant/evals",
+    "source-repo/skills/choice-assistant/reports"
+  ],
+  "archive_excludes": [
+    "README files",
+    "tests",
+    "Pages assets",
+    "screenshots and animations",
+    "reports and evaluation evidence",
+    "local databases and environment files",
+    "Python caches"
+  ],
+  "updated": "2026-08-17"
+}

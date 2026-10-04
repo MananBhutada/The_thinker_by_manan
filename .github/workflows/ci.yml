@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  test:
+    name: Test (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: "pip"
+
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Install test dependencies
+        run: pip install pytest pytest-asyncio httpx
+
+      - name: Smoke-check backend import
+        run: cd backend && python -c "from main import app; print('Import OK')"
+
+      - name: Run pytest
+        run: pytest tests/ -v --ignore=tests/test_desktop_ui.py
+
+  desktop-ui:
+    name: Desktop UI (Python 3.12)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install backend and browser-test dependencies
+        run: |
+          pip install -r backend/requirements.txt
+          pip install pytest pytest-asyncio httpx playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Validate installable Skill package
+        run: |
+          python scripts/validate_package.py
+          python scripts/choice_assistant.py --help
+
+      - name: Start backend
+        run: |
+          python backend/main.py > "$RUNNER_TEMP/decision-brief-backend.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/decision-brief-backend.pid"
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8010/api/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/decision-brief-backend.log"
+          exit 1
+
+      - name: Run desktop Playwright tests
+        run: pytest tests/test_desktop_ui.py -v
+
+      - name: Show backend log on failure
+        if: failure()
+        run: cat "$RUNNER_TEMP/decision-brief-backend.log"

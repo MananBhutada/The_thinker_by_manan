@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f4f5ef">
+<title>Decision Brief · 别纠结 — Compress your dilemma into one sentence</title>
+<meta name="description" content="Decision Brief is a local-first AI decision-support tool: start with text, voice, or an image and turn a tangled choice into evidence, risks, and a next step.">
+<meta name="keywords" content="AI decision assistant,decision support,decision brief,local-first,Codex Skill,multimodal decision making">
+<link rel="canonical" href="https://mianbaofang.github.io/decision-brief/index-en.html">
+<link rel="alternate" hreflang="zh-CN" href="https://mianbaofang.github.io/decision-brief/">
+<link rel="alternate" hreflang="en" href="https://mianbaofang.github.io/decision-brief/index-en.html">
+<link rel="alternate" hreflang="x-default" href="https://mianbaofang.github.io/decision-brief/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Decision Brief">
+<meta property="og:title" content="Decision Brief · 别纠结">
+<meta property="og:description" content="Turn a choice into evidence, risks, and a next step without making the decision for you.">
+<meta property="og:url" content="https://mianbaofang.github.io/decision-brief/index-en.html">
+<meta property="og:image" content="https://mianbaofang.github.io/decision-brief/images/logo-nav.png">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="zh_CN">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Decision Brief · 别纠结">
+<meta name="twitter:description" content="Text, voice, or image input for a structured decision brief.">
+<meta name="twitter:image" content="https://mianbaofang.github.io/decision-brief/images/logo-nav.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareSourceCode","name":"Decision Brief","alternateName":"别纠结","description":"A local-first AI decision-support tool.","url":"https://mianbaofang.github.io/decision-brief/index-en.html","codeRepository":"https://github.com/mianbaofang/decision-brief","programmingLanguage":"Python","license":"https://github.com/mianbaofang/decision-brief/blob/master/LICENSE","version":"0.9.1","author":{"@type":"Person","name":"mianbaofang","url":"https://github.com/mianbaofang"},"keywords":["AI decision assistant","decision support","decision brief"]}
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --paper:#f4f5ef;
+  --paper-2:#ecebe1;
+  --ink:#1f2320;
+  --ink-soft:#4b5149;
+  --muted:#8a8f83;
+  --line:#d8d6c9;
+  --accent:#317d78;
+  --brand-seal:#4a5e53;
+  --rational:#365385;
+  --random:#9b7636;
+  --nature:#486a55;
+  --dialogue:#69526f;
+  --fengshui:#b45a42;
+  --white:#fff;
+  --serif:"Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
+html,body{
+  width:100%;height:100%;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+.stage{
+  position:relative;width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.dots{
+  position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(var(--line) 1px,transparent 1px);
+  background-size:28px 28px;opacity:.3;
+  mask-image:radial-gradient(ellipse at center,#000 40%,transparent 75%);
+  -webkit-mask-image:radial-gradient(ellipse at center,#000 40%,transparent 75%);
+}
+
+/* ===== 进度条 ===== */
+.progress-bar{
+  position:absolute;top:0;left:0;height:4px;width:100%;z-index:10;
+  background:transparent;
+}
+.progress-fill{
+  height:100%;width:0%;background:var(--accent);
+}
+.progress-segs{
+  position:absolute;top:0;left:0;right:0;display:flex;
+}
+.progress-seg{
+  flex:1;height:4px;position:relative;cursor:pointer;
+}
+.progress-seg::after{
+  content:"";position:absolute;top:0;left:0;right:0;height:4px;
+  background:rgba(49,125,120,0);transition:background .2s;
+}
+.progress-seg:hover::after{background:rgba(49,125,120,.18)}
+.progress-seg.done::after{background:var(--accent)}
+
+/* ===== 幻灯片容器 ===== */
+.slides{
+  position:relative;width:1280px;height:720px;
+}
+.slide{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transform:translateY(8px);
+  transition:opacity .45s cubic-bezier(.2,.8,.2,1),transform .45s cubic-bezier(.2,.8,.2,1);
+  pointer-events:none;
+}
+.slide.active{
+  opacity:1;transform:translateY(0);pointer-events:auto;
+}
+
+/* ===== 封面 / 结尾 ===== */
+.cover{
+  display:flex;flex-direction:column;align-items:center;text-align:center;gap:20px;
+}
+.cover-brand{
+  display:flex;align-items:center;gap:14px;
+}
+.cover-seal{
+  width:52px;height:52px;border-radius:10px;background:#087e7d;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;padding:0;
+}
+.brand-logo-img{width:100%;height:100%;display:block;object-fit:cover}
+.cover-title{
+  font-family:var(--serif);font-size:28px;font-weight:700;letter-spacing:.02em;
+}
+.cover-h1{
+  font-family:var(--serif);font-size:64px;font-weight:800;line-height:1.1;
+  letter-spacing:-.02em;margin-top:16px;
+}
+.cover-sub{
+  font-size:20px;color:var(--ink-soft);max-width:640px;line-height:1.6;
+}
+.cover-seals{
+  display:flex;gap:16px;margin-top:24px;
+}
+.cover-seal-item{
+  width:84px;height:84px;border-radius:12px;background:#fff;
+  border:1.5px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  opacity:0;transform:translateY(12px);
+  transition:opacity .4s,transform .4s;
+}
+.slide.active .cover-seal-item{opacity:1;transform:translateY(0)}
+.cover-seal-item .c{
+  width:36px;height:36px;border-radius:7px;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:19px;font-weight:900;
+}
+.cover-seal-item .l{font-size:13px;color:var(--ink-soft)}
+.cs-1 .c{background:var(--accent)}
+.cs-2 .c{background:var(--rational)}
+.cs-3 .c{background:var(--random)}
+.cs-4 .c{background:var(--nature)}
+.cs-5 .c{background:var(--dialogue)}
+.cs-6 .c{background:var(--fengshui)}
+.cover-chips{
+  display:flex;gap:10px;margin-top:14px;
+}
+.cover-chip{
+  padding:8px 18px;border-radius:999px;font-size:14px;font-weight:500;
+  background:#fff;border:1px solid var(--line);color:var(--ink-soft);
+  opacity:0;transform:translateY(8px);
+  transition:opacity .4s .2s,transform .4s .2s;
+}
+.slide.active .cover-chip{opacity:1;transform:translateY(0)}
+.cover-chip.hot{background:rgba(49,125,120,.12);border-color:var(--accent);color:var(--accent)}
+
+/* ===== 截图+说明布局 ===== */
+.shot-layout{
+  display:flex;align-items:center;gap:48px;width:100%;height:100%;
+  padding:60px 64px 72px;
+}
+.shot-visual{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  min-width:0;
+}
+.shot-img{
+  max-width:100%;max-height:580px;
+  border-radius:14px;
+  box-shadow:0 20px 60px -18px rgba(0,0,0,.22),0 0 0 1px rgba(0,0,0,.06);
+  display:block;
+}
+.shot-info{
+  width:380px;flex-shrink:0;display:flex;flex-direction:column;gap:16px;
+}
+.shot-tag{
+  font-family:"SF Mono",Menlo,Consolas,monospace;
+  font-size:12px;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);
+}
+.shot-title{
+  font-family:var(--serif);font-size:40px;font-weight:700;line-height:1.2;
+}
+.shot-desc{
+  font-size:16px;color:var(--ink-soft);line-height:1.75;
+}
+.shot-points{
+  display:flex;flex-direction:column;gap:9px;margin-top:6px;
+}
+.shot-point{
+  display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--ink-soft);
+  line-height:1.5;
+}
+.shot-point .dot{
+  width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;
+  margin-top:7px;
+}
+
+/* ===== Composer 特写 ===== */
+.composer-feature{
+  display:flex;flex-direction:column;align-items:center;gap:28px;text-align:center;
+  padding:60px 80px 72px;width:100%;
+}
+.composer-tag{
+  font-family:"SF Mono",Menlo,Consolas,monospace;
+  font-size:12px;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);
+}
+.composer-title{
+  font-family:var(--serif);font-size:44px;font-weight:700;line-height:1.2;
+}
+.composer-sub{
+  font-size:18px;color:var(--ink-soft);max-width:620px;line-height:1.6;
+}
+.composer-big{
+  width:680px;
+  border:1.5px solid var(--line);border-radius:22px;
+  background:var(--white);
+  box-shadow:0 14px 48px -16px rgba(31,35,32,.2);
+  overflow:hidden;
+}
+.composer-preview-row{padding:14px 18px 0;display:flex;gap:8px}
+.composer-thumb{
+  width:64px;height:64px;border-radius:12px;
+  background:linear-gradient(135deg,var(--accent),var(--nature));
+  position:relative;border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:500;
+}
+.composer-thumb::after{
+  content:"×";position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;
+  background:rgba(0,0,0,.6);color:#fff;font-size:13px;display:grid;place-items:center;line-height:1;
+}
+.composer-text{
+  padding:16px 22px 8px;font-size:17px;line-height:1.6;
+  color:var(--ink);text-align:left;min-height:60px;
+}
+.composer-toolbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:4px 14px 14px;
+}
+.composer-tools-l,.composer-tools-r{display:flex;align-items:center;gap:2px}
+.tbtn{
+  width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
+  background:transparent;border:none;color:var(--ink-soft);font-size:20px;
+}
+.tbtn.send{
+  background:var(--accent);color:#fff;width:44px;height:44px;border-radius:14px;
+  box-shadow:0 6px 16px -4px rgba(49,125,120,.5);
+}
+.tbtn.mic-rec{background:var(--fengshui);color:#fff}
+.composer-modes-row{
+  display:flex;gap:14px;margin-top:4px;
+}
+.composer-mode{
+  display:flex;align-items:center;gap:10px;padding:12px 18px;
+  border-radius:14px;background:#fff;border:1px solid var(--line);
+  font-size:14px;color:var(--ink-soft);
+}
+.composer-mode .ic{font-size:22px}
+.composer-mode b{color:var(--ink);font-weight:600}
+
+/* ===== v0.9.0 feature slides ===== */
+.feature-showcase{
+  width:100%;height:100%;padding:64px 58px 70px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+}
+.feature-heading{text-align:center}
+.feature-heading .shot-tag{display:block;margin-bottom:9px}
+.feature-heading h2{font-family:var(--serif);font-size:40px;line-height:1.2}
+.feature-heading p{margin-top:10px;color:var(--ink-soft);font-size:16px;line-height:1.65}
+.skin-grid{width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.skin-card{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:0 12px 30px -20px rgba(0,0,0,.3)}
+.skin-preview{height:246px;padding:12px;display:grid;grid-template-columns:46px 1fr;gap:9px;background:var(--skin-bg);color:var(--skin-ink)}
+.skin-side{border:1px solid var(--skin-line);background:var(--skin-panel);padding:8px 6px;display:flex;flex-direction:column;gap:7px}
+.skin-side i{height:5px;background:var(--skin-line);display:block;border-radius:2px}
+.skin-side i:first-child{height:22px;background:var(--skin-accent);margin-bottom:4px}
+.skin-main{display:flex;flex-direction:column;gap:8px}
+.skin-main strong{font-family:var(--serif);font-size:14px;line-height:1.2}
+.skin-modes{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.skin-modes i{height:36px;border:1px solid var(--skin-line);background:var(--skin-panel);display:block;border-radius:var(--skin-radius)}
+.skin-brief{flex:1;border:1px solid var(--skin-line);background:var(--skin-panel);border-radius:var(--skin-radius);padding:8px;display:flex;flex-direction:column;gap:6px}
+.skin-brief i{height:6px;background:var(--skin-line);display:block;border-radius:2px}
+.skin-brief i:first-child{height:20px;background:var(--skin-accent)}
+.skin-label{padding:11px 12px 12px;border-top:1px solid var(--line)}
+.skin-label b{display:block;font-size:14px}.skin-label span{font-size:12px;color:var(--muted)}
+.skin-card.heritage{--skin-bg:#f4f1e8;--skin-panel:#fffdf7;--skin-ink:#26251f;--skin-line:#d8d0be;--skin-accent:#4d6b5a;--skin-radius:7px}
+.skin-card.workbench{--skin-bg:#f3f5f6;--skin-panel:#fff;--skin-ink:#25282a;--skin-line:#d8dde0;--skin-accent:#2f6f68;--skin-radius:4px}
+.skin-card.journal{--skin-bg:#faf9f5;--skin-panel:#fff;--skin-ink:#161616;--skin-line:#b8b6ae;--skin-accent:#181818;--skin-radius:1px}
+.skin-card.console{--skin-bg:#edf0f2;--skin-panel:#f9fafb;--skin-ink:#202326;--skin-line:#cbd1d5;--skin-accent:#355c7d;--skin-radius:4px}
+.slide.active .skin-card{animation:featureRise .5s both}.slide.active .skin-card:nth-child(2){animation-delay:.08s}.slide.active .skin-card:nth-child(3){animation-delay:.16s}.slide.active .skin-card:nth-child(4){animation-delay:.24s}
+@keyframes featureRise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.effect-grid{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:12px 14px}
+.effect-mini{height:142px;border:1px solid var(--line);border-radius:8px;background:#fff;display:grid;grid-template-columns:1fr 95px;align-items:center;padding:13px 16px;overflow:hidden}
+.effect-copy b{display:block;font-size:15px;margin-bottom:5px}.effect-copy span{font-size:12px;color:var(--muted);line-height:1.45}
+.effect-art{height:104px;display:grid;place-items:center;position:relative}
+.mini-wheel{width:72px;height:72px;border-radius:50%;border:2px solid #d5d9da;background:conic-gradient(#f7f8f8 0 60deg,#dfeeed 60deg 120deg,#f7f8f8 120deg 180deg,#e8edf5 180deg 240deg,#f7f8f8 240deg 300deg,#f3e9dc 300deg);position:relative}
+.mini-wheel::before{content:"";position:absolute;width:3px;height:30px;background:#2e6f6b;left:33px;top:8px;transform-origin:50% 28px;border-radius:3px}
+.mini-wheel::after{content:"";position:absolute;width:10px;height:10px;border-radius:50%;background:#2e6f6b;left:29px;top:30px}
+.slide.active .mini-wheel::before{animation:needleSpin 2.2s cubic-bezier(.18,.8,.22,1) both}
+@keyframes needleSpin{from{transform:rotate(0)}to{transform:rotate(1110deg)}}
+.mini-sticks{width:64px;height:60px;border:2px solid #bd8b54;border-top:0;border-radius:7px 7px 18px 18px;background:#e7bd80;position:relative;margin-top:22px}
+.mini-sticks i{position:absolute;width:6px;height:64px;bottom:30px;background:#f2d29c;border:1px solid #bd8b54;border-radius:3px;transform-origin:bottom}
+.mini-sticks i:nth-child(1){left:12px;transform:rotate(-10deg)}.mini-sticks i:nth-child(2){left:23px;transform:rotate(-3deg)}.mini-sticks i:nth-child(3){left:34px;transform:rotate(5deg)}.mini-sticks i:nth-child(4){left:45px;transform:rotate(11deg)}
+.slide.active .mini-sticks i:nth-child(3){animation:stickPick 2.1s ease-in-out both}
+@keyframes stickPick{0%,35%{transform:translateY(0) rotate(5deg)}55%{transform:translateY(-20px) rotate(2deg)}100%{transform:translateY(-10px) rotate(3deg);background:#fff0c7}}
+.mini-die{width:48px;height:48px;position:relative;transform-style:preserve-3d;transform:rotateX(-22deg) rotateY(32deg)}
+.mini-die i{position:absolute;inset:0;border:1px solid #c8cdd1;background:#fff;border-radius:8px;box-shadow:inset 0 0 12px rgba(80,90,96,.08)}
+.mini-die i:nth-child(1){transform:translateZ(24px);background:radial-gradient(circle at 50% 50%,#2f5f70 0 5px,transparent 5.5px),#fff}
+.mini-die i:nth-child(2){transform:rotateY(90deg) translateZ(24px);background:radial-gradient(circle at 28% 28%,#bd6f62 0 4px,transparent 4.5px),radial-gradient(circle at 72% 72%,#bd6f62 0 4px,transparent 4.5px),#f7f8f8}
+.mini-die i:nth-child(3){transform:rotateX(90deg) translateZ(24px);background:radial-gradient(circle at 25% 25%,#be9851 0 4px,transparent 4.5px),radial-gradient(circle at 75% 25%,#be9851 0 4px,transparent 4.5px),radial-gradient(circle at 50% 50%,#be9851 0 4px,transparent 4.5px),#f2f4f5}
+.slide.active .mini-die{animation:dieRoll 1.9s cubic-bezier(.2,.75,.2,1) both}
+@keyframes dieRoll{from{transform:rotateX(-22deg) rotateY(32deg)}60%{transform:rotateX(740deg) rotateY(590deg) scale(1.08)}to{transform:rotateX(338deg) rotateY(392deg)}}
+.mini-cards{width:88px;height:72px;position:relative}.mini-cards i{position:absolute;width:34px;height:52px;border-radius:5px;border:1px solid #9aaebd;background:repeating-linear-gradient(45deg,#6d8fa7 0 3px,#e7eef2 3px 6px);left:27px;top:12px;transform-origin:50% 100%}
+.mini-cards i:nth-child(1){transform:rotate(-30deg)}.mini-cards i:nth-child(2){transform:rotate(-18deg)}.mini-cards i:nth-child(3){transform:rotate(-6deg)}.mini-cards i:nth-child(4){transform:rotate(6deg)}.mini-cards i:nth-child(5){transform:rotate(18deg)}.mini-cards i:nth-child(6){transform:rotate(30deg)}
+.slide.active .mini-cards i:nth-child(4){animation:cardPick 2.1s ease both}
+@keyframes cardPick{0%,35%{transform:rotate(6deg)}65%{transform:translateY(-14px) rotate(4deg) rotateY(90deg)}100%{transform:translateY(-8px) rotate(0) rotateY(180deg);background:#fff2d9;border-color:#be8d48}}
+.mini-ticket{width:78px;height:82px;border:2px solid #657681;border-radius:7px;background:#e8ecee;overflow:hidden;position:relative;padding:7px}.mini-ticket::after{content:"";position:absolute;left:0;right:0;top:38px;height:2px;background:#657681}.ticket-strip{display:flex;flex-direction:column;gap:5px;transform:translateY(-2px)}.ticket-strip i{height:22px;background:#fff;border-left:5px solid #6b8ca4;box-shadow:0 0 0 1px #cfd7db}.slide.active .ticket-strip{animation:ticketRoll 2s cubic-bezier(.2,.75,.2,1) both}@keyframes ticketRoll{from{transform:translateY(-2px)}to{transform:translateY(-55px)}}
+.mini-ink{width:82px;height:82px;position:relative}.mini-ink::before{content:"";position:absolute;width:12px;height:12px;border-radius:50%;background:#263f3c;left:35px;top:35px}.mini-ink i{position:absolute;width:34px;height:2px;background:#a6b7b2;left:41px;top:40px;transform-origin:left center}.mini-ink i::after{content:"";position:absolute;width:9px;height:9px;border-radius:50%;background:#dfe7e4;right:-4px;top:-4px;border:1px solid #8ba19a}.mini-ink i:nth-child(1){transform:rotate(0)}.mini-ink i:nth-child(2){transform:rotate(60deg)}.mini-ink i:nth-child(3){transform:rotate(120deg)}.mini-ink i:nth-child(4){transform:rotate(180deg)}.mini-ink i:nth-child(5){transform:rotate(240deg)}.mini-ink i:nth-child(6){transform:rotate(300deg)}.slide.active .mini-ink i:nth-child(5){animation:inkPick 1.8s ease both}@keyframes inkPick{0%{background:#a6b7b2}60%,100%{background:#ba785e;height:4px}}
+
+/* ===== 页码指示器 ===== */
+.pager{
+  position:absolute;bottom:28px;left:50%;transform:translateX(-50%);
+  display:flex;gap:7px;z-index:10;
+}
+.pager-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--line);
+  cursor:pointer;transition:all .3s;
+}
+.pager-dot.active{background:var(--accent);width:24px;border-radius:4px}
+.pager-dot:hover{background:var(--muted)}
+
+/* ===== 角标 ===== */
+.corner-logo{
+  position:absolute;top:24px;left:40px;
+  display:flex;align-items:center;gap:10px;
+  font-size:14px;color:var(--ink-soft);z-index:10;
+}
+.corner-logo .s{
+  width:28px;height:28px;border-radius:6px;background:#087e7d;
+  display:grid;place-items:center;overflow:hidden;padding:0;
+}
+.corner-logo .s img{width:100%;height:100%;display:block;object-fit:cover}
+.corner-lang{
+  position:absolute;top:22px;right:40px;z-index:10;
+}
+.corner-lang a{
+  padding:6px 14px;border:1px solid var(--line);border-radius:8px;
+  font-size:13px;color:var(--ink-soft);transition:all .2s;
+}
+.corner-lang a:hover{border-color:var(--ink-soft);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="dots"></div>
+
+  <!-- 进度条 -->
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill"></div>
+    <div class="progress-segs" id="progressSegs"></div>
+  </div>
+
+  <!-- 角标 -->
+  <div class="corner-logo">
+    <div class="s"><img src="images/logo-nav.png" alt=""></div>
+    <span>Decision Brief · 别纠结</span>
+  </div>
+  <div class="corner-lang">
+    <a href="index.html">中文</a>
+  </div>
+
+  <!-- 幻灯片 -->
+  <div class="slides" id="slidesEl">
+
+    <!-- Slide 0: 封面 -->
+    <div class="slide" data-dur="4000">
+      <div class="cover">
+        <div class="cover-brand">
+          <div class="cover-seal"><img class="brand-logo-img" src="images/logo-nav.png" alt="Decision Brief logo"></div>
+          <div class="cover-title">Decision Brief · 别纠结</div>
+        </div>
+        <h1 class="cover-h1">Compress your dilemma into one sentence first.</h1>
+        <p class="cover-sub">Write one sentence, speak it, or add a photo. Decision Brief separates the dilemma into evidence, risks, and a next step.</p>
+        <div class="cover-seals">
+          <div class="cover-seal-item cs-1" style="transition-delay:.1s"><div class="c">自</div><div class="l">Auto</div></div>
+          <div class="cover-seal-item cs-2" style="transition-delay:.2s"><div class="c">理</div><div class="l">Rational</div></div>
+          <div class="cover-seal-item cs-3" style="transition-delay:.3s"><div class="c">随</div><div class="l">Random</div></div>
+          <div class="cover-seal-item cs-4" style="transition-delay:.4s"><div class="c">然</div><div class="l">Nature</div></div>
+          <div class="cover-seal-item cs-5" style="transition-delay:.5s"><div class="c">问</div><div class="l">Dialogue</div></div>
+          <div class="cover-seal-item cs-6" style="transition-delay:.6s"><div class="c">局</div><div class="l">Culture</div></div>
+        </div>
+        <div class="cover-chips">
+          <span class="cover-chip hot" style="transition-delay:.7s">⌨️ Type</span>
+          <span class="cover-chip hot" style="transition-delay:.8s">🎙️ Voice</span>
+          <span class="cover-chip hot" style="transition-delay:.9s">🖼️ Image</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 1: 首页 - 模式选择 -->
+    <div class="slide" data-dur="4500">
+      <div class="shot-layout">
+        <div class="shot-visual">
+          <img class="shot-img" src="images/home-en.png" alt="Mode Selection">
+        </div>
+        <div class="shot-info">
+          <div class="shot-tag">STEP 01</div>
+          <h2 class="shot-title">Six ways in<br>Pick one and start</h2>
+          <p class="shot-desc">Use Random for a small choice and Rational for a serious one. Auto can pick a lens when you are unsure.</p>
+          <div class="shot-points">
+            <div class="shot-point"><span class="dot" style="background:var(--accent)"></span><span>A · Auto-detect the problem type</span></div>
+            <div class="shot-point"><span class="dot" style="background:var(--rational)"></span><span>R · Rational analysis for high-stakes calls</span></div>
+            <div class="shot-point"><span class="dot" style="background:var(--random)"></span><span>F · Leave it to fate for trivial matters</span></div>
+            <div class="shot-point"><span class="dot" style="background:var(--nature)"></span><span>N · Nature's nudge to shift perspective</span></div>
+            <div class="shot-point"><span class="dot" style="background:var(--dialogue)"></span><span>D · Dialogue to help you hear yourself</span></div>
+            <div class="shot-point"><span class="dot" style="background:var(--fengshui)"></span><span>C · Traditional culture, for reference and fun</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 2: Composer 三模态输入 (NEW) -->
+    <div class="slide" data-dur="5500">
+      <div class="composer-feature">
+        <div class="composer-tag">STEP 02 · NEW</div>
+        <h2 class="composer-title">Text, voice, and images use the same input</h2>
+        <p class="composer-sub">Type the question, say it aloud, or attach a photo. All three routes produce the same decision brief.</p>
+        <div class="composer-big" id="demoComposer">
+          <div class="composer-preview-row" id="demoPrevRow">
+            <div class="composer-thumb" id="demoThumb">IMG</div>
+          </div>
+          <div class="composer-text">
+            <span id="demoTypedText"></span>
+          </div>
+          <div class="composer-toolbar">
+            <div class="composer-tools-l">
+              <button class="tbtn">🖼️</button>
+            </div>
+            <div class="composer-tools-r">
+              <button class="tbtn mic-rec" id="demoMic">🎙️</button>
+              <button class="tbtn send">➤</button>
+            </div>
+          </div>
+        </div>
+        <div class="composer-modes-row">
+          <div class="composer-mode"><span class="ic">🖼️</span><div><b>Image Input</b><br>Multimodal visual analysis</div></div>
+          <div class="composer-mode"><span class="ic">🎙️</span><div><b>Voice Input</b><br>Browser-native, no key needed</div></div>
+          <div class="composer-mode"><span class="ic">⌨️</span><div><b>Adaptive Text</b><br>Enter to send / Shift+Enter newline</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: Four interface styles -->
+    <div class="slide" data-dur="4300">
+      <div class="feature-showcase">
+        <div class="feature-heading">
+          <span class="shot-tag">v0.9.0 · INTERFACE STYLES</span>
+          <h2>Four looks, switch whenever you like</h2>
+          <p>The features stay put. Choose the interface that feels easiest to read.</p>
+        </div>
+        <div class="skin-grid">
+          <div class="skin-card heritage"><div class="skin-preview"><div class="skin-side"><i></i><i></i><i></i><i></i></div><div class="skin-main"><strong>What needs a decision?</strong><div class="skin-modes"><i></i><i></i><i></i></div><div class="skin-brief"><i></i><i></i><i></i><i></i></div></div></div><div class="skin-label"><b>Original</b><span>Paper and seals</span></div></div>
+          <div class="skin-card workbench"><div class="skin-preview"><div class="skin-side"><i></i><i></i><i></i><i></i></div><div class="skin-main"><strong>What needs a decision?</strong><div class="skin-modes"><i></i><i></i><i></i></div><div class="skin-brief"><i></i><i></i><i></i><i></i></div></div></div><div class="skin-label"><b>Quiet workbench</b><span>Compact and clear</span></div></div>
+          <div class="skin-card journal"><div class="skin-preview"><div class="skin-side"><i></i><i></i><i></i><i></i></div><div class="skin-main"><strong>DECISION / 026</strong><div class="skin-modes"><i></i><i></i><i></i></div><div class="skin-brief"><i></i><i></i><i></i><i></i></div></div></div><div class="skin-label"><b>Decision journal</b><span>Black-and-white record</span></div></div>
+          <div class="skin-card console"><div class="skin-preview"><div class="skin-side"><i></i><i></i><i></i><i></i></div><div class="skin-main"><strong>Decision modules</strong><div class="skin-modes"><i></i><i></i><i></i></div><div class="skin-brief"><i></i><i></i><i></i><i></i></div></div></div><div class="skin-label"><b>Modular console</b><span>Panel layout</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 4: Six random animations -->
+    <div class="slide" data-dur="4300">
+      <div class="feature-showcase">
+        <div class="feature-heading">
+          <span class="shot-tag">v0.9.0 · RANDOM CHOICE</span>
+          <h2>Random does not always mean a wheel</h2>
+          <p>One of six live animations is chosen for the question. Each result still maps to one of six options.</p>
+        </div>
+        <div class="effect-grid">
+          <div class="effect-mini"><div class="effect-copy"><b>Pointer dial</b><span>Spins, then stops on one option</span></div><div class="effect-art"><div class="mini-wheel"></div></div></div>
+          <div class="effect-mini"><div class="effect-copy"><b>Fortune sticks</b><span>Two shakes, then one stick rises</span></div><div class="effect-art"><div class="mini-sticks"><i></i><i></i><i></i><i></i></div></div></div>
+          <div class="effect-mini"><div class="effect-copy"><b>3D die</b><span>Rolls to a face from one to six</span></div><div class="effect-art"><div class="mini-die"><i></i><i></i><i></i></div></div></div>
+          <div class="effect-mini"><div class="effect-copy"><b>Six-card draw</b><span>Shuffles, selects, and flips a card</span></div><div class="effect-art"><div class="mini-cards"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+          <div class="effect-mini"><div class="effect-copy"><b>Ticket machine</b><span>Scrolls the list and stops on a result</span></div><div class="effect-art"><div class="mini-ticket"><div class="ticket-strip"><i></i><i></i><i></i><i></i></div></div></div></div>
+          <div class="effect-mini"><div class="effect-copy"><b>Ink paths</b><span>One of six routes lights up</span></div><div class="effect-art"><div class="mini-ink"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 5: Rational analysis -->
+    <div class="slide" data-dur="4000">
+      <div class="shot-layout">
+        <div class="shot-visual">
+          <img class="shot-img" src="images/rational-en.png" alt="Rational Analysis">
+        </div>
+        <div class="shot-info">
+          <div class="shot-tag" style="color:var(--rational)">MODE · R</div>
+          <h2 class="shot-title">Rational Analysis<br>Separate benefits from risks</h2>
+          <p class="shot-desc">For high-regret decisions like quitting a job, buying a home, or big-ticket spending. Structured breakdown: benefits, risks, reversibility, and the smallest next step.</p>
+          <div class="shot-points">
+            <div class="shot-point"><span class="dot" style="background:var(--rational)"></span><span>Benefits list vs. risks list</span></div>
+            <div class="shot-point"><span class="dot" style="background:var(--rational)"></span><span>Reversibility assessment</span></div>
+            <div class="shot-point"><span class="dot" style="background:var(--rational)"></span><span>Smallest viable next step</span></div>
+            <div class="shot-point"><span class="dot" style="background:var(--rational)"></span><span>Confidence score ring</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 4: 自然启示 -->
+    <div class="slide" data-dur="3800">
+      <div class="shot-layout">
+        <div class="shot-visual">
+          <img class="shot-img" src="images/nature-en.png" alt="Nature's Nudge">
+        </div>
+        <div class="shot-info">
+          <div class="shot-tag" style="color:var(--nature)">MODE · N</div>
+          <h2 class="shot-title">Nature's Nudge<br>Shift angles, catch your breath</h2>
+          <p class="shot-desc">When you are done calculating pros and cons, use time, weather, and wind direction to try another angle. You configure the weather source.</p>
+          <div class="shot-points">
+            <div class="shot-point"><span class="dot" style="background:var(--nature)"></span><span>Add your own Amap key, Base URL, and city</span></div>
+            <div class="shot-point"><span class="dot" style="background:var(--nature)"></span><span>Real-time weather + wind + Chinese hour</span></div>
+            <div class="shot-point"><span class="dot" style="background:var(--nature)"></span><span>Simulated weather when Amap is not configured</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 5: 对话引导 -->
+    <div class="slide" data-dur="3800">
+      <div class="shot-layout">
+        <div class="shot-visual">
+          <img class="shot-img" src="images/dialogue-en.png" alt="Dialogue Guide">
+        </div>
+        <div class="shot-info">
+          <div class="shot-tag" style="color:var(--dialogue)">MODE · D</div>
+          <h2 class="shot-title">Dialogue Guide<br>Hear your own voice</h2>
+          <p class="shot-desc">Three to five follow-up questions help you write down preferences and concerns that were still unclear.</p>
+          <div class="shot-points">
+            <div class="shot-point"><span class="dot" style="background:var(--dialogue)"></span><span>Questions and answers are stored together</span></div>
+            <div class="shot-point"><span class="dot" style="background:var(--dialogue)"></span><span>Clarifies concerns, never answers for you</span></div>
+            <div class="shot-point"><span class="dot" style="background:var(--dialogue)"></span><span>For when "I know, but I can't say it"</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 6: 决策档案 -->
+    <div class="slide" data-dur="3800">
+      <div class="shot-layout">
+        <div class="shot-visual">
+          <img class="shot-img" src="images/archive-en.png" alt="Decision Archive">
+        </div>
+        <div class="shot-info">
+          <div class="shot-tag">ARCHIVE</div>
+          <h2 class="shot-title">Auto Archive<br>Come back to a decision later</h2>
+          <p class="shot-desc">All decisions auto-saved locally; mark them "Done" or "Regretted" anytime. Desktop sidebar syncs in real time.</p>
+          <div class="shot-points">
+            <div class="shot-point"><span class="dot"></span><span>SQLite local persistence</span></div>
+            <div class="shot-point"><span class="dot"></span><span>Mark Done / Regretted status</span></div>
+            <div class="shot-point"><span class="dot"></span><span>Sidebar real-time sync</span></div>
+            <div class="shot-point"><span class="dot"></span><span>Data stays on your own machine</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 7: 统计复盘 -->
+    <div class="slide" data-dur="3800">
+      <div class="shot-layout">
+        <div class="shot-visual">
+          <img class="shot-img" src="images/stats-en.png" alt="Stats Review">
+        </div>
+        <div class="shot-info">
+          <div class="shot-tag">STATS</div>
+          <h2 class="shot-title">Stats Review<br>See your own decision patterns</h2>
+          <p class="shot-desc">Follow-through rate, regret rate, mode distribution, timeline — reviewing your decision patterns is more honest than any self-help book.</p>
+          <div class="shot-points">
+            <div class="shot-point"><span class="dot"></span><span>Follow-through / regret rate stats</span></div>
+            <div class="shot-point"><span class="dot"></span><span>Six-mode distribution</span></div>
+            <div class="shot-point"><span class="dot"></span><span>Decision timeline</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 8: 设置/TTS -->
+    <div class="slide" data-dur="3800">
+      <div class="shot-layout">
+        <div class="shot-visual">
+          <img class="shot-img" src="images/settings-en.png" alt="Settings">
+        </div>
+        <div class="shot-info">
+          <div class="shot-tag">SETTINGS</div>
+          <h2 class="shot-title">Voice, language, and APIs<br>Live in Settings</h2>
+          <p class="shot-desc">Edge TTS needs no key. Add your own LLM and Amap weather details when you need them.</p>
+          <div class="shot-points">
+            <div class="shot-point"><span class="dot"></span><span>Edge TTS free, no key needed</span></div>
+            <div class="shot-point"><span class="dot"></span><span>Light / Dark / Follow system</span></div>
+            <div class="shot-point"><span class="dot"></span><span>6-language internationalization</span></div>
+            <div class="shot-point"><span class="dot"></span><span>No Amap API? Nature uses simulated weather</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 9: 结尾 CTA -->
+    <div class="slide" data-dur="4500">
+      <div class="cover">
+        <div class="cover-seal" style="width:64px;height:64px;border-radius:12px"><img class="brand-logo-img" src="images/logo-nav.png" alt="Decision Brief logo"></div>
+        <h1 class="cover-h1" style="font-size:56px">Stop overthinking decisions.</h1>
+        <p class="cover-sub">Run it locally and keep the archive on your own computer.<br>Add LLM and Amap details only when needed; Demo and simulated weather are available without them.</p>
+        <div style="display:flex;gap:14px;margin-top:12px">
+          <div style="padding:14px 28px;border-radius:12px;background:var(--accent);color:#fff;font-size:15px;font-weight:500;box-shadow:0 8px 20px -8px rgba(49,125,120,.5)">★ View on GitHub</div>
+          <div style="padding:14px 28px;border-radius:12px;border:1px solid var(--line);font-size:15px;font-weight:500;color:var(--ink);font-family:'SF Mono',Menlo,Consolas,monospace">pip install -e ".[dev]"</div>
+        </div>
+        <p style="margin-top:20px;font-size:13px;color:var(--muted)">Made with ❤ for people who overthink · MIT Licensed</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 页码指示器 -->
+  <div class="pager" id="pager"></div>
+</div>
+
+<script>
+const slides = Array.from(document.querySelectorAll('.slide'));
+const total = slides.length;
+const durations = slides.map(s => parseInt(s.dataset.dur) || 4000);
+const totalDuration = durations.reduce((a,b) => a+b, 0);
+
+const progressFill = document.getElementById('progressFill');
+const progressSegs = document.getElementById('progressSegs');
+const pager = document.getElementById('pager');
+
+let current = 0;
+let autoplayTimer = null;
+let slideStart = 0;
+let rafId = null;
+
+for(let i=0;i<total;i++){
+  const ps = document.createElement('div');
+  ps.className = 'progress-seg';
+  ps.addEventListener('click', ()=>goTo(i));
+  progressSegs.appendChild(ps);
+
+  const pg = document.createElement('div');
+  pg.className = 'pager-dot' + (i===0?' active':'');
+  pg.addEventListener('click', ()=>goTo(i));
+  pager.appendChild(pg);
+}
+
+function setSlide(i){
+  if(i<0||i>=total) return;
+  slides[current].classList.remove('active');
+  pager.children[current].classList.remove('active');
+  for(let d=0;d<current;d++) progressSegs.children[d].classList.add('done');
+  current = i;
+  slides[current].classList.add('active');
+  pager.children[current].classList.add('active');
+  slideStart = performance.now();
+
+  if(i===2) animateComposer();
+
+  if(!window.__DISABLE_AUTOPLAY__){
+    clearTimeout(autoplayTimer);
+    cancelAnimationFrame(rafId);
+    tick();
+    autoplayTimer = setTimeout(()=>{
+      goTo((current+1)%total);
+    }, durations[current]);
+  }
+}
+window.setSlide = setSlide;
+window.slides = slides;
+
+function tick(){
+  const elapsed = performance.now() - slideStart;
+  const dur = durations[current];
+  let prevTotal = 0;
+  for(let j=0;j<current;j++) prevTotal += durations[j];
+  const overall = (prevTotal + Math.min(elapsed, dur)) / totalDuration;
+  progressFill.style.width = (overall*100) + '%';
+  if(!window.__DISABLE_AUTOPLAY__ && elapsed<dur){
+    rafId = requestAnimationFrame(tick);
+  }
+}
+
+function goTo(i){
+  clearTimeout(autoplayTimer);
+  cancelAnimationFrame(rafId);
+  for(let d=0;d<total;d++){
+    progressSegs.children[d].classList.toggle('done', d<i);
+  }
+  setSlide(i);
+}
+
+// Composer 打字动画
+const phrases = [
+  "What's for lunch?",
+  "Should I take this offer?",
+  "Which outfit looks better?",
+  "Keep this book or toss it?"
+];
+let pIdx=2, cIdx=0, deleting=false;
+let typingTimer = null;
+const demoTyped = document.getElementById('demoTypedText');
+const demoPrev = document.getElementById('demoPrevRow');
+const demoMic = document.getElementById('demoMic');
+
+function animateComposer(){
+  pIdx=2; cIdx=0; deleting=false;
+  demoPrev.hidden = false;
+  demoMic.classList.add('mic-rec');
+  demoTyped.textContent = '';
+  clearTimeout(typingTimer);
+
+  function typeIt(){
+    const phrase = phrases[pIdx];
+    if(!deleting){
+      demoTyped.textContent = phrase.slice(0, ++cIdx);
+      if(cIdx === phrase.length){
+        typingTimer = setTimeout(()=>{ deleting = true; typeIt(); }, 2000);
+        return;
+      }
+    }else{
+      demoTyped.textContent = phrase.slice(0, --cIdx);
+      if(cIdx===0){
+        deleting=false; pIdx=0;
+      }
+    }
+    typingTimer = setTimeout(typeIt, deleting?30:70+Math.random()*50);
+  }
+  typingTimer = setTimeout(typeIt, 500);
+}
+
+if(!window.__DISABLE_AUTOPLAY__){
+  setSlide(0);
+}else{
+  setSlide(0);
+  clearTimeout(autoplayTimer);
+  cancelAnimationFrame(rafId);
+}
+</script>
+</body>
+</html>
