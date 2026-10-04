@@ -1,7 +1,7 @@
 /* ============================================================
-   Stats — 决策统计
-   职责：4 指标卡 / 模式分布柱状图 / 7 天趋势
-   依赖：API, MODES, I18N, App
+   Stats — English text
+   English text4 English text / English text / 7 English text
+   English textAPI, MODES, I18N, App
    ============================================================ */
 
 const Stats = (() => {
@@ -33,7 +33,7 @@ const Stats = (() => {
       return;
     }
 
-    // 4 指标卡
+    // 4 English text
     const grid = document.createElement('div');
     grid.className = 'stats-grid';
     grid.appendChild(statCard('total', total, I18N.t('stats.total'), ''));
@@ -42,7 +42,7 @@ const Stats = (() => {
     grid.appendChild(statCard('confidence', Math.round(data.avgConfidence || 0), I18N.t('stats.avgConfidence'), '%'));
     scroll.appendChild(grid);
 
-    // 模式分布
+    // English text
     if (modeDist && Object.keys(modeDist).length) {
       const chart = document.createElement('div');
       chart.className = 'chart';
@@ -79,7 +79,7 @@ const Stats = (() => {
       scroll.appendChild(chart);
     }
 
-    // 7 天趋势
+    // 7 English text
     if (data.weekTrend) {
       const chart = document.createElement('div');
       chart.className = 'chart';
@@ -137,7 +137,7 @@ const Stats = (() => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
     if (isNaN(d)) return '';
-    const labels = ['日', '一', '二', '三', '四', '五', '六'];
+    const labels = ['English text', 'English text', 'English text', 'English text', 'English text', 'English text', 'English text'];
     return labels[d.getDay()] || '';
   }
 
