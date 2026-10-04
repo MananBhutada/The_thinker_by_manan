@@ -176,7 +176,7 @@ PREF_KEYS = (
 
 DEFAULT_PREFS: Dict[str, Any] = {
     "language": "en",
-    "default_mode": "auto",
+    "default_mode": "founder",
     "theme": "auto",
     "skin": "heritage",
     "logo": "tree1",
