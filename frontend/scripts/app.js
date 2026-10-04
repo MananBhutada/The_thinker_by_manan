@@ -234,7 +234,7 @@ const App = (() => {
         container.innerHTML = '<div style="font-size:11px;color:#999;padding:8px;">' + I18N.t('archive.empty') + '</div>';
         return;
       }
-      const modeColors = { auto: '#317d78', rational: '#365385', random: '#317d78', nature: '#486a55', dialogue: '#69526f', fengshui: '#b45a42' };
+      const modeColors = { auto: '#317d78', founder: '#365385', product: '#486a55', people: '#69526f', money: '#9b7636', growth: '#317d78', conflict: '#b45a42' };
       list.forEach(d => {
         const item = document.createElement('div');
         item.className = 'recent-item';
