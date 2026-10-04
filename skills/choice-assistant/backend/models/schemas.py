@@ -1,7 +1,7 @@
-"""别纠结后端 Pydantic 模型。
+"""English text Pydantic English text
 
-对齐 HTML 版本的数据结构，支持 6 模式 ModeResult 联合类型、
-Decision 完整字段（executed/regret/dialogueHistory）、Stats 增强（executedRate/regretRate/weekTrend）。
+English text HTML English textEnglish text 6 English text ModeResult English text
+Decision English textexecuted/regret/dialogueHistoryStats English textexecutedRate/regretRate/weekTrend
 """
 
 from datetime import datetime
@@ -10,44 +10,44 @@ from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, Field
 
 
-# ─── 决策简报 ───────────────────────────────────────────────────
+# ─── English text ───────────────────────────────────────────────────
 
 
 class Brief(BaseModel):
-    """决策简报 - AI 返回的结构化决策结果（非 nature 模式）。"""
+    """English text - AI English textEnglish text nature English text"""
 
-    summary: str = Field(..., description="核心结论")
-    confidence: int = Field(..., ge=0, le=100, description="信心值 0-100")
-    perspectives: List[str] = Field(default_factory=list, description="多角度分析")
-    nextSteps: List[str] = Field(default_factory=list, description="下一步建议")
-    risks: List[str] = Field(default_factory=list, description="风险提示")
-    source: Optional[str] = Field(default=None, description="数据来源：real / mock")
+    summary: str = Field(..., description="English text")
+    confidence: int = Field(..., ge=0, le=100, description="English text 0-100")
+    perspectives: List[str] = Field(default_factory=list, description="English text")
+    nextSteps: List[str] = Field(default_factory=list, description="English text")
+    risks: List[str] = Field(default_factory=list, description="English text")
+    source: Optional[str] = Field(default=None, description="English textreal / mock")
 
 
-# ─── 6 模式 ModeResult ─────────────────────────────────────────
+# ─── 6 English text ModeResult ─────────────────────────────────────────
 
 
 class RationalResult(BaseModel):
-    """理性分析模式结果。"""
+    """English text"""
 
     type: str = Field(default="rational")
-    pros: List[str] = Field(default_factory=list, description="利")
-    cons: List[str] = Field(default_factory=list, description="弊")
-    conclusion: str = Field(default="", description="结论")
-    score: Optional[Dict[str, Any]] = Field(default=None, description="评分")
+    pros: List[str] = Field(default_factory=list, description="English text")
+    cons: List[str] = Field(default_factory=list, description="English text")
+    conclusion: str = Field(default="", description="English text")
+    score: Optional[Dict[str, Any]] = Field(default=None, description="English text")
 
 
 class RandomResult(BaseModel):
-    """天意随机模式结果。"""
+    """English text"""
 
     type: str = Field(default="random")
-    options: List[str] = Field(default_factory=list, description="6 个候选项")
-    wheelResult: Optional[str] = Field(default=None, description="抽中结果")
+    options: List[str] = Field(default_factory=list, description="6 English text")
+    wheelResult: Optional[str] = Field(default=None, description="English text")
     reason: Optional[str] = Field(default=None)
 
 
 class NatureResult(BaseModel):
-    """自然启示模式结果。"""
+    """English text"""
 
     type: str = Field(default="nature")
     time: str = ""
@@ -68,7 +68,7 @@ class NatureResult(BaseModel):
 
 
 class DialogueResult(BaseModel):
-    """对话引导模式结果。"""
+    """English text"""
 
     type: str = Field(default="dialogue")
     question: str = ""
@@ -76,7 +76,7 @@ class DialogueResult(BaseModel):
 
 
 class FengshuiResult(BaseModel):
-    """风水玄学模式结果。"""
+    """English text"""
 
     type: str = Field(default="fengshui")
     needBirth: bool = False
@@ -89,53 +89,53 @@ class FengshuiResult(BaseModel):
     baziAudit: str = ""
 
 
-# ─── chat 接口 ─────────────────────────────────────────────────
+# ─── chat English text ─────────────────────────────────────────────────
 
 
 class ChatRequest(BaseModel):
-    """/api/chat 入参。
+    """/api/chat English text
 
-    天气服务从 v0.7.0 起切换到高德开放平台：
-      - weatherKey（高德 Key）是主字段
-      - weatherBaseUrl 是高德天气接口地址
-      - weatherAppsecret 兼容旧版（自动当作 weatherKey 处理）
+    English text v0.7.0 English text
+      - weatherKeyEnglish text KeyEnglish text
+      - weatherBaseUrl English text
+      - weatherAppsecret English textEnglish text weatherKey English text
     """
 
-    question: str = Field(..., description="用户的问题或纠结点")
+    question: str = Field(..., description="English text")
     mode: Literal["auto", "rational", "random", "nature", "dialogue", "fengshui"] = Field(
-        default="auto", description="决策模式"
+        default="auto", description="English text"
     )
-    # LLM/天气配置临时覆盖（可选，优先级高于环境变量和配置文件）
+    # LLM/English textEnglish textEnglish text
     apiKey: Optional[str] = Field(default=None)
     llmModel: Optional[str] = Field(default=None)
     llmBaseUrl: Optional[str] = Field(default=None)
-    weatherKey: Optional[str] = Field(default=None, description="高德 Key（v0.7.0 主字段）")
-    weatherBaseUrl: Optional[str] = Field(default=None, description="高德天气接口 Base URL")
-    weatherAppsecret: Optional[str] = Field(default=None, description="兼容旧版，自动映射到 weatherKey")
+    weatherKey: Optional[str] = Field(default=None, description="English text Keyv0.7.0 English text")
+    weatherBaseUrl: Optional[str] = Field(default=None, description="English text Base URL")
+    weatherAppsecret: Optional[str] = Field(default=None, description="English textEnglish text weatherKey")
     weatherCity: Optional[str] = Field(default=None)
-    # 用户价值观（rational 模式用）
+    # English textrational English text
     values: Optional[Dict[str, int]] = Field(default=None)
-    # 多模态图片（base64 data URL，可选）
-    image: Optional[str] = Field(default=None, description="用户上传的图片，base64 data URL")
+    # English textbase64 data URLEnglish text
+    image: Optional[str] = Field(default=None, description="English textbase64 data URL")
 
 
 class ChatResponse(BaseModel):
-    """/api/chat 返回。"""
+    """/api/chat English text"""
 
-    brief: Optional[Brief] = Field(default=None, description="决策简报（nature 模式为空）")
-    nature: Optional[Dict[str, Any]] = Field(default=None, description="nature 模式自然意象简报")
-    mode: str = Field(..., description="实际使用的决策模式（auto 已解析）")
-    reply: str = Field(..., description="给用户的自然语言回复")
-    result: Optional[Dict[str, Any]] = Field(default=None, description="完整 ModeResult（用于前端渲染和持久化）")
-    autoRecognized: Optional[Dict[str, Any]] = Field(default=None, description="auto 模式识别结果")
-    decisionId: Optional[str] = Field(default=None, description="自动落库后的决策记录 id")
+    brief: Optional[Brief] = Field(default=None, description="English textnature English text")
+    nature: Optional[Dict[str, Any]] = Field(default=None, description="nature English text")
+    mode: str = Field(..., description="English textauto English text")
+    reply: str = Field(..., description="English text")
+    result: Optional[Dict[str, Any]] = Field(default=None, description="English text ModeResultEnglish text")
+    autoRecognized: Optional[Dict[str, Any]] = Field(default=None, description="auto English text")
+    decisionId: Optional[str] = Field(default=None, description="English text id")
 
 
-# ─── decision 接口 ─────────────────────────────────────────────
+# ─── decision English text ─────────────────────────────────────────────
 
 
 class DecisionSave(BaseModel):
-    """POST /api/decision 入参。"""
+    """POST /api/decision English text"""
 
     id: Optional[str] = None
     question: str
@@ -148,18 +148,18 @@ class DecisionSave(BaseModel):
 
 
 class DecisionPatch(BaseModel):
-    """PATCH /api/decision/:id 入参。"""
+    """PATCH /api/decision/:id English text"""
 
     executed: Optional[bool] = None
     regret: Optional[bool] = None
     dialogueHistory: Optional[List[Dict[str, str]]] = None
 
 
-# ─── stats 接口 ────────────────────────────────────────────────
+# ─── stats English text ────────────────────────────────────────────────
 
 
 class Stats(BaseModel):
-    """/api/stats 返回。"""
+    """/api/stats English text"""
 
     totalDecisions: int
     modeDistribution: Dict[str, int] = Field(default_factory=dict)
@@ -169,11 +169,11 @@ class Stats(BaseModel):
     weekTrend: List[Dict[str, Any]] = Field(default_factory=list)
 
 
-# ─── 模式元数据 ────────────────────────────────────────────────
+# ─── English text ────────────────────────────────────────────────
 
 
 class ModeMeta(BaseModel):
-    """决策模式元数据。"""
+    """English text"""
 
     id: str
     name: str
@@ -182,25 +182,25 @@ class ModeMeta(BaseModel):
     description: str
 
 
-# ─── 配置接口 ─────────────────────────────────────────────────
+# ─── English text ─────────────────────────────────────────────────
 
 
 class ConfigResponse(BaseModel):
-    """/api/config GET 返回（脱敏）。"""
+    """/api/config GET English textEnglish text"""
 
-    llm: Dict[str, Any] = Field(default_factory=dict, description="LLM 配置（脱敏）")
-    weather: Dict[str, Any] = Field(default_factory=dict, description="天气配置（脱敏）")
+    llm: Dict[str, Any] = Field(default_factory=dict, description="LLM English textEnglish text")
+    weather: Dict[str, Any] = Field(default_factory=dict, description="English textEnglish text")
     hasLlm: bool = False
     hasWeather: bool = False
 
 
 class ConfigUpdate(BaseModel):
-    """/api/config POST 入参。
+    """/api/config POST English text
 
-    天气服务从 v0.7.0 起切换到高德开放平台：
-      - weather_key（高德 Key）是主字段
-      - weather_base_url 是高德天气接口地址
-      - weather_appsecret 兼容旧版（自动当作 weather_key 处理）
+    English text v0.7.0 English text
+      - weather_keyEnglish text KeyEnglish text
+      - weather_base_url English text
+      - weather_appsecret English textEnglish text weather_key English text
     """
 
     llm_api_key: Optional[str] = None
@@ -208,12 +208,12 @@ class ConfigUpdate(BaseModel):
     llm_base_url: Optional[str] = None
     weather_key: Optional[str] = None
     weather_base_url: Optional[str] = None
-    weather_appsecret: Optional[str] = None  # 兼容旧版
+    weather_appsecret: Optional[str] = None  # English text
     weather_city: Optional[str] = None
 
 
 class PreferencesUpdate(BaseModel):
-    """/api/preferences POST 入参。"""
+    """/api/preferences POST English text"""
 
     language: Optional[str] = None
     default_mode: Optional[str] = None
