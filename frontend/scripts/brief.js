@@ -45,7 +45,6 @@ const Brief = (() => {
   function renderBrief(o) {
     const article = el('article', 'brief');
 
-    // English textEnglish text + English text/English text + English text
     const head = el('div', 'brief-head');
     head.setAttribute('data-tone', o.tone || 'auto');
     const sealWrap = document.createElement('span');
@@ -63,60 +62,60 @@ const Brief = (() => {
     head.appendChild(meta);
     article.appendChild(head);
 
-    // English textEnglish textEnglish text
     if (o.bazi) {
       const bazi = el('div', 'brief-bazi');
-      bazi.textContent = (o.baziAudit ? I18N.t('fengshui.bazi') + 'English text' : I18N.t('fengshui.bazi') + '') + o.bazi;
+      bazi.textContent = (o.baziAudit ? I18N.t('fengshui.bazi') + ' · ' : I18N.t('fengshui.bazi')) + o.bazi;
       article.appendChild(bazi);
     }
 
-    // English text
     const body = el('div', 'brief-body');
 
-    // English text + English text
-    if (o.verdict) {
-      const verdict = el('div', 'verdict');
-      const verdictLeft = el('div');
-      verdictLeft.appendChild(el('div', 'verdict-label', I18N.t('brief.verdict')));
-      verdictLeft.appendChild(el('div', 'verdict-main', o.verdict));
-      verdict.appendChild(verdictLeft);
-      verdict.appendChild(confidenceRing(o.percent || 0));
-      body.appendChild(verdict);
+    if (o.tension || o.verdict) {
+      const section = el('section', 'blindspot-hero');
+      section.appendChild(el('div', 'blindspot-kicker', 'DECISION TENSION'));
+      section.appendChild(el('div', 'blindspot-hero-text', o.tension || o.verdict));
+      section.appendChild(confidenceRing(o.percent || 0));
+      body.appendChild(section);
     }
 
-    // English text / English text English text
-    if (o.keep || o.drop) {
-      const cols = el('div', 'brief-columns' + (!o.keep || !o.drop ? ' is-single' : ''));
-      if (o.keep) {
-        const keepSec = el('section', 'mini-section');
-        keepSec.appendChild(el('h3', '', I18N.t('brief.keep')));
-        keepSec.appendChild(el('p', '', o.keep));
-        cols.appendChild(keepSec);
-      }
-      if (o.drop) {
-        const dropSec = el('section', 'mini-section');
-        dropSec.appendChild(el('h3', '', I18N.t('brief.drop')));
-        dropSec.appendChild(el('p', '', o.drop));
-        cols.appendChild(dropSec);
-      }
-      body.appendChild(cols);
+    const cards = [
+      ['Assumption to test', o.assumptions],
+      ['Potential blind spots', o.blindSpots],
+      ['Tensions to examine', o.tensions],
+      ['Missing information', o.missingInfo],
+      ['Questions worth asking', o.questions],
+    ].filter(([, value]) => value && (Array.isArray(value) ? value.length : String(value).trim()));
+
+    if (cards.length) {
+      const grid = el('div', 'blindspot-grid');
+      cards.forEach(([title, value]) => {
+        const section = el('section', 'blindspot-card');
+        section.appendChild(el('h3', '', title));
+        const items = Array.isArray(value) ? value : [value];
+        const ul = el('ul');
+        items.filter(Boolean).forEach(item => ul.appendChild(el('li', '', item)));
+        section.appendChild(ul);
+        grid.appendChild(section);
+      });
+      body.appendChild(grid);
     }
 
-    // English text
     const extra = renderExtra(o);
     if (extra) body.appendChild(extra);
 
-    // English text
     if (o.next) {
       const next = el('div', 'next-step');
-      next.innerHTML = '<strong>' + esc(I18N.t('brief.next')) + '</strong>' + esc(o.next);
+      next.innerHTML = '<strong>Reflection:</strong> ' + esc(o.next);
       body.appendChild(next);
     }
+
+    const boundary = el('div', 'blindspot-boundary');
+    boundary.textContent = 'BlindSpot AI surfaces possibilities and missing context. It does not choose for you.';
+    body.appendChild(boundary);
 
     article.appendChild(body);
     return article;
   }
-
   // tone → modeIdEnglish text
   function toneToModeId(tone) {
     return tone || 'auto';
@@ -711,11 +710,17 @@ const Brief = (() => {
       modeName: I18N.t(m.nameKey),
       randomSeed: resp.decisionId || result.randomSeed || result.wheelResult || brief.summary || '',
       percent: brief.confidence != null ? brief.confidence : 55,
-      title: brief.summary || '',
+      title: '',
       verdict: brief.summary || result.conclusion || result.signal || result.suggestion || '',
-      keep: perspectives[0] || '',
-      drop: perspectives[1] || (brief.risks && brief.risks[0]) || '',
-      next: nextSteps.join('') || result.suggestion || '',
+      tension: perspectives[2] || brief.summary || '',
+      assumptions: perspectives[0] ? [perspectives[0]] : [],
+      blindSpots: perspectives[1] ? [perspectives[1]] : [],
+      tensions: perspectives[2] ? [perspectives[2]] : [],
+      missingInfo: Array.isArray(brief.risks) ? brief.risks : [],
+      questions: nextSteps,
+      keep: '',
+      drop: '',
+      next: nextSteps[0] || result.suggestion || '',
       // 6 English text result English text
       pros: result.pros,
       cons: result.cons,
@@ -755,11 +760,17 @@ const Brief = (() => {
       modeName: I18N.t(m.nameKey),
       randomSeed: d.id || result.randomSeed || result.wheelResult || d.question || '',
       percent: brief.confidence != null ? brief.confidence : 55,
-      title: brief.summary || '',
+      title: '',
       verdict: brief.summary || result.conclusion || result.signal || result.suggestion || '',
-      keep: perspectives[0] || '',
-      drop: perspectives[1] || (brief.risks && brief.risks[0]) || '',
-      next: nextSteps.join('') || result.suggestion || '',
+      tension: perspectives[2] || brief.summary || '',
+      assumptions: perspectives[0] ? [perspectives[0]] : [],
+      blindSpots: perspectives[1] ? [perspectives[1]] : [],
+      tensions: perspectives[2] ? [perspectives[2]] : [],
+      missingInfo: Array.isArray(brief.risks) ? brief.risks : [],
+      questions: nextSteps,
+      keep: '',
+      drop: '',
+      next: nextSteps[0] || result.suggestion || '',
       pros: result.pros,
       cons: result.cons,
       score: result.score,
