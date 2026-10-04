@@ -145,14 +145,14 @@ const API = (() => {
 const MODES = (() => {
   // English text + English text tone English text + i18n English text key
   const REGISTRY = [
-    { id: 'auto',     char: 'English text', tone: 'auto',     color: 'var(--aqua)',     hex: '#317d78', nameKey: 'mode.auto',     descKey: 'mode.auto.desc' },
-    { id: 'rational', char: 'English text', tone: 'rational', color: 'var(--lapis)',    hex: '#365385', nameKey: 'mode.rational', descKey: 'mode.rational.desc' },
-    { id: 'random',   char: 'English text', tone: 'random',   color: 'var(--random-head)', hex: '#317d78', nameKey: 'mode.random', descKey: 'mode.random.desc' },
-    { id: 'nature',   char: 'English text', tone: 'nature',   color: 'var(--moss)',     hex: '#486a55', nameKey: 'mode.nature',   descKey: 'mode.nature.desc' },
-    { id: 'dialogue', char: 'English text', tone: 'dialogue', color: 'var(--plum)',     hex: '#69526f', nameKey: 'mode.dialogue', descKey: 'mode.dialogue.desc' },
-    { id: 'fengshui', char: 'English text', tone: 'fengshui', color: 'var(--cinnabar)', hex: '#b45a42', nameKey: 'mode.fengshui', descKey: 'mode.fengshui.desc' }
-  ];
-  const BY_ID = Object.fromEntries(REGISTRY.map(m => [m.id, m]));
+    { id: 'auto',     char: 'A', tone: 'auto',     color: 'var(--aqua)',   hex: '#317d78', nameKey: 'mode.auto',     descKey: 'mode.auto.desc' },
+    { id: 'founder',  char: 'F', tone: 'founder',  color: 'var(--lapis)',  hex: '#365385', nameKey: 'mode.founder',  descKey: 'mode.founder.desc' },
+    { id: 'product',  char: 'P', tone: 'product',  color: 'var(--moss)',   hex: '#486a55', nameKey: 'mode.product',  descKey: 'mode.product.desc' },
+    { id: 'people',   char: 'H', tone: 'people',   color: 'var(--plum)',   hex: '#69526f', nameKey: 'mode.people',   descKey: 'mode.people.desc' },
+    { id: 'money',    char: '$', tone: 'money',    color: 'var(--ochre)',  hex: '#9b7636', nameKey: 'mode.money',    descKey: 'mode.money.desc' },
+    { id: 'growth',   char: 'G', tone: 'growth',   color: 'var(--aqua)',   hex: '#317d78', nameKey: 'mode.growth',   descKey: 'mode.growth.desc' },
+    { id: 'conflict', char: 'C', tone: 'conflict', color: 'var(--cinnabar)', hex: '#b45a42', nameKey: 'mode.conflict', descKey: 'mode.conflict.desc' }
+  ];  const BY_ID = Object.fromEntries(REGISTRY.map(m => [m.id, m]));
 
   /**
    * English text SVGEnglish text + English text + English text
