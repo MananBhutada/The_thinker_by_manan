@@ -1,4 +1,4 @@
-"""GET /api/modes - 返回六种决策模式元数据 + 五条快捷问题。"""
+"""GET /api/modes - English text + English text"""
 
 from typing import Any, Dict
 
@@ -11,7 +11,7 @@ router = APIRouter()
 
 @router.get("/api/modes")
 def get_modes() -> Dict[str, Any]:
-    """返回六种模式的元数据（id / 名称 / 图标 / 色值 / 说明）+ 五条快捷问题。"""
+    """English textid / English text / English text / English text / English text+ English text"""
     return {
         "modes": [m.model_dump() for m in MODES],
         "quickQuestions": QUICK_QUESTIONS,
