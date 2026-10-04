@@ -72,7 +72,7 @@ const Brief = (() => {
 
     if (o.tension || o.verdict) {
       const section = el('section', 'blindspot-hero');
-      section.appendChild(el('div', 'blindspot-kicker', 'DECISION TENSION'));
+      section.appendChild(el('div', 'blindspot-kicker', 'FOUNDER LENS'));
       section.appendChild(el('div', 'blindspot-hero-text', o.tension || o.verdict));
       section.appendChild(confidenceRing(o.percent || 0));
       body.appendChild(section);
@@ -110,7 +110,7 @@ const Brief = (() => {
     }
 
     const boundary = el('div', 'blindspot-boundary');
-    boundary.textContent = 'BlindSpot AI surfaces possibilities and missing context. It does not choose for you.';
+    boundary.textContent = 'Founder BlindSpot pressure-tests the reasoning. The founder owns the decision.';
     body.appendChild(boundary);
 
     article.appendChild(body);
