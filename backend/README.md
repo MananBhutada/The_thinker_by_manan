@@ -1,69 +1,69 @@
-# 别纠结后端 (FastAPI)
+# English text (FastAPI)
 
-独立 FastAPI 后端，为《别纠结》（Decision Brief）Skill 提供聊天、档案、统计和设置等 REST 接口。
+English text FastAPI English textEnglish textEnglish textDecision BriefSkill English textEnglish textEnglish text REST English text
 
-## 依赖
+## English text
 
 - fastapi
 - uvicorn
 - httpx
 - pydantic
 
-## 启动
+## English text
 
-在 `backend/` 目录下执行：
+English text `backend/` English text
 
 ```bash
 pip install -r requirements.txt
 
-# 方式一：直接运行
+# English textEnglish text
 python main.py
 
-# 方式二：uvicorn 热重载
+# English textuvicorn English text
 uvicorn main:app --reload --host 127.0.0.1 --port 8010
 ```
 
-启动后：
+English text
 
-- 服务地址：http://127.0.0.1:8010
-- API 文档：http://127.0.0.1:8010/docs
-- 健康检查：http://127.0.0.1:8010/
+- English texthttp://127.0.0.1:8010
+- API English texthttp://127.0.0.1:8010/docs
+- English texthttp://127.0.0.1:8010/
 
-## 接口
+## English text
 
-| 方法 | 路径 | 说明 |
+| English text | English text | English text |
 | --- | --- | --- |
-| POST | /api/chat | 接收问题 + 模式，返回 AI 回复（含决策简报 .brief） |
-| GET | /api/modes | 返回六种模式元数据 |
-| POST | /api/decision | 保存一条决策记录 |
-| GET | /api/archive | 获取决策历史列表 |
-| GET | /api/stats | 获取统计数据 |
+| POST | /api/chat | English text + English textEnglish text AI English textEnglish text .brief |
+| GET | /api/modes | English text |
+| POST | /api/decision | English text |
+| GET | /api/archive | English text |
+| GET | /api/stats | English text |
 
-## 目录
+## English text
 
 ```
 backend/
-├── main.py              # 应用入口，注册路由，监听 8010
+├── main.py              # English textEnglish textEnglish text 8010
 ├── requirements.txt
-├── routes/              # 路由（chat/modes/decision/archive/stats）
-├── services/            # 业务服务（llm_service / modes_data）
-└── models/              # Pydantic 模型（schemas.py）
+├── routes/              # English textchat/modes/decision/archive/stats
+├── services/            # English textllm_service / modes_data
+└── models/              # Pydantic English textschemas.py
 ```
 
-## 说明
+## English text
 
-- LLM 使用 OpenAI 兼容接口，由用户配置 Key、模型和 Base URL。
-- 未配置 LLM Key 时，`/api/chat` 返回 402；只有用户主动开启 Demo 才会返回示例数据。
-- 天气使用高德开放平台，Key、Base URL 和城市由用户配置；缺少 Key 或 Base URL 时，自然模式使用明确标注的模拟天气。
-- 决策记录和设置保存在本机 SQLite，服务重启后仍在。
+- LLM English text OpenAI English textEnglish text KeyEnglish text Base URL
+- English text LLM Key English text`/api/chat` English text 402English text Demo English text
+- English textKeyBase URL English textEnglish text Key English text Base URL English textEnglish text
+- English text SQLiteEnglish text
 
-## Agent 集成
+## Agent English text
 
-本后端为《别纠结》（Decision Brief）Skill 提供 API 服务，Agent 通过 CLI 脚本调用：
+English textEnglish textDecision BriefSkill English text API English textAgent English text CLI English text
 
-1. 先启动后端（见上方「启动」章节）
-2. Agent 加载 `SKILL.md` 中的 Skill 定义
-3. Agent 通过 `python scripts/choice_assistant.py --question "..." --mode auto` 调用
-4. CLI 脚本会向本后端的 `/api/chat` 发送 POST 请求，返回结构化决策简报
+1. English textEnglish textEnglish textEnglish text
+2. Agent English text `SKILL.md` English text Skill English text
+3. Agent English text `python scripts/choice_assistant.py --question "..." --mode auto` English text
+4. CLI English text `/api/chat` English text POST English textEnglish text
 
-详细参数和调用样例见项目根目录的 `SKILL.md`。
+English text `SKILL.md`
