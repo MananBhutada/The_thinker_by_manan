@@ -1,13 +1,13 @@
 /* ============================================================
-   Voice — 语音输入（STT）+ 语音输出（TTS，浏览器原生 SpeechSynthesis）
-   职责：
-     - STT：点击麦克风按钮启动/停止识别，结果写入 textarea
-     - TTS：朗读决策简报的 reply（自动 + 手动喇叭按钮）
-     - 设置页：发音人/语速/音调/试听
-   依赖：I18N, App（prefs / toast）
-   说明：
-     - STT 用 Web Speech API SpeechRecognition（Chrome/Edge 支持）
-     - TTS 用浏览器原生 SpeechSynthesis（Windows 默认调用微软 SAPI，免费）
+   Voice — English textSTT+ English textTTSEnglish text SpeechSynthesis
+   English text
+     - STTEnglish text/English textEnglish text textarea
+     - TTSEnglish text replyEnglish text + English text
+     - English textEnglish text/English text/English text/English text
+   English textI18N, Appprefs / toast
+   English text
+     - STT English text Web Speech API SpeechRecognitionChrome/Edge English text
+     - TTS English text SpeechSynthesisWindows English text SAPIEnglish text
    ============================================================ */
 
 const Voice = (() => {
@@ -16,17 +16,17 @@ const Voice = (() => {
   /* ---------- STT ---------- */
   let recognition = null;
   let recognizing = false;
-  let sttTarget = null; // 当前识别结果写入的 textarea
+  let sttTarget = null; // English text textarea
 
   function sttSupported() {
     return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
   }
 
-  // 把 i18n 语言代码转 BCP-47（SpeechRecognition 接受的）
+  // English text i18n English text BCP-47SpeechRecognition English text
   function bcp47(lang) {
     switch (lang) {
       case 'zh-CN': return 'zh-CN';
-      case 'yue':   return 'zh-HK';   // 粤语 fallback 到香港普通话识别
+      case 'yue':   return 'zh-HK';   // English text fallback English text
       case 'en':    return 'en-US';
       case 'fr':    return 'fr-FR';
       case 'ja':    return 'ja-JP';
@@ -108,19 +108,19 @@ const Voice = (() => {
   }
 
   /* ---------- TTS ----------
-   * 双通道：优先 edge-tts（后端 /api/tts/speak 返回 MP3），失败降级到浏览器 SpeechSynthesis。
-   * edge 支持更自然的神经音色（晓晓/云希等），离线/网络异常时仍可朗读。
+   * English textEnglish text edge-ttsEnglish text /api/tts/speak English text MP3English text SpeechSynthesis
+   * edge English textEnglish text/English textEnglish text/English text
    */
 
-  let edgeUnavailable = false;  // 一次失败后标记，避免反复请求
-  let edgeAudio = null;         // 当前 Audio 元素（edge 通道）
+  let edgeUnavailable = false;  // English textEnglish text
+  let edgeAudio = null;         // English text Audio English textedge English text
 
   function browserTtsSupported() {
     return !!window.speechSynthesis && typeof window.speechSynthesis.speak === 'function';
   }
 
   function ttsSupported() {
-    return true;  // edge 或 browser 总有一个能用（edge 通过后端）
+    return true;  // edge English text browser English textedge English text
   }
 
   function edgeTtsUrl(text, opts = {}) {
@@ -137,12 +137,12 @@ const Voice = (() => {
   }
 
   function stop() {
-    // 停 edge
+    // English text edge
     if (edgeAudio) {
       try { edgeAudio.pause(); edgeAudio.src = ''; } catch (_) {}
       edgeAudio = null;
     }
-    // 停浏览器
+    // English text
     if (browserTtsSupported()) {
       try { window.speechSynthesis.cancel(); } catch (_) {}
     }
@@ -162,14 +162,14 @@ const Voice = (() => {
     u.rate = typeof prefs.tts_rate === 'number' ? prefs.tts_rate : 0.95;
     u.pitch = typeof prefs.tts_pitch === 'number' ? prefs.tts_pitch : 1.05;
     u.lang = bcp47(prefs.language || 'zh-CN');
-    // 不指定 voice，用系统默认（edge 通道才是音色主力）
+    // English text voiceEnglish textedge English text
     if (opts.onend) u.onend = opts.onend;
     if (opts.onstart) u.onstart = opts.onstart;
     if (opts.onerror) u.onerror = opts.onerror;
     window.speechSynthesis.speak(u);
   }
 
-  // 用 edge-tts 播放，返回 Promise 以支持失败降级
+  // English text edge-tts English textEnglish text Promise English text
   function _speakEdge(text, opts = {}) {
     return new Promise((resolve, reject) => {
       if (edgeUnavailable) return reject(new Error('edge unavailable'));
@@ -197,13 +197,13 @@ const Voice = (() => {
       }, { once: true });
       audio.addEventListener('error', (e) => {
         edgeAudio = null;
-        // 网络/后端异常：标记 edge 不可用，后续降级浏览器
+        // English text/English textEnglish text edge English textEnglish text
         edgeUnavailable = true;
         done(e.error || new Error('edge tts error'));
       }, { once: true });
       edgeAudio = audio;
       audio.load();
-      // 5 秒没 canplaythrough 视为失败
+      // 5 English text canplaythrough English text
       setTimeout(() => {
         if (!settled && (audio.readyState < 2)) {
           try { audio.pause(); } catch (_) {}
@@ -219,12 +219,12 @@ const Voice = (() => {
     try {
       await _speakEdge(text, opts);
     } catch (e) {
-      // edge 失败降级浏览器
+      // edge English text
       _speakBrowser(text, opts);
     }
   }
 
-  // 手动朗读按钮（插入到简报卡顶部）
+  // English textEnglish text
   function makeSpeakButton(text) {
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -253,7 +253,7 @@ const Voice = (() => {
     return btn;
   }
 
-  // 音色列表：首次从后端拉取，缓存
+  // English textEnglish textEnglish text
   let voicesCache = null;
   async function getEdgeVoices(lang) {
     if (voicesCache) return voicesCache;
