@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="styles/desktop.css?v=9">
 <link rel="stylesheet" href="styles/skins.css?v=7">
 </head>
-<body>
+<body>\n  <a class="skip-link" href="#mainContent">Skip to main content</a>
 <div class="app-shell">
   <!-- 顶栏 -->
   <header class="topbar">
@@ -72,7 +72,7 @@
   </aside>
 
   <!-- 主区 -->
-  <main class="main">
+  <main class="main" id="mainContent" tabindex="-1">
     <div class="scroll-area" id="chatScroll">
       <section class="hero">
         <div class="hero-label">
@@ -136,7 +136,7 @@
           <button type="button" class="tool-button" id="imageBtn" aria-label="Upload image">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           </button>
-          <input type="file" id="imageInput" accept="image/*" hidden>
+          <input type="file" id="imageInput" accept="image/*" hidden aria-label="Choose an image">
         </div>
         <div class="composer-tools-right">
           <button type="button" class="tool-button mic-button" id="micBtn" aria-label="Voice input" data-i18n-aria="chat.mic">
@@ -155,7 +155,7 @@
 <div class="drawer-overlay" id="drawerOverlay"></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Drawer">
   <div class="drawer-header">
-    <button type="button" class="drawer-back" id="drawerBack" aria-label="关闭Drawer">
+    <button type="button" class="drawer-back" id="drawerBack" aria-label="Back">
       <svg width="14" height="14" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M10 2L2 10l8 8"/></svg>
       <span data-i18n="drawer.back">English</span>
     </button>
@@ -262,7 +262,7 @@
 </aside>
 
 <!-- Modal / Toast -->
-<div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-label="Dialogue框" aria-hidden="true">
+<div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-label="Dialogue" aria-hidden="true">
   <div class="modal" id="modalContent" role="document"></div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
