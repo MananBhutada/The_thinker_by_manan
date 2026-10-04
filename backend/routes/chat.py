@@ -173,6 +173,8 @@ def chat(req: ChatRequest) -> ChatResponse:
             )
     except NoApiKeyError:
         raise HTTPException(status_code=402, detail="No LLM API key is configured. Add one in settings or enable demo mode.")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=str(e)[:500])
 
     # 3. English text
     decision_id: Optional[str] = None
