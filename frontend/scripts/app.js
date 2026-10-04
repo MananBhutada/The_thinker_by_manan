@@ -92,6 +92,8 @@ const App = (() => {
     }
     if (tab === 'chat') {
       closeDrawer();
+      const graphPage = $('page-graph');
+      if (graphPage) graphPage.classList.remove('active');
       currentTab = 'chat';
       document.querySelectorAll('.nav-item').forEach(t => {
         const active = t.getAttribute('data-tab') === 'chat';
@@ -104,6 +106,8 @@ const App = (() => {
       return;
     }
     // archive / stats / settings → English text
+    const graphPage = $('page-graph');
+    if (graphPage) graphPage.classList.remove('active');
     currentTab = tab;
     document.querySelectorAll('.nav-item').forEach(t => {
       t.classList.toggle('active', t.getAttribute('data-tab') === tab);
