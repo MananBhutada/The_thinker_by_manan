@@ -22,7 +22,7 @@ from fastapi.staticfiles import StaticFiles
 sys.path.insert(0, str(Path(__file__).parent))
 
 from db import init_db  # noqa: E402
-from routes import archive, chat, config_api, decision, modes, stats, tts  # noqa: E402
+from routes import archive, chat, config_api, decision, graph, modes, stats, tts  # noqa: E402
 
 # English textchoice-skill/frontend/
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
@@ -50,6 +50,7 @@ async def security_headers(request: Request, call_next):
 
 # ─── API English text ───────────────────────────────────────────────────
 app.include_router(chat.router)
+app.include_router(graph.router)
 app.include_router(modes.router)
 app.include_router(decision.router)
 app.include_router(archive.router)
