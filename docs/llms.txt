@@ -1,4 +1,4 @@
-# Decision Brief / 别纠结
+# Decision Brief / English text
 
 Decision Brief is a local-first AI decision-support tool with a Web UI, CLI, and installable Agent Skill. It accepts text, voice, and image input, then organizes a choice into evidence, risks, and a next step. It does not make the final decision for the user.
 
