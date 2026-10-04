@@ -1,7 +1,7 @@
 """
-桌面端布局测试 — 验证二区域结构与抽屉交互。
-依赖：后端服务在 http://127.0.0.1:8010 运行。
-用 sync_playwright 直接启动，不依赖 pytest-playwright fixture。
+English text — English text
+English textEnglish text http://127.0.0.1:8010 English text
+English text sync_playwright English textEnglish text pytest-playwright fixture
 """
 import json
 import os
@@ -24,18 +24,18 @@ def page():
 
 
 def test_app_shell_two_pane_layout(page):
-    """桌面端应有 .app-shell 二区域结构，无 .ios-wrapper 可见"""
+    """English text .app-shell English textEnglish text .ios-wrapper English text"""
     page.goto(BASE_URL)
     page.wait_for_selector(".app-shell", timeout=10000)
     assert page.locator(".app-shell").is_visible()
-    # ios-wrapper 应被隐藏
+    # ios-wrapper English text
     ios = page.locator(".ios-wrapper")
     if ios.count() > 0:
         assert not ios.is_visible()
 
 
 def test_sidebar_visible_with_nav(page):
-    """侧栏应有 4 个 nav-item：决策/档案/统计/设置"""
+    """English text 4 English text nav-itemEnglish text/English text/English text/English text"""
     page.goto(BASE_URL)
     page.wait_for_selector(".sidebar .nav-item", timeout=10000)
     navs = page.locator(".sidebar .nav-item")
@@ -46,17 +46,17 @@ def test_sidebar_visible_with_nav(page):
 
 
 def test_mode_grid_six_seals(page):
-    """六模式印章应横排显示，data-mode 正确，且恰好有一个 active"""
+    """English textdata-mode English textEnglish text active"""
     page.goto(BASE_URL)
     page.wait_for_selector(".mode-grid .mode-card", timeout=10000)
-    # 等待 init 完成（applyPrefs 异步调用 setMode）
+    # English text init English textapplyPrefs English text setMode
     page.wait_for_timeout(1500)
     cards = page.locator(".mode-grid .mode-card")
     assert cards.count() == 6
     expected = ["auto", "rational", "random", "nature", "dialogue", "fengshui"]
     for i, m in enumerate(expected):
         assert cards.nth(i).get_attribute("data-mode") == m
-    # 恰好有一个 mode-card 是 active（取决于后端 default_mode 偏好）
+    # English text mode-card English text activeEnglish text default_mode English text
     active_count = 0
     for i in range(6):
         cls = cards.nth(i).get_attribute("class") or ""
@@ -66,7 +66,7 @@ def test_mode_grid_six_seals(page):
 
 
 def test_click_archive_opens_drawer(page):
-    """点击档案 nav-item 应打开右侧抽屉"""
+    """English text nav-item English text"""
     page.goto(BASE_URL)
     page.wait_for_selector(".nav-item[data-tab='archive']", timeout=10000)
     page.locator(".nav-item[data-tab='archive']").click()
@@ -78,7 +78,7 @@ def test_click_archive_opens_drawer(page):
 
 
 def test_close_drawer_with_back_button(page):
-    """抽屉打开后，点击返回按钮应关闭"""
+    """English textEnglish text"""
     page.goto(BASE_URL)
     page.wait_for_selector(".nav-item[data-tab='archive']", timeout=10000)
     page.locator(".nav-item[data-tab='archive']").click()
@@ -90,7 +90,7 @@ def test_close_drawer_with_back_button(page):
 
 
 def test_esc_closes_drawer(page):
-    """按 Esc 应关闭抽屉"""
+    """English text Esc English text"""
     page.goto(BASE_URL)
     page.wait_for_selector(".nav-item[data-tab='stats']", timeout=10000)
     page.locator(".nav-item[data-tab='stats']").click()
@@ -102,7 +102,7 @@ def test_esc_closes_drawer(page):
 
 
 def test_chat_main_area_visible(page):
-    """主区对话流容器应可见"""
+    """English text"""
     page.goto(BASE_URL)
     page.wait_for_selector("#chatContainer", timeout=10000)
     assert page.locator("#chatContainer").is_visible()
@@ -111,7 +111,7 @@ def test_chat_main_area_visible(page):
 
 
 def test_weather_settings_explain_mock_fallback(page):
-    """未配置高德 API 时，要说明使用模拟数据，不能只显示“模拟数据”。"""
+    """English text API English textEnglish textEnglish text“English text”"""
     config = {
         "llm": {"model": "", "baseUrl": "", "hasKey": False},
         "weather": {"city": "", "baseUrl": "", "hasKey": False, "hasBaseUrl": False},
@@ -127,17 +127,17 @@ def test_weather_settings_explain_mock_fallback(page):
         page.goto(BASE_URL)
         page.locator(".nav-item[data-tab='settings']").click()
         page.wait_for_function(
-            "document.querySelector('#weatherConfigValue')?.textContent.includes('如果没有配置高德天气 API')"
+            "document.querySelector('#weatherConfigValue')?.textContent.includes('English text API')"
         )
         status = page.locator("#weatherConfigValue").inner_text()
-        assert status == "如果没有配置高德天气 API，会使用模拟数据"
-        assert status != "模拟数据"
+        assert status == "English text APIEnglish text"
+        assert status != "English text"
 
         page.locator("#setWeatherConfig").click()
         assert page.locator("#w_key").is_visible()
         assert page.locator("#w_base_url").is_visible()
         assert page.locator("#w_city").is_visible()
-        assert "没有高德 API 时会使用模拟数据" in page.locator(".weather-tip").inner_text()
+        assert "English text API English text" in page.locator(".weather-tip").inner_text()
     finally:
         page.unroute("**/api/config", handle_config)
 
@@ -178,15 +178,15 @@ def test_stats_refreshes_each_time_drawer_opens(page):
 def test_zdog_dice_renders_requested_result(page):
     record = {
         "id": "dice-test-5",
-        "question": "骰子动画验收",
+        "question": "English text",
         "mode": "random",
         "result": {
             "type": "random",
-            "options": ["方案一", "方案二", "方案三", "方案四", "方案五", "方案六"],
-            "wheelResult": "方案四",
+            "options": ["English text", "English text", "English text", "English text", "English text", "English text"],
+            "wheelResult": "English text",
         },
         "brief": {
-            "summary": "测试骰子最终落到第四项",
+            "summary": "English text",
             "confidence": 58,
             "perspectives": [],
             "risks": [],
@@ -261,12 +261,12 @@ def test_random_effects_preview_renders_six_production_variants(page):
 
     results = page.locator(".preview-effect .random-draw-result").all_text_contents()
     assert results == [
-        "这次抽到：「现在就做」",
-        "这次抽到：「明天再定」",
-        "这次抽到：「先问朋友」",
-        "这次抽到：「换个方案」",
-        "这次抽到：「暂时放下」",
-        "这次抽到：「凭直觉选」",
+        "English textEnglish text",
+        "English textEnglish text",
+        "English textEnglish text",
+        "English textEnglish text",
+        "English textEnglish text",
+        "English textEnglish text",
     ]
 
     stage = page.locator(".random-dice-canvas-stage")
@@ -288,7 +288,7 @@ def test_random_preview_cards_flip_one_front_and_sticks_use_palette(page):
     page.goto(BASE_URL + "/random-effects-preview.html")
     page.wait_for_selector("[data-preview-variant='cards'] .random-card-form")
 
-    replay = page.get_by_role("button", name="重新播放六张抽卡", exact=True)
+    replay = page.get_by_role("button", name="English text", exact=True)
     replay.click()
     page.wait_for_timeout(620)
     picked = page.locator(
@@ -357,10 +357,10 @@ def test_random_preview_cards_flip_one_front_and_sticks_use_palette(page):
 def test_random_preview_switches_all_four_skins(page):
     page.goto(BASE_URL + "/random-effects-preview.html")
     for label, skin in [
-        ("原来的样子", "heritage"),
-        ("安静工作台", "workbench"),
-        ("决策日志", "journal"),
-        ("模块工作台", "console"),
+        ("English text", "heritage"),
+        ("English text", "workbench"),
+        ("English text", "journal"),
+        ("English text", "console"),
     ]:
         page.get_by_role("button", name=label, exact=True).click()
         assert page.locator("html").get_attribute("data-skin") == skin
@@ -370,30 +370,30 @@ def test_random_preview_switches_all_four_skins(page):
 def test_nature_detail_shows_inputs_and_weights(page):
     record = {
         "id": "nature-reference-test",
-        "question": "要不要周末出门？",
+        "question": "English text",
         "mode": "nature",
         "result": {
             "type": "nature",
-            "signal": "雨前收束",
-            "poem": "雨快到了，先把今天能收好的东西收好。",
-            "suggestion": "带伞，行程留一点余量。",
+            "signal": "English text",
+            "poem": "English textEnglish text",
+            "suggestion": "English textEnglish text",
             "source": "amap",
             "isReal": True,
-            "city": "杭州",
-            "weather": "雷阵雨",
+            "city": "English text",
+            "weather": "English text",
             "temperature": "29",
             "humidity": "78",
-            "wind": "东南风 3级",
-            "sun": "雨幕遮日",
-            "moonPhase": "下弦月",
+            "wind": "English text 3English text",
+            "sun": "English text",
+            "moonPhase": "English text",
             "updateTime": "2026-07-26 22:30:00",
-            "alarms": [{"title": "雷电黄色预警"}],
-            "weatherTrend": "明天 · 多云 · 31℃",
-            "forecast_24h": [{"time": "明天", "weather": "多云", "temperature": "31"}],
+            "alarms": [{"title": "English text"}],
+            "weatherTrend": "English text · English text · 31℃",
+            "forecast_24h": [{"time": "English text", "weather": "English text", "temperature": "31"}],
             "signals": {"weights": [
-                {"name": "真实天气", "weight": 32, "value": "雷阵雨"},
-                {"name": "天气预警", "weight": 28, "value": "雷电黄色预警"},
-                {"name": "月相", "weight": 6, "value": "下弦月"},
+                {"name": "English text", "weight": 32, "value": "English text"},
+                {"name": "English text", "weight": 28, "value": "English text"},
+                {"name": "English text", "weight": 6, "value": "English text"},
             ]},
         },
         "brief": None,
@@ -419,10 +419,10 @@ def test_nature_detail_shows_inputs_and_weights(page):
         page.locator(".nav-item[data-tab='archive']").click()
         page.locator(".archive-card[data-id='nature-reference-test']").click()
         page.wait_for_selector(".nature-weights")
-        assert "雷电黄色预警" in page.locator(".nature-considerations").inner_text()
-        assert "下弦月" in page.locator(".nature-evidence").inner_text()
+        assert "English text" in page.locator(".nature-considerations").inner_text()
+        assert "English text" in page.locator(".nature-evidence").inner_text()
         assert page.locator(".nature-weight-row").count() == 3
-        assert "明天 · 多云 · 31" in page.locator(".nature-forecast").inner_text()
+        assert "English text · English text · 31" in page.locator(".nature-forecast").inner_text()
     finally:
         page.unroute("**/api/archive*", handle_archive)
         page.unroute("**/api/decision/nature-reference-test", handle_detail)
@@ -432,7 +432,7 @@ def test_dialogue_choice_is_saved_to_history(page):
     saved = {}
     response = {
         "brief": {
-            "summary": "先看清你最舍不得什么",
+            "summary": "English text",
             "confidence": 58,
             "perspectives": [],
             "risks": [],
@@ -440,11 +440,11 @@ def test_dialogue_choice_is_saved_to_history(page):
         },
         "nature": None,
         "mode": "dialogue",
-        "reply": "选一个最接近你真实想法的回答。",
+        "reply": "English text",
         "result": {
             "type": "dialogue",
-            "question": "如果没人评价你，你会怎么选？",
-            "options": ["马上去做", "先等一周", "其实不想做"],
+            "question": "English textEnglish text",
+            "options": ["English text", "English text", "English text"],
         },
         "autoRecognized": None,
         "decisionId": "dialogue-save-test",
@@ -457,7 +457,7 @@ def test_dialogue_choice_is_saved_to_history(page):
         saved.update(route.request.post_data_json)
         body = {
             "id": "dialogue-save-test",
-            "question": "我要不要接受邀请？",
+            "question": "English text",
             "mode": "dialogue",
             "result": response["result"],
             "dialogueHistory": saved.get("dialogueHistory", []),
@@ -471,14 +471,14 @@ def test_dialogue_choice_is_saved_to_history(page):
     try:
         page.goto(BASE_URL)
         page.locator(".mode-card[data-mode='dialogue']").click()
-        page.locator("#inputText").fill("我要不要接受邀请？")
+        page.locator("#inputText").fill("English text")
         page.locator("#sendBtn").click()
-        page.get_by_role("button", name="马上去做", exact=True).click()
+        page.get_by_role("button", name="English text", exact=True).click()
         page.wait_for_function("() => document.querySelector('.dialogue-record') !== null")
         page.wait_for_timeout(100)
         assert saved["dialogueHistory"] == [{
-            "question": "如果没人评价你，你会怎么选？",
-            "answer": "马上去做",
+            "question": "English textEnglish text",
+            "answer": "English text",
         }]
         assert "dialogueDone" not in saved
     finally:
