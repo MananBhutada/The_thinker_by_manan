@@ -1,7 +1,7 @@
 /* ============================================================
-   别纠结 · Skill 前端 — 主样式
-   设计语言：低饱和多色体系（纸张 + 墨色 + 模式色）
-   设备框：iPhone 15 Pro 钛金属 + Dynamic Island
+   English text · Skill English text — English text
+   English textEnglish textEnglish text + English text + English text
+   English textiPhone 15 Pro English text + Dynamic Island
    ============================================================ */
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -25,9 +25,9 @@ button {
   border: 0;
 }
 
-/* ============ 设计 Token ============ */
+/* ============ English text Token ============ */
 :root {
-  /* 纸张 / 墨色 */
+  /* English text / English text */
   --paper: #f4f5ef;
   --paper-2: #e9ece5;
   --ink: #191a16;
@@ -38,16 +38,16 @@ button {
   --white: #fbfbf7;
   --black: #11120f;
 
-  /* 6 模式色（低饱和但有辨识度） */
-  --aqua: #317d78;      /* 自动判断 auto */
-  --lapis: #365385;     /* 理性分析 rational */
-  --brass: #9b7636;     /* 天意随机 random */
-  --moss: #486a55;      /* 自然启示 nature */
-  --plum: #69526f;      /* 对话引导 dialogue */
-  --cinnabar: #b45a42;  /* 风水玄学 fengshui */
-  --brand-seal: #4a5e53; /* 品牌章色：沉稳灰绿 */
+  /* 6 English textEnglish text */
+  --aqua: #317d78;      /* English text auto */
+  --lapis: #365385;     /* English text rational */
+  --brass: #9b7636;     /* English text random */
+  --moss: #486a55;      /* English text nature */
+  --plum: #69526f;      /* English text dialogue */
+  --cinnabar: #b45a42;  /* English text fengshui */
+  --brand-seal: #4a5e53; /* English textEnglish text */
 
-  /* 模式别名映射 */
+  /* English text */
   --rational: var(--lapis);
   --random: var(--random-head);
   --nature: var(--moss);
@@ -55,7 +55,7 @@ button {
   --auto: var(--aqua);
   --fengshui: var(--cinnabar);
 
-  /* 表面 / 文字 */
+  /* English text / English text */
   --bg: var(--paper);
   --surface: var(--white);
   --surface-secondary: var(--paper-2);
@@ -64,27 +64,27 @@ button {
   --text-tertiary: var(--ink-faint);
   --separator: var(--line);
 
-  /* 阴影：柔和而非炫技 */
+  /* English textEnglish text */
   --shadow-sm: 0 1px 3px rgba(25,26,22,0.06);
   --shadow-md: 0 4px 12px rgba(25,26,22,0.08);
   --shadow-lg: 0 18px 34px rgba(25,26,22,0.07);
   --shadow-xl: 0 26px 70px rgba(18,20,16,0.22);
 
-  /* 动效曲线 */
+  /* English text */
   --ease-ios: cubic-bezier(.2, .8, .2, 1);
   --ease-ios-decel: cubic-bezier(.4, 0, .2, 1);
   --ease-spring: cubic-bezier(.34, 1.2, .64, 1);
 
-  /* 安全区 / 键盘避让 */
+  /* English text / English text */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --kb-height: 0px;
 
-  /* 字体：标题宋体衬线，正文无衬线 */
+  /* English textEnglish textEnglish text */
   --font-display: "Songti SC", "Noto Serif SC", "STSong", serif;
   --font-text: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
 
-  /* z-index 层次 */
+  /* z-index English text */
   --z-content: 1;
   --z-tab: 100;
   --z-detail: 150;
@@ -93,7 +93,7 @@ button {
   --z-modal: 600;
   --z-toast: 999;
 
-  /* === 桌面端新增（v0.8.0） === */
+  /* === English textv0.8.0 === */
   --side-w: 220px;
   --side-w-narrow: 180px;
   --topbar-h: 36px;
@@ -123,13 +123,13 @@ button {
   --shadow-md: 0 4px 12px rgba(0,0,0,0.25);
   --shadow-lg: 0 18px 34px rgba(0,0,0,0.3);
   --shadow-xl: 0 26px 70px rgba(0,0,0,0.48);
-  /* === 桌面端深色 token（v0.8.0） === */
+  /* === English text tokenv0.8.0 === */
   --paper-deep: #22231e;
   --paper-deeper: #282924;
   --border-soft: rgba(232, 230, 223, 0.14);
 }
 
-/* ============ 页面基底 ============ */
+/* ============ English text ============ */
 html, body {
   width: 100%;
   min-height: 100vh;
@@ -145,11 +145,11 @@ html, body {
 }
 [data-theme="dark"] body { background: var(--paper); }
 
-/* ============ iPhone 15 Pro 设备框 ============ */
+/* ============ iPhone 15 Pro English text ============ */
 .ios-wrapper {
   display: inline-block;
   padding: 14px;
-  /* 钛金属边框：6 色标渐变模拟真实钛金属光泽（偏暖灰） */
+  /* English text6 English textEnglish text */
   background: linear-gradient(135deg, #5a5a5c 0%, #3a3a3c 20%, #2a2a2c 45%, #1c1c1e 55%, #3a3a3c 75%, #4a4a4c 100%);
   border-radius: 68px;
   box-shadow:
@@ -159,7 +159,7 @@ html, body {
     0 10px 30px rgba(0,0,0,0.2);
   position: relative;
 }
-/* 侧边按钮：左侧 Action Button + 音量上下 */
+/* English textEnglish text Action Button + English text */
 .ios-wrapper::before {
   content: '';
   position: absolute;
@@ -172,7 +172,7 @@ html, body {
     0 38px 0 0 transparent,
     0 78px 0 #1c1c1e;
 }
-/* 右侧电源键 */
+/* English text */
 .ios-wrapper::after {
   content: '';
   position: absolute;
@@ -191,7 +191,7 @@ html, body {
   height: 852px;
 }
 
-/* 状态栏 */
+/* English text */
 .ios-status-bar {
   position: absolute;
   top: 0; left: 0; right: 0;
@@ -224,7 +224,7 @@ html, body {
   border-radius: 9999px;
   z-index: 300;
 }
-/* 右侧 Face ID 传感器 */
+/* English text Face ID English text */
 .ios-dynamic-island::before {
   content: '';
   position: absolute;
@@ -235,7 +235,7 @@ html, body {
   border-radius: 50%;
   box-shadow: inset 0 0 2px rgba(100,100,150,0.3);
 }
-/* 左侧摄像头 */
+/* English text */
 .ios-dynamic-island::after {
   content: '';
   position: absolute;
@@ -267,7 +267,7 @@ html, body {
   pointer-events: none;
 }
 
-/* ============ 页面容器 ============ */
+/* ============ English text ============ */
 .page {
   position: absolute;
   inset: 0;
@@ -284,7 +284,7 @@ html, body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* 内页标题（档案 / 统计 / 设置） */
+/* English textEnglish text / English text / English text */
 .archive-title,
 .stats-title,
 .settings-title {
@@ -318,7 +318,7 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 2px;
-  height: 44px;            /* 触摸目标 ≥ 44pt */
+  height: 44px;            /* English text ≥ 44pt */
   margin: 0 5px;
   color: var(--ink-faint);
   border-radius: 21px;
@@ -335,7 +335,7 @@ html, body {
 .tab-item .tab-icon { width: 20px; height: 20px; }
 .tab-item .tab-label { font-size: 10px; font-weight: 500; }
 
-/* ============ 通用：Toast ============ */
+/* ============ English textToast ============ */
 .toast {
   position: absolute;
   left: 50%;
@@ -360,7 +360,7 @@ html, body {
   transform: translate(-50%, 0);
 }
 
-/* ============ 通用：Modal ============ */
+/* ============ English textModal ============ */
 .modal-overlay {
   position: absolute;
   inset: 0;
@@ -404,7 +404,7 @@ html, body {
   margin: 0 auto 12px;
 }
 
-/* ============ 通用：表单行 / 按钮 / Toggle ============ */
+/* ============ English textEnglish text / English text / Toggle ============ */
 .field {
   margin-bottom: 14px;
 }
@@ -484,7 +484,7 @@ html, body {
 .toggle[aria-checked="true"] { background: var(--moss); }
 .toggle[aria-checked="true"]::after { transform: translateX(18px); }
 
-/* 加载态 */
+/* English text */
 .spinner {
   width: 18px; height: 18px;
   border: 2px solid rgba(255,255,255,0.35);
@@ -513,7 +513,7 @@ html, body {
   30% { opacity: 1; transform: scale(1); }
 }
 
-/* 尊重用户减少动画的偏好 */
+/* English text */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation: none !important;
