@@ -81,6 +81,15 @@ const App = (() => {
 
   /* ---------- Tab English textEnglish textEnglish text=English textEnglish text=English text ---------- */
   function switchTab(tab) {
+    if (tab === 'graph') {
+      currentTab = 'graph';
+      document.querySelectorAll('.nav-item').forEach(t => t.classList.toggle('active', t.getAttribute('data-tab') === 'graph'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      const page = $('page-graph');
+      if (page) page.classList.add('active');
+      if (window.FounderGraph) FounderGraph.load();
+      return;
+    }
     if (tab === 'chat') {
       closeDrawer();
       currentTab = 'chat';
@@ -313,6 +322,7 @@ const App = (() => {
     Archive.init();
     Stats.init();
     Settings.init();
+    if (window.FounderGraph) FounderGraph.init();
 
     // English text
     try {
