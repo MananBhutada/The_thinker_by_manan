@@ -102,6 +102,7 @@ class ChatRequest(BaseModel):
     """
 
     question: str = Field(..., min_length=1, max_length=4000, description="English text")
+    provider: Literal["byok", "free"] = Field(default="byok")
     mode: Literal["auto", "founder", "product", "people", "money", "growth", "conflict", "rational", "random", "nature", "dialogue", "fengshui"] = Field(
         default="auto", description="English text"
     )
