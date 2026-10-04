@@ -1,14 +1,14 @@
-"""别纠结决策辅助 - FastAPI 应用入口。
+"""English text - FastAPI English text
 
-启动流程：
-  1. 初始化 SQLite（choice.db）
-  2. 注册 6 个 API 路由
-  3. 挂载前端静态资源（frontend/）
-  4. 监听 8010 端口
+English text
+  1. English text SQLitechoice.db
+  2. English text 6 English text API English text
+  3. English textfrontend/
+  4. English text 8010 English text
 
-启动方式：
+English text
     python main.py
-    或 uvicorn main:app --reload --port 8010
+    English text uvicorn main:app --reload --port 8010
 """
 
 import sys
@@ -18,25 +18,25 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-# 确保 backend/ 在 sys.path 中（用于 routes/services 的相对导入）
+# English text backend/ English text sys.path English textEnglish text routes/services English text
 sys.path.insert(0, str(Path(__file__).parent))
 
 from db import init_db  # noqa: E402
 from routes import archive, chat, config_api, decision, modes, stats, tts  # noqa: E402
 
-# 前端静态资源目录（choice-skill/frontend/）
+# English textchoice-skill/frontend/
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
 
-# 启动时初始化数据库
+# English text
 init_db()
 
 app = FastAPI(
-    title="别纠结决策辅助 API",
-    description="辅助人做选择，不替代人做决定",
+    title="English text API",
+    description="English textEnglish text",
     version="0.9.1",
 )
 
-# ─── API 路由 ───────────────────────────────────────────────────
+# ─── API English text ───────────────────────────────────────────────────
 app.include_router(chat.router)
 app.include_router(modes.router)
 app.include_router(decision.router)
@@ -46,17 +46,17 @@ app.include_router(config_api.router)
 app.include_router(tts.router)
 
 
-# ─── 健康检查 ───────────────────────────────────────────────────
+# ─── English text ───────────────────────────────────────────────────
 
 
 @app.get("/api/health")
 def health() -> dict:
-    """健康检查。"""
-    return {"name": "别纠结 API", "status": "ok", "version": "0.9.1"}
+    """English text"""
+    return {"name": "English text API", "status": "ok", "version": "0.9.1"}
 
 
-# ─── 前端静态资源 ──────────────────────────────────────────────
-# 仅当 frontend/ 目录存在时挂载（CLI-only 模式下不需要前端）
+# ─── English text ──────────────────────────────────────────────
+# English text frontend/ English textCLI-only English text
 if FRONTEND_DIR.exists():
     styles_dir = FRONTEND_DIR / "styles"
     scripts_dir = FRONTEND_DIR / "scripts"
@@ -71,20 +71,20 @@ if FRONTEND_DIR.exists():
 
     @app.get("/")
     def serve_index() -> FileResponse:
-        """根路径返回前端首页。"""
+        """English text"""
         return FileResponse(str(FRONTEND_DIR / "index.html"))
 
     @app.get("/{full_path:path}")
     def serve_spa(full_path: str) -> FileResponse:
-        """SPA fallback：非 API 路径返回 index.html。"""
-        # 不拦截 /api/ 开头的路径
+        """SPA fallbackEnglish text API English text index.html"""
+        # English text /api/ English text
         if full_path.startswith("api/"):
             return FileResponse(str(FRONTEND_DIR / "index.html"), status_code=404)
-        # 尝试返回静态文件
+        # English text
         candidate = FRONTEND_DIR / full_path
         if candidate.is_file():
             return FileResponse(str(candidate))
-        # fallback 到 index.html
+        # fallback English text index.html
         return FileResponse(str(FRONTEND_DIR / "index.html"))
 
 
