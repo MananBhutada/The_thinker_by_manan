@@ -1,6 +1,6 @@
 /* ============================================================
-   统计页样式
-   含：4 指标卡 / 模式分布柱状图 / 7 天趋势
+   English text
+   English text4 English text / English text / 7 English text
    ============================================================ */
 
 .stats-scroll {
@@ -13,7 +13,7 @@
 .stats-scroll::-webkit-scrollbar { width: 3px; }
 .stats-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 3px; }
 
-/* 4 指标卡 */
+/* 4 English text */
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -64,7 +64,7 @@
   letter-spacing: 0.02em;
 }
 
-/* 图表卡 */
+/* English text */
 .chart {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -81,7 +81,7 @@
   color: var(--text-primary);
 }
 
-/* 模式分布：横向柱状 */
+/* English textEnglish text */
 .mode-bars {
   display: flex;
   flex-direction: column;
@@ -130,7 +130,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* 7 天趋势：柱状图 */
+/* 7 English textEnglish text */
 .trend-chart {
   display: flex;
   align-items: flex-end;
