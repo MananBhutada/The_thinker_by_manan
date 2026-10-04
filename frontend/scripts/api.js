@@ -5,7 +5,7 @@
    ============================================================ */
 
 const API = (() => {
-  const BASE = '';  // English text
+  const BASE = '';  // same-origin API
 
   async function request(path, options = {}) {
     const opts = {
