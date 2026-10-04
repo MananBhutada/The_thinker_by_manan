@@ -1,9 +1,9 @@
 /* ============================================================
-   desktop.css — 桌面端二区域布局（v0.8.0）
-   覆盖手机框样式，侧栏 + 主区 + 右侧抽屉
+   desktop.css — English textv0.8.0
+   English textEnglish text + English text + English text
    ============================================================ */
 
-/* 隐藏手机框元素 */
+/* English text */
 .ios-wrapper,
 .ios-dynamic-island,
 .ios-status-bar,
@@ -12,7 +12,7 @@
   display: none !important;
 }
 
-/* 重置 body — 用 html,body 选择器覆盖 main.css 的同特异性规则 */
+/* English text body — English text html,body English text main.css English text */
 html, body {
   margin: 0;
   padding: 0;
@@ -30,7 +30,7 @@ html, body {
   color: var(--text-primary);
 }
 
-/* === 主框架 === */
+/* === English text === */
 .app-shell {
   display: grid;
   grid-template-columns: var(--side-w) 1fr;
@@ -42,7 +42,7 @@ html, body {
   width: 100vw;
 }
 
-/* === 顶栏 === */
+/* === English text === */
 .topbar {
   grid-area: topbar;
   background: var(--paper);
@@ -74,7 +74,7 @@ html, body {
   align-items: center;
 }
 
-/* === 侧栏 === */
+/* === English text === */
 .sidebar {
   grid-area: sidebar;
   background: var(--paper-deep);
@@ -83,7 +83,7 @@ html, body {
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  z-index: 45; /* 高于 drawer-overlay(40)，确保抽屉打开时侧栏仍可点击 */
+  z-index: 45; /* English text drawer-overlay(40)English text */
 }
 
 .sidebar-head {
@@ -238,7 +238,7 @@ html, body {
   justify-content: space-between;
 }
 
-/* === 主区 === */
+/* === English text === */
 .main {
   grid-area: main;
   background: var(--paper);
@@ -257,7 +257,7 @@ html, body {
   gap: 14px;
 }
 
-/* Hero 区 */
+/* Hero English text */
 .hero {
   max-width: 640px;
 }
@@ -297,7 +297,7 @@ html, body {
   line-height: 1.5;
 }
 
-/* 六模式印章横排 */
+/* English text */
 .mode-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -331,7 +331,7 @@ html, body {
   color: var(--text-primary);
 }
 
-/* 对话流 */
+/* English text */
 .chat-flow {
   flex: 1;
   display: flex;
@@ -340,7 +340,7 @@ html, body {
   max-width: 720px;
 }
 
-/* quick chips — 固定在 composer 上方 */
+/* quick chips — English text composer English text */
 .quick-row {
   display: flex;
   gap: 6px;
@@ -364,7 +364,7 @@ html, body {
 
 .quick-chip:hover { background: rgba(0,0,0,0.03); }
 
-/* composer — 输入框区（桌面端：保持卡片风） */
+/* composer — English textEnglish textEnglish text */
 .composer {
   position: static;
   padding: 16px 28px 20px;
@@ -483,7 +483,7 @@ html, body {
   background: #888;
 }
 
-/* === 右侧抽屉 === */
+/* === English text === */
 .drawer-overlay {
   position: fixed;
   inset: 0;
@@ -558,7 +558,7 @@ html, body {
   position: relative;
 }
 
-/* 抽屉内 page 容器覆盖（去除 absolute 定位，不作为 absolute 子元素的参照） */
+/* English text page English textEnglish text absolute English textEnglish text absolute English text */
 .drawer-body .page {
   position: static;
   inset: auto;
@@ -572,7 +572,7 @@ html, body {
   animation: none;
 }
 
-/* 抽屉内详情视图：相对于 drawer-body 铺满整个抽屉内容区 */
+/* English textEnglish text drawer-body English text */
 .drawer-body .detail-view {
   position: absolute;
   top: 0;
@@ -585,7 +585,7 @@ html, body {
   border-radius: 0;
 }
 
-/* === Modal / Toast（保留，覆盖手机框定位） === */
+/* === Modal / ToastEnglish textEnglish text === */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -634,7 +634,7 @@ html, body {
   transform: translateX(-50%) translateY(0);
 }
 
-/* === 档案列表样式（drawer-body 内） === */
+/* === English textdrawer-body English text === */
 .archive-empty {
   text-align: center;
   padding: 40px 20px;
@@ -666,7 +666,7 @@ html, body {
   gap: 8px;
 }
 
-/* === 统计样式 === */
+/* === English text === */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -694,7 +694,7 @@ html, body {
   color: var(--ink);
 }
 
-/* === 设置样式 === */
+/* === English text === */
 .settings-scroll {
   display: flex;
   flex-direction: column;
@@ -816,7 +816,7 @@ html, body {
   padding: 16px 0;
 }
 
-/* === Brief 卡（沿用 brief.js 渲染，补充桌面端样式） === */
+/* === Brief English textEnglish text brief.js English textEnglish text === */
 .brief {
   background: var(--white);
   border: 1px solid var(--border-soft);
@@ -826,7 +826,7 @@ html, body {
   box-shadow: var(--shadow-sm);
 }
 
-/* === 响应式 === */
+/* === English text === */
 @media (max-width: 1023px) {
   .app-shell {
     grid-template-columns: var(--side-w-narrow) 1fr;
