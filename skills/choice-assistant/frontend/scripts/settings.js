@@ -1,7 +1,7 @@
 /* ============================================================
-   Settings — 设置页
-   职责：LLM 配置 / 天气配置 / 语言 / 主题 / 用户偏好
-   依赖：API, MODES, I18N, App
+   Settings — English text
+   English textLLM English text / English text / English text / English text / English text
+   English textAPI, MODES, I18N, App
    ============================================================ */
 
 const Settings = (() => {
@@ -26,7 +26,7 @@ const Settings = (() => {
     try {
       configCache = await API.getConfig();
       refreshConfigValues();
-    } catch (e) { /* 忽略 */ }
+    } catch (e) { /* English text */ }
   }
 
   function refreshConfigValues() {
@@ -46,7 +46,7 @@ const Settings = (() => {
     }
   }
 
-  /** 刷新右侧显示值（语言/主题/模式等） */
+  /** English textEnglish text/English text/English text */
   function refreshValues() {
     const prefs = App.prefs || {};
     if ($('languageValue')) {
@@ -70,10 +70,10 @@ const Settings = (() => {
         $('valuesValue').textContent = [v.efficiency, v.risk, v.growth, v.relationship].filter(x => x != null).join(' / ');
       }
     }
-    // TTS 状态：显示当前音色名
+    // TTS English textEnglish text
     if ($('ttsValue')) {
       const voiceUri = prefs.tts_voice_uri || 'zh-CN-XiaoxiaoNeural';
-      $('ttsValue').textContent = voiceUri;  // 先显示 id，等音色列表加载完再替换为中文名
+      $('ttsValue').textContent = voiceUri;  // English text idEnglish text
       Voice.getEdgeVoices().then(vs => {
         const v = vs.find(x => x.id === voiceUri);
         if (v && $('ttsValue')) {
@@ -83,7 +83,7 @@ const Settings = (() => {
     }
   }
 
-  /* ---------- 语言 ---------- */
+  /* ---------- English text ---------- */
   function openLanguage() {
     const list = document.createElement('div');
     list.className = 'lang-list';
@@ -116,7 +116,7 @@ const Settings = (() => {
     App.openModal(list, { title: I18N.t('settings.language') });
   }
 
-  /* ---------- 主题 ---------- */
+  /* ---------- English text ---------- */
   function openTheme() {
     const row = document.createElement('div');
     row.className = 'choice-row';
@@ -182,7 +182,7 @@ const Settings = (() => {
     App.openModal(grid, { title: I18N.t('settings.skin') });
   }
 
-  /* ---------- 默认模式 ---------- */
+  /* ---------- English text ---------- */
   function openDefaultMode() {
     const grid = document.createElement('div');
     grid.className = 'mode-pick-grid';
@@ -206,7 +206,7 @@ const Settings = (() => {
     App.openModal(grid, { title: I18N.t('settings.defaultMode') });
   }
 
-  /* ---------- 价值观权重 ---------- */
+  /* ---------- English text ---------- */
   function openValues() {
     const wrap = document.createElement('div');
     const v = (App.prefs && App.prefs.values) || { efficiency: 50, risk: 50, growth: 50, relationship: 50 };
@@ -249,13 +249,13 @@ const Settings = (() => {
     App.openModal(wrap, { title: I18N.t('settings.values') });
   }
 
-  /* ---------- LLM 配置 ---------- */
+  /* ---------- LLM English text ---------- */
   async function openLLM() {
     if (!configCache) {
       try { configCache = await API.getConfig(); } catch (e) { configCache = {}; }
     }
     const cfg = (configCache && configCache.llm) || {};
-    const keyPh = cfg.hasKey ? '***已配置***（留空则不修改）' : 'sk-...';
+    const keyPh = cfg.hasKey ? '***English text***English text' : 'sk-...';
     const wrap = document.createElement('div');
     wrap.innerHTML =
       fieldHTML('llm_apiKey', I18N.t('settings.llm.apiKey'), '', 'password', keyPh) +
@@ -288,13 +288,13 @@ const Settings = (() => {
     App.openModal(wrap, { title: I18N.t('settings.llm') });
   }
 
-  /* ---------- 天气配置（高德开放平台） ---------- */
+  /* ---------- English textEnglish text ---------- */
   async function openWeather() {
     if (!configCache) {
       try { configCache = await API.getConfig(); } catch (e) { configCache = {}; }
     }
     const cfg = (configCache && configCache.weather) || {};
-    const keyPh = cfg.hasKey ? '***已配置***（留空则不修改）' : 'your-amap-key';
+    const keyPh = cfg.hasKey ? '***English text***English text' : 'your-amap-key';
     const wrap = document.createElement('div');
 
     const tip = document.createElement('div');
@@ -305,7 +305,7 @@ const Settings = (() => {
     wrap.appendChild(document.createElement('div')).innerHTML =
       fieldHTML('w_key', I18N.t('settings.weather.key'), '', 'password', keyPh) +
       fieldHTML('w_base_url', I18N.t('settings.weather.baseUrl'), cfg.baseUrl || '', 'text', 'https://restapi.amap.com/v3/weather/weatherInfo') +
-      fieldHTML('w_city', I18N.t('settings.weather.city'), cfg.city || '', 'text', '北京');
+      fieldHTML('w_city', I18N.t('settings.weather.city'), cfg.city || '', 'text', 'English text');
     const save = document.createElement('button');
     save.className = 'btn btn-block';
     save.style.marginTop = '4px';
@@ -336,12 +336,12 @@ const Settings = (() => {
     return '<div class="field"><label for="' + id + '">' + Brief.esc(label) + '</label><input id="' + id + '" type="' + type + '" value="' + Brief.esc(value) + '" placeholder="' + Brief.esc(ph) + '" autocomplete="off"/></div>';
   }
 
-  /* ---------- 关于 ---------- */
+  /* ---------- English text ---------- */
   function openAbout() {
     const wrap = document.createElement('div');
     wrap.className = 'about-wrap';
 
-    // 顶部 logo + 标题 + 版本
+    // English text logo + English text + English text
     const head = document.createElement('div');
     head.className = 'about-head';
     head.innerHTML =
@@ -351,7 +351,7 @@ const Settings = (() => {
       '<div class="about-ver">v0.9.1 · MIT</div>';
     wrap.appendChild(head);
 
-    // 5 段内容
+    // 5 English text
     const sections = [
       { key: 'about.why',      textKey: 'about.why.text' },
       { key: 'about.features', textKey: 'about.features.text' },
@@ -374,13 +374,13 @@ const Settings = (() => {
     App.openModal(wrap, { title: I18N.t('settings.about') });
   }
 
-  /* ---------- 语音朗读（TTS） ---------- */
+  /* ---------- English textTTS ---------- */
   async function openTTS() {
     const prefs = App.prefs || {};
     const wrap = document.createElement('div');
     wrap.className = 'tts-wrap';
 
-    // 自动朗读开关
+    // English text
     const autoRow = document.createElement('div');
     autoRow.className = 'tts-row tts-toggle-row';
     autoRow.innerHTML =
@@ -388,7 +388,7 @@ const Settings = (() => {
       '<label class="switch"><input type="checkbox" id="tts_auto"' + (prefs.auto_speak !== false ? ' checked' : '') + '><span class="slider" aria-hidden="true"></span></label>';
     wrap.appendChild(autoRow);
 
-    // 语速
+    // English text
     const rateRow = document.createElement('div');
     rateRow.className = 'tts-row';
     const rateVal = prefs.tts_rate != null ? prefs.tts_rate : 0.95;
@@ -404,7 +404,7 @@ const Settings = (() => {
     rateRow.appendChild(rateInput);
     wrap.appendChild(rateRow);
 
-    // 音调
+    // English text
     const pitchRow = document.createElement('div');
     pitchRow.className = 'tts-row';
     const pitchVal = prefs.tts_pitch != null ? prefs.tts_pitch : 1.05;
@@ -420,7 +420,7 @@ const Settings = (() => {
     pitchRow.appendChild(pitchInput);
     wrap.appendChild(pitchRow);
 
-    // 发音人（edge 神经音色）
+    // English textedge English text
     const voiceRow = document.createElement('div');
     voiceRow.className = 'tts-row tts-voice-row';
     voiceRow.innerHTML = '<div class="tts-row-label">' + Brief.esc(I18N.t('settings.tts.voice')) + '</div>';
@@ -447,11 +447,11 @@ const Settings = (() => {
     testBtn.disabled = true;
     testBtn.addEventListener('click', () => {
       const sample = {
-        'zh-CN': '这是一个决策辅助工具，帮你把纠结拆成可判断的证据和下一步。',
-        'yue': '呢個係一個決策輔助工具，幫你將糾結拆成可判斷嘅證據。',
+        'zh-CN': 'English textEnglish text',
+        'yue': 'English textEnglish text',
         'en': 'This is a decision aid that breaks your dilemma into judgeable evidence and next steps.',
         'fr': 'Voici un outil d\'aide à la décision qui décompose votre dilemme en preuves.',
-        'ja': 'これは決断補助ツールで、迷いを判断できる証拠と次の一手に分解します。',
+        'ja': 'これはEnglish textツールでEnglish textいをEnglish textできるEnglish textとEnglish textのEnglish textにEnglish textします',
         'es': 'Esta herramienta descompone tu dilema en pruebas y próximos pasos.',
       }[curLang] || 'This is a decision aid.';
       Voice.speak(sample, { voice: voiceSelect.value, rate: parseFloat(rateInput.value), pitch: parseFloat(pitchInput.value) });
@@ -502,7 +502,7 @@ const Settings = (() => {
           g.push(v);
         });
         const orderedLangs = [curLang, 'zh-CN', 'yue', 'en', 'ja', 'fr', 'es'].filter((l, i, arr) => arr.indexOf(l) === i);
-        const langLabel = { 'zh-CN': '中文', 'yue': '粵語', 'en': 'English', 'ja': '日本語', 'fr': 'Français', 'es': 'Español' };
+        const langLabel = { 'zh-CN': 'English text', 'yue': 'English text', 'en': 'English', 'ja': 'English text', 'fr': 'Français', 'es': 'Español' };
         voiceSelect.innerHTML = '';
         orderedLangs.forEach(lg => {
           const list = groups[lg];
@@ -530,7 +530,7 @@ const Settings = (() => {
         voiceSelect.innerHTML = '';
         const opt = document.createElement('option');
         opt.value = 'zh-CN-XiaoxiaoNeural';
-        opt.textContent = '晓晓 (默认)';
+        opt.textContent = 'English text (English text)';
         opt.selected = true;
         voiceSelect.appendChild(opt);
         testBtn.disabled = false;
