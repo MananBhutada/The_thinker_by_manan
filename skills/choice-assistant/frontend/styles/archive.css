@@ -1,6 +1,6 @@
 /* ============================================================
-   决策档案页样式
-   含：列表 / 空态 / 详情视图 / 标记按钮
+   English text
+   English textEnglish text / English text / English text / English text
    ============================================================ */
 
 .archive-list {
@@ -40,7 +40,7 @@
   line-height: 1.6;
 }
 
-/* 档案卡片 */
+/* English text */
 .archive-card {
   position: relative;
   background: rgba(251,251,247,0.78);
@@ -84,7 +84,7 @@
   overflow: hidden;
 }
 
-/* 模式标签 pill */
+/* English text pill */
 .pill {
   height: fit-content;
   border-radius: 999px;
@@ -126,7 +126,7 @@
   background: conic-gradient(var(--ink) 0 0deg, rgba(25,26,22,0.12) 0deg 360deg);
 }
 
-/* 执行 / 后悔标记 */
+/* English text / English text */
 .mark-row {
   display: flex;
   gap: 6px;
@@ -151,7 +151,7 @@
 }
 .mark svg { width: 10px; height: 10px; }
 
-/* 分页器 */
+/* English text */
 .archive-pager {
   display: flex;
   justify-content: center;
@@ -174,7 +174,7 @@
 .archive-pager button:active { transform: scale(0.94); }
 .archive-pager button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* ============ 详情视图 ============ */
+/* ============ English text ============ */
 .detail-view {
   position: absolute;
   inset: 0;
@@ -238,7 +238,7 @@
   margin-bottom: 14px;
 }
 
-/* 详情操作区 */
+/* English text */
 .detail-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
