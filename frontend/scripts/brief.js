@@ -1,12 +1,12 @@
 /* ============================================================
-   Brief — 决策简报卡渲染器
-   核心：信心环 conic-gradient + 6 模式结果卡
-   依赖：I18N, MODES
+   Brief — English text
+   English textEnglish text conic-gradient + 6 English text
+   English textI18N, MODES
    ============================================================ */
 
 const Brief = (() => {
 
-  // 安全转义
+  // English text
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const el = (tag, cls, content) => {
     const e = document.createElement(tag);
@@ -15,7 +15,7 @@ const Brief = (() => {
     return e;
   };
 
-  /** 信心环 DOM：conic-gradient 按百分比动态渲染 */
+  /** English text DOMconic-gradient English text */
   function confidenceRing(percent) {
     const p = Math.max(0, Math.min(100, percent | 0));
     const deg = Math.round((p / 100) * 360);
@@ -28,7 +28,7 @@ const Brief = (() => {
     return ring;
   }
 
-  /** 小尺寸信心环（档案列表用） */
+  /** English textEnglish text */
   function miniRing(percent) {
     const p = Math.max(0, Math.min(100, percent | 0));
     const deg = Math.round((p / 100) * 360);
@@ -38,14 +38,14 @@ const Brief = (() => {
   }
 
   /**
-   * 主简报卡构造器（所有模式共用）
+   * English textEnglish text
    * @param {object} o { tone, modeName, percent, title, verdict, keep, drop, next }
    * @returns {HTMLElement} article.brief
    */
   function renderBrief(o) {
     const article = el('article', 'brief');
 
-    // 头部：印章 + 模式名/证据强度 + 标题
+    // English textEnglish text + English text/English text + English text
     const head = el('div', 'brief-head');
     head.setAttribute('data-tone', o.tone || 'auto');
     const sealWrap = document.createElement('span');
@@ -63,17 +63,17 @@ const Brief = (() => {
     head.appendChild(meta);
     article.appendChild(head);
 
-    // 八字信息条（风水模式，可选）
+    // English textEnglish textEnglish text
     if (o.bazi) {
       const bazi = el('div', 'brief-bazi');
-      bazi.textContent = (o.baziAudit ? I18N.t('fengshui.bazi') + '（降级）：' : I18N.t('fengshui.bazi') + '：') + o.bazi;
+      bazi.textContent = (o.baziAudit ? I18N.t('fengshui.bazi') + 'English text' : I18N.t('fengshui.bazi') + '') + o.bazi;
       article.appendChild(bazi);
     }
 
-    // 主体
+    // English text
     const body = el('div', 'brief-body');
 
-    // 当前判断 + 信心环
+    // English text + English text
     if (o.verdict) {
       const verdict = el('div', 'verdict');
       const verdictLeft = el('div');
@@ -84,7 +84,7 @@ const Brief = (() => {
       body.appendChild(verdict);
     }
 
-    // 保留 / 放下 双栏
+    // English text / English text English text
     if (o.keep || o.drop) {
       const cols = el('div', 'brief-columns' + (!o.keep || !o.drop ? ' is-single' : ''));
       if (o.keep) {
@@ -102,11 +102,11 @@ const Brief = (() => {
       body.appendChild(cols);
     }
 
-    // 模式专属附加内容
+    // English text
     const extra = renderExtra(o);
     if (extra) body.appendChild(extra);
 
-    // 下一步
+    // English text
     if (o.next) {
       const next = el('div', 'next-step');
       next.innerHTML = '<strong>' + esc(I18N.t('brief.next')) + '</strong>' + esc(o.next);
@@ -117,12 +117,12 @@ const Brief = (() => {
     return article;
   }
 
-  // tone → modeId（用于取印章）
+  // tone → modeIdEnglish text
   function toneToModeId(tone) {
     return tone || 'auto';
   }
 
-  /** 6 模式专属附加内容 */
+  /** 6 English text */
   function renderExtra(o) {
     switch (o.tone) {
       case 'rational': return renderRationalExtra(o);
@@ -134,7 +134,7 @@ const Brief = (() => {
     }
   }
 
-  /* ---- 理性：利弊清单 + 评分 ---- */
+  /* ---- English textEnglish text + English text ---- */
   function renderRationalExtra(o) {
     const pros = Array.isArray(o.pros) ? o.pros : [];
     const cons = Array.isArray(o.cons) ? o.cons : [];
@@ -156,11 +156,11 @@ const Brief = (() => {
       const s = o.score;
       const line = el('div', 'score-line');
       const parts = [];
-      if (s.benefit != null)      parts.push('收益 ' + s.benefit);
-      if (s.risk != null)         parts.push('风险 ' + s.risk);
-      if (s.reversibility != null) parts.push('可逆 ' + s.reversibility);
-      if (s.valueFit != null)     parts.push('契合 ' + s.valueFit);
-      line.textContent = I18N.t('rational.score') + '：' + parts.join(' / ');
+      if (s.benefit != null)      parts.push('English text ' + s.benefit);
+      if (s.risk != null)         parts.push('English text ' + s.risk);
+      if (s.reversibility != null) parts.push('English text ' + s.reversibility);
+      if (s.valueFit != null)     parts.push('English text ' + s.valueFit);
+      line.textContent = I18N.t('rational.score') + '' + parts.join(' / ');
       wrap.appendChild(line);
     }
     return wrap;
@@ -238,7 +238,7 @@ const Brief = (() => {
     svg.appendChild(randomSvgNode('path', 'random-stick-cup-band', { d: 'M48 146 Q124 164 200 146 L196 162 Q124 180 52 162 Z' }));
     svg.appendChild(randomSvgNode('circle', 'random-stick-cup-seal', { cx: 124, cy: 176, r: 16 }));
     const seal = randomSvgNode('text', 'random-stick-cup-char', { x: 124, y: 181, 'text-anchor': 'middle' });
-    seal.textContent = '签';
+    seal.textContent = 'English text';
     svg.appendChild(seal);
     svg.appendChild(randomSvgNode('path', 'random-stick-rim-front', { d: 'M40 122 Q124 148 208 122' }));
     return svg;
@@ -489,10 +489,10 @@ const Brief = (() => {
     return svg;
   }
 
-  /* ---- 天意：同一结果固定一种形式，不同决策随机换样式 ---- */
+  /* ---- English textEnglish textEnglish text ---- */
   function renderRandomExtra(o) {
     const options = Array.isArray(o.options) ? o.options.slice(0, 6) : [];
-    const fallback = ['再想想', '换个角度', '问朋友', '睡一觉', '抛硬币', '跟着心走'];
+    const fallback = ['English text', 'English text', 'English text', 'English text', 'English text', 'English text'];
     let i = 0;
     while (options.length < 6) options.push(fallback[i++ % fallback.length]);
 
@@ -503,7 +503,7 @@ const Brief = (() => {
     const chosenIdx = resolvedIdx >= 0 ? resolvedIdx : fallbackIdx;
     const variants = ['pointer', 'sticks', 'dice', 'cards', 'tickets', 'ink'];
     const variant = variants[randomHash(seed + '|style') % variants.length];
-    const label = I18N.t('random.result') + '：' + chosen;
+    const label = I18N.t('random.result') + '' + chosen;
     const builders = {
       pointer: () => buildPointerForm(chosenIdx, label),
       sticks: () => buildSticksForm(chosenIdx, label),
@@ -531,7 +531,7 @@ const Brief = (() => {
     wrap.appendChild(stage);
 
     const result = el('div', 'random-draw-result');
-    result.textContent = I18N.t('random.result') + '：「' + chosen + '」';
+    result.textContent = I18N.t('random.result') + '' + chosen + '';
     wrap.appendChild(result);
     requestAnimationFrame(() => requestAnimationFrame(() => {
       formVisual.classList.add('is-drawing');
@@ -540,7 +540,7 @@ const Brief = (() => {
     return wrap;
   }
 
-  /* ---- 自然：信号卡 + 诗意解读 ---- */
+  /* ---- English textEnglish text + English text ---- */
   function renderNatureExtra(o) {
     const n = o.nature || o;
     const card = el('div', 'nature-card');
@@ -616,11 +616,11 @@ const Brief = (() => {
   }
 
   function natureText(value) {
-    if (Array.isArray(value)) return value.map(natureText).filter(Boolean).slice(0, 2).join('；');
+    if (Array.isArray(value)) return value.map(natureText).filter(Boolean).slice(0, 2).join('');
     if (value && typeof value === 'object') {
       const candidates = [value.name, value.level, value.desc, value.title, value.text, value.description, value.value]
         .concat(Array.isArray(value.ids) ? value.ids : []);
-      return candidates.map(natureText).filter(Boolean).slice(0, 3).join('；');
+      return candidates.map(natureText).filter(Boolean).slice(0, 3).join('');
     }
     return String(value || '').trim();
   }
@@ -639,7 +639,7 @@ const Brief = (() => {
     return section;
   }
 
-  /* ---- 对话：反问 + 3 选项（交互式） ---- */
+  /* ---- English textEnglish text + 3 English textEnglish text ---- */
   function renderDialogueExtra(o) {
     const opts = el('div', 'dialogue-options');
     (Array.isArray(o.dialogueOptions) ? o.dialogueOptions : (o.options || [])).slice(0, 4).forEach(opt => {
@@ -660,7 +660,7 @@ const Brief = (() => {
     return opts;
   }
 
-  /* ---- 风水：生辰追问表单 ---- */
+  /* ---- English textEnglish text ---- */
   function renderFengshuiExtra(o) {
     if (!o.needBirth) return null;
     const wrap = el('div', 'fengshui-ask');
@@ -692,9 +692,9 @@ const Brief = (() => {
   }
 
   /**
-   * 从后端 chat 响应构造简报卡
-   * 后端返回：brief={summary,confidence,perspectives,nextSteps,risks,source} + result={type,pros,cons,...}
-   * 前端简报卡期望：{tone,modeName,percent,verdict,keep,drop,next, 6 模式专属字段}
+   * English text chat English text
+   * English textbrief={summary,confidence,perspectives,nextSteps,risks,source} + result={type,pros,cons,...}
+   * English text{tone,modeName,percent,verdict,keep,drop,next, 6 English text}
    */
   function fromResponse(resp) {
     if (!resp) return renderBrief({ tone: 'auto', modeName: '', percent: 0, verdict: '', keep: '', drop: '', next: '' });
@@ -703,7 +703,7 @@ const Brief = (() => {
     const modeId = (resp.autoRecognized && resp.autoRecognized.mode) || resp.mode || 'auto';
     const m = MODES.get(modeId) || MODES.get('auto');
 
-    // 从后端 Brief 字段映射到前端简报卡字段
+    // English text Brief English text
     const perspectives = Array.isArray(brief.perspectives) ? brief.perspectives : [];
     const nextSteps = Array.isArray(brief.nextSteps) ? brief.nextSteps : [];
     const o = {
@@ -715,8 +715,8 @@ const Brief = (() => {
       verdict: brief.summary || result.conclusion || result.signal || result.suggestion || '',
       keep: perspectives[0] || '',
       drop: perspectives[1] || (brief.risks && brief.risks[0]) || '',
-      next: nextSteps.join('；') || result.suggestion || '',
-      // 6 模式专属字段从 result 取
+      next: nextSteps.join('') || result.suggestion || '',
+      // 6 English text result English text
       pros: result.pros,
       cons: result.cons,
       score: result.score,
@@ -740,7 +740,7 @@ const Brief = (() => {
   }
 
   /**
-   * 从数据库取出的 decision 构造简报卡（档案详情用）
+   * English text decision English textEnglish text
    * decision = { id, question, mode, result, brief, createdAt, executed, regret }
    */
   function fromStored(d) {
@@ -759,7 +759,7 @@ const Brief = (() => {
       verdict: brief.summary || result.conclusion || result.signal || result.suggestion || '',
       keep: perspectives[0] || '',
       drop: perspectives[1] || (brief.risks && brief.risks[0]) || '',
-      next: nextSteps.join('；') || result.suggestion || '',
+      next: nextSteps.join('') || result.suggestion || '',
       pros: result.pros,
       cons: result.cons,
       score: result.score,
