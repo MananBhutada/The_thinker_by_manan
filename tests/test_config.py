@@ -1,7 +1,7 @@
-"""配置管理（config.py）测试。
+"""English textconfig.pyEnglish text
 
-覆盖三层优先级（env > db > file）、脱敏、has_llm_config/has_weather_config、
-save_api_keys_to_db、preferences。
+English textenv > db > fileEnglish texthas_llm_config/has_weather_config
+save_api_keys_to_dbpreferences
 """
 
 import os
@@ -10,29 +10,29 @@ import config as config_mod
 import db
 
 
-# ─── 三层优先级 ──────────────────────────────────────────────
+# ─── English text ──────────────────────────────────────────────
 
 
 def test_get_effective_config_layer_priority_env_over_db_over_file(monkeypatch):
-    """环境变量 > SQLite > config.json：三层都设值时环境变量胜出。"""
-    # 层 3：config.json
+    """English text > SQLite > config.jsonEnglish text"""
+    # English text 3config.json
     config_mod._save_config_file({"llm_api_key": "from-file", "llm_model": "gpt-file"})
 
-    # 层 2：SQLite
+    # English text 2SQLite
     db.set_config_value("llm_api_key", "from-db")
     db.set_config_value("llm_model", "gpt-db")
 
-    # 层 1：环境变量
+    # English text 1English text
     monkeypatch.setenv("CHOICE_LLM_API_KEY", "from-env")
 
     cfg = config_mod.get_effective_config()
-    assert cfg["llm_api_key"] == "from-env"  # 环境变量胜出
-    assert cfg["llm_model"] == "gpt-db"  # 数据库覆盖文件
+    assert cfg["llm_api_key"] == "from-env"  # English text
+    assert cfg["llm_model"] == "gpt-db"  # English text
 
 
 def test_get_effective_config_db_over_file(monkeypatch):
-    """无环境变量时，SQLite 覆盖 config.json。"""
-    # 清理可能的环境变量
+    """English textSQLite English text config.json"""
+    # English text
     for env in ("CHOICE_LLM_API_KEY", "CHOICE_LLM_MODEL", "CHOICE_LLM_BASE_URL"):
         monkeypatch.delenv(env, raising=False)
 
@@ -44,7 +44,7 @@ def test_get_effective_config_db_over_file(monkeypatch):
 
 
 def test_get_effective_config_file_fallback(monkeypatch):
-    """无环境变量、无 SQLite 时，回落到 config.json。"""
+    """English textEnglish text SQLite English textEnglish text config.json"""
     for env in ("CHOICE_LLM_API_KEY", "CHOICE_LLM_MODEL", "CHOICE_LLM_BASE_URL"):
         monkeypatch.delenv(env, raising=False)
 
@@ -55,7 +55,7 @@ def test_get_effective_config_file_fallback(monkeypatch):
 
 
 def test_get_effective_config_default_empty(monkeypatch):
-    """三层都没有时，所有键为空字符串。"""
+    """English textEnglish text"""
     for env in list(config_mod.ENV_KEY_MAP.values()):
         monkeypatch.delenv(env, raising=False)
 
@@ -64,11 +64,11 @@ def test_get_effective_config_default_empty(monkeypatch):
         assert cfg[key] == ""
 
 
-# ─── 脱敏 ────────────────────────────────────────────────────
+# ─── English text ────────────────────────────────────────────────────
 
 
 def test_get_masked_config_masks_sensitive_fields(monkeypatch):
-    """llm_api_key / weather_key / weather_appsecret 脱敏为 ***已配置***，其它字段保留。"""
+    """llm_api_key / weather_key / weather_appsecret English text ***English text***English text"""
     for env in list(config_mod.ENV_KEY_MAP.values()):
         monkeypatch.delenv(env, raising=False)
 
@@ -76,19 +76,19 @@ def test_get_masked_config_masks_sensitive_fields(monkeypatch):
     db.set_config_value("weather_key", "amap-real-key")
     db.set_config_value("weather_base_url", "https://restapi.amap.com/v3/weather/weatherInfo")
     db.set_config_value("llm_model", "gpt-4o-mini")
-    db.set_config_value("weather_city", "北京")
+    db.set_config_value("weather_city", "English text")
 
     masked = config_mod.get_masked_config()
-    assert masked["llm_api_key"] == "***已配置***"
-    assert masked["weather_key"] == "***已配置***"
-    # 非敏感字段不脱敏
+    assert masked["llm_api_key"] == "***English text***"
+    assert masked["weather_key"] == "***English text***"
+    # English text
     assert masked["llm_model"] == "gpt-4o-mini"
-    assert masked["weather_city"] == "北京"
+    assert masked["weather_city"] == "English text"
     assert masked["weather_base_url"] == "https://restapi.amap.com/v3/weather/weatherInfo"
 
 
 def test_get_masked_config_empty_when_not_set(monkeypatch):
-    """未配置的敏感字段保持空字符串。"""
+    """English text"""
     for env in list(config_mod.ENV_KEY_MAP.values()):
         monkeypatch.delenv(env, raising=False)
 
@@ -102,24 +102,24 @@ def test_get_masked_config_empty_when_not_set(monkeypatch):
 
 
 def test_has_llm_config_requires_all_three(monkeypatch):
-    """需要 api_key + base_url + model 三个都有才算 True。"""
+    """English text api_key + base_url + model English text True"""
     for env in list(config_mod.ENV_KEY_MAP.values()):
         monkeypatch.delenv(env, raising=False)
 
     assert config_mod.has_llm_config() is False
 
     db.set_config_value("llm_api_key", "sk-1")
-    assert config_mod.has_llm_config() is False  # 还缺 base_url 和 model
+    assert config_mod.has_llm_config() is False  # English text base_url English text model
 
     db.set_config_value("llm_base_url", "https://api.openai.com/v1")
-    assert config_mod.has_llm_config() is False  # 还缺 model
+    assert config_mod.has_llm_config() is False  # English text model
 
     db.set_config_value("llm_model", "gpt-4o-mini")
     assert config_mod.has_llm_config() is True
 
 
 def test_has_weather_config_accepts_user_and_legacy_keys(monkeypatch):
-    """没有用户 Key 时为 False，并兼容旧版 appsecret。"""
+    """English text Key English text FalseEnglish text appsecret"""
     for env in list(config_mod.ENV_KEY_MAP.values()):
         monkeypatch.delenv(env, raising=False)
 
@@ -137,7 +137,7 @@ def test_has_weather_config_accepts_user_and_legacy_keys(monkeypatch):
 
 
 def test_has_llm_config_env_overrides(monkeypatch):
-    """环境变量也参与判定。"""
+    """English text"""
     for env in list(config_mod.ENV_KEY_MAP.values()):
         monkeypatch.delenv(env, raising=False)
     monkeypatch.setenv("CHOICE_LLM_API_KEY", "env-key")
@@ -151,7 +151,7 @@ def test_has_llm_config_env_overrides(monkeypatch):
 
 
 def test_save_api_keys_to_db_persists_to_sqlite(monkeypatch):
-    """保存到 SQLite config 表，且空字段跳过，返回脱敏结果。"""
+    """English text SQLite config English textEnglish textEnglish text"""
     for env in list(config_mod.ENV_KEY_MAP.values()):
         monkeypatch.delenv(env, raising=False)
 
@@ -160,20 +160,20 @@ def test_save_api_keys_to_db_persists_to_sqlite(monkeypatch):
             "llm_api_key": "sk-persist",
             "llm_model": "gpt-4o-mini",
             "llm_base_url": "https://api.openai.com/v1",
-            "weather_appid": "",  # 空字符串应被跳过
-            "weather_appsecret": None,  # None 应被跳过
+            "weather_appid": "",  # English text
+            "weather_appsecret": None,  # None English text
         }
     )
 
-    # 脱敏返回
-    assert masked["llm_api_key"] == "***已配置***"
+    # English text
+    assert masked["llm_api_key"] == "***English text***"
     assert masked["llm_model"] == "gpt-4o-mini"
 
-    # 实际落库
+    # English text
     assert db.get_config_value("llm_api_key") == "sk-persist"
     assert db.get_config_value("llm_model") == "gpt-4o-mini"
     assert db.get_config_value("llm_base_url") == "https://api.openai.com/v1"
-    # 空字段未落库
+    # English text
     assert db.get_config_value("weather_appid", default="<missing>") == "<missing>"
 
 
@@ -181,7 +181,7 @@ def test_save_api_keys_to_db_persists_to_sqlite(monkeypatch):
 
 
 def test_get_preferences_returns_defaults_when_empty():
-    """未保存过偏好时，返回完整默认值。"""
+    """English textEnglish text"""
     prefs = config_mod.get_preferences()
     assert prefs["language"] == "zh-CN"
     assert prefs["default_mode"] == "auto"
@@ -195,15 +195,15 @@ def test_get_preferences_returns_defaults_when_empty():
 
 
 def test_save_preferences_merges_with_defaults():
-    """save_preferences 只覆盖传入的字段，其它字段保留默认值。"""
+    """save_preferences English textEnglish text"""
     saved = config_mod.save_preferences({"language": "yue", "theme": "dark"})
     assert saved["language"] == "yue"
     assert saved["theme"] == "dark"
-    # 其它字段仍是默认值
+    # English text
     assert saved["default_mode"] == "auto"
     assert saved["auto_speak"] is True
 
-    # 再次 get 应能拿到刚保存的值
+    # English text get English text
     prefs = config_mod.get_preferences()
     assert prefs["language"] == "yue"
     assert prefs["theme"] == "dark"
@@ -216,7 +216,7 @@ def test_save_preferences_persists_skin():
 
 
 def test_save_preferences_ignores_unknown_keys():
-    """未知键名被忽略，不写入。"""
+    """English textEnglish text"""
     saved = config_mod.save_preferences({"language": "en", "unknown_key": "should-be-ignored"})
     assert "unknown_key" not in saved
     assert saved["language"] == "en"
