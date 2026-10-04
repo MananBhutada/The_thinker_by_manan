@@ -92,38 +92,95 @@ def _parse_json_content(text: str) -> Any:
         return None
 
 
-def call_openai_llm(prompt: str, config: Dict[str, Any], image: Optional[str] = None) -> Dict[str, Any]:
-    """English text OpenAI English textEnglish text JSON dictEnglish text
+def _response_text(data: Dict[str, Any]) -> str:
+    """Extract text from a Responses API JSON payload."""
+    direct = data.get("output_text")
+    if isinstance(direct, str) and direct.strip():
+        return direct
+    chunks = []
+    for item in data.get("output") or []:
+        for part in item.get("content") or []:
+            if isinstance(part, dict) and part.get("type") in ("output_text", "text"):
+                value = part.get("text")
+                if isinstance(value, str):
+                    chunks.append(value)
+    return "\n".join(chunks).strip()
 
-    English textconfig English text api_keyEnglish text
-    image English text base64 data URLEnglish text "data:image/png;base64,..."English text
-    """
+
+def _raise_llm_error(resp: httpx.Response) -> None:
+    detail = ""
+    try:
+        payload = resp.json()
+        err = payload.get("error") if isinstance(payload, dict) else None
+        if isinstance(err, dict):
+            detail = err.get("message") or err.get("code") or ""
+        elif isinstance(payload, dict):
+            detail = payload.get("message") or ""
+    except Exception:
+        pass
+    detail = str(detail).strip()[:400]
+    raise RuntimeError(f"LLM request failed ({resp.status_code}){': ' + detail if detail else ''}")
+
+
+def call_openai_llm(prompt: str, config: Dict[str, Any], image: Optional[str] = None) -> Dict[str, Any]:
+    """Call OpenAI Responses API for OpenAI, Chat Completions for compatible providers."""
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {config['llm_api_key']}",
     }
+    base = config["llm_base_url"].rstrip("/")
+    is_openai = "api.openai.com" in base
+
     if image and isinstance(image, str) and image.startswith("data:"):
-        user_content = [
-            {"type": "text", "text": prompt},
-            {"type": "image_url", "image_url": {"url": image}},
-        ]
+        if is_openai:
+            user_content = [
+                {"type": "input_text", "text": prompt},
+                {"type": "input_image", "image_url": image},
+            ]
+        else:
+            user_content = [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": image}},
+            ]
     else:
         user_content = prompt
-    body = {
-        "model": config["llm_model"],
-        "messages": [{"role": "user", "content": user_content}],
-        "temperature": 0.7,
-    }
-    url = _build_endpoint(config["llm_base_url"])
-    with httpx.Client(timeout=_LLM_TIMEOUT) as client:
-        resp = client.post(url, headers=headers, json=body)
-        resp.raise_for_status()
-    data = resp.json()
-    choices = data.get("choices") or [{}]
-    content = (choices[0].get("message") or {}).get("content", "")
+
+    if is_openai:
+        body = {
+            "model": config["llm_model"],
+            "input": [{"role": "user", "content": user_content if isinstance(user_content, list) else [
+                {"type": "input_text", "text": user_content}
+            ]}],
+        }
+        url = base + "/responses"
+    else:
+        body = {
+            "model": config["llm_model"],
+            "messages": [{"role": "user", "content": user_content}],
+            "temperature": 0.2,
+        }
+        url = _build_endpoint(base)
+
+    try:
+        with httpx.Client(timeout=_LLM_TIMEOUT) as client:
+            resp = client.post(url, headers=headers, json=body)
+    except httpx.RequestError as exc:
+        raise RuntimeError(f"Could not reach the LLM provider: {exc}") from exc
+
+    if not resp.is_success:
+        _raise_llm_error(resp)
+
+    try:
+        data = resp.json()
+    except ValueError as exc:
+        raise RuntimeError("LLM provider returned invalid JSON") from exc
+
+    content = _response_text(data) if is_openai else (
+        (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
+    )
     parsed = _parse_json_content(content)
     if not isinstance(parsed, dict):
-        raise ValueError("LLM English text JSON")
+        raise RuntimeError("LLM returned text instead of the required JSON structure")
     return parsed
 
 
@@ -370,26 +427,12 @@ def _get_values() -> Dict[str, int]:
 
 
 def _build_mode_prompt(question: str, mode: str, has_image: bool = False) -> str:
-    """English text promptEnglish text prompts.py English textauto English text brief prompt English text"""
-    from services.prompts import (
-        rational as rational_prompt,
-        random as random_prompt,
-        dialogue as dialogue_prompt,
-        fengshui as fengshui_prompt,
-    )
-
-    image_hint = "\n\nEnglish textEnglish text" if has_image else ""
-
-    if mode == "rational":
-        return rational_prompt(question, _get_values()) + image_hint
-    if mode == "random":
-        return random_prompt(question) + image_hint
-    if mode == "dialogue":
-        return dialogue_prompt(question) + image_hint
-    if mode == "fengshui":
-        return fengshui_prompt(question) + image_hint
-    # auto English textEnglish text brief promptEnglish text
-    return _build_brief_prompt(question, mode) + image_hint
+    from services.prompts import founder as founder_prompt
+    focus = mode if mode in {"founder", "product", "people", "money", "growth", "conflict"} else "founder"
+    prompt = founder_prompt(question, focus)
+    if has_image:
+        prompt += "\n\nAn image was attached. Use it only as supporting evidence and mention uncertainty where visual evidence is incomplete."
+    return prompt
 
 
 def _mock_random(question: str, language: str = "zh-CN") -> Dict[str, Any]:
