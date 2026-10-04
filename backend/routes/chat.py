@@ -96,9 +96,9 @@ def _try_build_brief(result: Dict[str, Any], mode: str = "auto") -> Optional[Bri
         pros = result.get("pros") or []
         cons = result.get("cons") or []
         if pros:
-            perspectives.append("English text" + "".join(str(p) for p in pros[:3]))
+            perspectives.append("Potential upside: " + "; ".join(str(p) for p in pros[:3]))
         if cons:
-            risks.append("English text" + "".join(str(c) for c in cons[:3]))
+            risks.append("Potential downside: " + "; ".join(str(c) for c in cons[:3]))
     if not next_steps and result.get("suggestion"):
         next_steps.append(str(result["suggestion"]))
 
@@ -156,10 +156,10 @@ def chat(req: ChatRequest) -> ChatResponse:
             poem = nature.get("poem", "")
             suggestion = nature.get("suggestion", "")
             reply = (
-                f"English textnatureEnglish text{req.question}\n"
-                f"English text{signal}\n"
+                f"Nature context for: {req.question}\n"
+                f"Signal to examine: {signal}\n"
                 f"{poem}\n"
-                f"English text{suggestion}"
+                f"Reflection: {suggestion}"
             )
         else:
             result = call_llm(req.question, effective_mode, merged_config,
@@ -168,11 +168,11 @@ def chat(req: ChatRequest) -> ChatResponse:
             brief = _try_build_brief(result, mode=effective_mode)
             summary = result.get("summary") or result.get("conclusion") or ""
             reply = (
-                f"English text{effective_mode}English text{req.question}\n"
+                f"{effective_mode.title()} analysis for: {req.question}\n"
                 f"{summary}"
             )
     except NoApiKeyError:
-        raise HTTPException(status_code=402, detail="English text LLM API Key English textEnglish textEnglish text DemoEnglish text")
+        raise HTTPException(status_code=402, detail="No LLM API key is configured. Add one in settings or enable demo mode.")
 
     # 3. English text
     decision_id: Optional[str] = None
