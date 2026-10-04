@@ -46,7 +46,7 @@ def init_db() -> None:
             CREATE INDEX IF NOT EXISTS idx_decisions_created_at ON decisions(created_at);
             CREATE INDEX IF NOT EXISTS idx_decisions_mode ON decisions(mode);
 
-            CREATE TABLE IF NOT EXISTS config (
+            CREATE TABLE IF NOT EXISTS graph_state (\n                id INTEGER PRIMARY KEY CHECK (id = 1),\n                data TEXT NOT NULL,\n                updated_at TEXT NOT NULL\n            );\n\n            CREATE TABLE IF NOT EXISTS config (
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL
             );
@@ -211,3 +211,24 @@ def _random_suffix() -> str:
     import random
     import string
     return "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
+
+
+def save_graph(graph: dict) -> dict:
+    payload = json.dumps(graph, ensure_ascii=False)
+    now = datetime.now().isoformat()
+    with get_conn() as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO graph_state (id, data, updated_at) VALUES (1, ?, ?)",
+            (payload, now),
+        )
+    return graph
+
+def get_graph() -> dict:
+    with get_conn() as conn:
+        row = conn.execute("SELECT data FROM graph_state WHERE id = 1").fetchone()
+    if not row:
+        return {"root": {"title": "Your Startup", "summary": ""}, "nodes": [], "edges": [], "insights": [], "questions": []}
+    try:
+        return json.loads(row["data"])
+    except (json.JSONDecodeError, TypeError):
+        return {"root": {"title": "Your Startup", "summary": ""}, "nodes": [], "edges": [], "insights": [], "questions": []}
