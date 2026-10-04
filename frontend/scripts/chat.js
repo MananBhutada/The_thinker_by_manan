@@ -1,7 +1,7 @@
 /* ============================================================
-   Chat — 首页聊天逻辑
-   职责：模式选择 / 发送问题 / 调用 API / 渲染简报卡
-   依赖：API, Brief, MODES, I18N, App（toast）
+   Chat — English text
+   English textEnglish text / English text / English text API / English text
+   English textAPI, Brief, MODES, I18N, Apptoast
    ============================================================ */
 
 const Chat = (() => {
@@ -23,7 +23,7 @@ const Chat = (() => {
   }
 
   function init() {
-    // 模式选择
+    // English text
     document.querySelectorAll('#modeSelector .mode-card').forEach(card => {
       card.addEventListener('click', () => {
         if (busy) return;
@@ -31,7 +31,7 @@ const Chat = (() => {
       });
     });
 
-    // 快捷示例
+    // English text
     document.querySelectorAll('#quickExamples .quick-chip').forEach(chip => {
       chip.addEventListener('click', () => {
         if (busy) return;
@@ -40,7 +40,7 @@ const Chat = (() => {
       });
     });
 
-    // 发送
+    // English text
     $('sendBtn').addEventListener('click', send);
     const ta = $('inputText');
     ta.addEventListener('keydown', (e) => {
@@ -51,14 +51,14 @@ const Chat = (() => {
     });
     ta.addEventListener('input', () => autoGrow(ta));
 
-    // 语音输入
+    // English text
     const micBtn = $('micBtn');
     if (micBtn) {
       micBtn.addEventListener('click', () => Voice.toggleStt(ta));
       if (!Voice.sttSupported()) micBtn.style.display = 'none';
     }
 
-    // 图片选择
+    // English text
     const imageBtn = $('imageBtn');
     const imageInput = $('imageInput');
     const imagePreview = $('imagePreview');
@@ -74,7 +74,7 @@ const Chat = (() => {
           return;
         }
         if (file.size > 5 * 1024 * 1024) {
-          App.toast('图片不能超过 5MB');
+          App.toast('English text 5MB');
           imageInput.value = '';
           return;
         }
@@ -91,13 +91,13 @@ const Chat = (() => {
       }
     }
 
-    // 新对话
+    // English text
     $('newChatBtn').addEventListener('click', () => {
       if (busy) return;
       reset();
     });
 
-    // 风水追问 / 对话完成事件
+    // English text / English text
     window.addEventListener('bjj:resubmit', (e) => {
       ta.value = lastQuestion + ' ' + e.detail;
       send();
@@ -139,32 +139,32 @@ const Chat = (() => {
     const text = $('inputText').value.trim();
     if (!text && !pendingImage) return;
     busy = true;
-    lastQuestion = text || '(图片)';
+    lastQuestion = text || '(English text)';
     const imgToSend = pendingImage;
     $('sendBtn').disabled = true;
     $('inputText').value = '';
     autoGrow($('inputText'));
     clearImage();
 
-    // 渲染用户消息（含图片）
+    // English textEnglish text
     appendMessage('user', text || '', imgToSend);
-    // 思考占位
+    // English text
     const thinking = appendThinking();
 
     try {
       const extra = {};
       if (imgToSend) extra.image = imgToSend;
-      const resp = await API.chat(text || '请分析这张图片并给出建议', currentMode, extra);
+      const resp = await API.chat(text || 'English text', currentMode, extra);
       thinking.remove();
-      // auto 模式识别提示
+      // auto English text
       const recognizedMode = resp.autoRecognized && resp.autoRecognized.mode;
       if (currentMode === 'auto' && recognizedMode && recognizedMode !== 'auto') {
         const m = MODES.get(recognizedMode);
         if (m) appendAutoHint(I18N.t('auto.recognized', { mode: I18N.t(m.nameKey) }));
       }
-      // 渲染简报卡
+      // English text
       const card = Brief.fromResponse(resp);
-      // 在卡顶部加朗读按钮
+      // English text
       if (Voice.ttsSupported() && resp.reply) {
         const speakBtn = Voice.makeSpeakButton(resp.reply);
         speakBtn.classList.add('brief-action-btn');
@@ -172,12 +172,12 @@ const Chat = (() => {
       }
       appendCard(card);
 
-      // 后端已自动落库，记录 decisionId 供后续标记 executed/regret
+      // English textEnglish text decisionId English text executed/regret
       if (resp.decisionId) {
         App.currentDecision = { id: resp.decisionId, mode: resp.mode };
       }
 
-      // 自动朗读（偏好控制）
+      // English textEnglish text
       if (Voice.ttsSupported() && resp.reply && App.prefs && App.prefs.auto_speak) {
         Voice.speak(resp.reply);
       }
