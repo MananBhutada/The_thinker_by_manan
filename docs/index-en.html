@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#f4f5ef">
-<title>Decision Brief · 别纠结 — Compress your dilemma into one sentence</title>
+<title>Decision Brief · English text — Compress your dilemma into one sentence</title>
 <meta name="description" content="Decision Brief is a local-first AI decision-support tool: start with text, voice, or an image and turn a tangled choice into evidence, risks, and a next step.">
 <meta name="keywords" content="AI decision assistant,decision support,decision brief,local-first,Codex Skill,multimodal decision making">
 <link rel="canonical" href="https://mianbaofang.github.io/decision-brief/index-en.html">
@@ -13,18 +13,18 @@
 <link rel="alternate" hreflang="x-default" href="https://mianbaofang.github.io/decision-brief/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Decision Brief">
-<meta property="og:title" content="Decision Brief · 别纠结">
+<meta property="og:title" content="Decision Brief · English text">
 <meta property="og:description" content="Turn a choice into evidence, risks, and a next step without making the decision for you.">
 <meta property="og:url" content="https://mianbaofang.github.io/decision-brief/index-en.html">
 <meta property="og:image" content="https://mianbaofang.github.io/decision-brief/images/logo-nav.png">
 <meta property="og:locale" content="en_US">
 <meta property="og:locale:alternate" content="zh_CN">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Decision Brief · 别纠结">
+<meta name="twitter:title" content="Decision Brief · English text">
 <meta name="twitter:description" content="Text, voice, or image input for a structured decision brief.">
 <meta name="twitter:image" content="https://mianbaofang.github.io/decision-brief/images/logo-nav.png">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareSourceCode","name":"Decision Brief","alternateName":"别纠结","description":"A local-first AI decision-support tool.","url":"https://mianbaofang.github.io/decision-brief/index-en.html","codeRepository":"https://github.com/mianbaofang/decision-brief","programmingLanguage":"Python","license":"https://github.com/mianbaofang/decision-brief/blob/master/LICENSE","version":"0.9.1","author":{"@type":"Person","name":"mianbaofang","url":"https://github.com/mianbaofang"},"keywords":["AI decision assistant","decision support","decision brief"]}
+{"@context":"https://schema.org","@type":"SoftwareSourceCode","name":"Decision Brief","alternateName":"English text","description":"A local-first AI decision-support tool.","url":"https://mianbaofang.github.io/decision-brief/index-en.html","codeRepository":"https://github.com/mianbaofang/decision-brief","programmingLanguage":"Python","license":"https://github.com/mianbaofang/decision-brief/blob/master/LICENSE","version":"0.9.1","author":{"@type":"Person","name":"mianbaofang","url":"https://github.com/mianbaofang"},"keywords":["AI decision assistant","decision support","decision brief"]}
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -68,7 +68,7 @@ html,body{
   -webkit-mask-image:radial-gradient(ellipse at center,#000 40%,transparent 75%);
 }
 
-/* ===== 进度条 ===== */
+/* ===== English text ===== */
 .progress-bar{
   position:absolute;top:0;left:0;height:4px;width:100%;z-index:10;
   background:transparent;
@@ -89,7 +89,7 @@ html,body{
 .progress-seg:hover::after{background:rgba(49,125,120,.18)}
 .progress-seg.done::after{background:var(--accent)}
 
-/* ===== 幻灯片容器 ===== */
+/* ===== English text ===== */
 .slides{
   position:relative;width:1280px;height:720px;
 }
@@ -104,7 +104,7 @@ html,body{
   opacity:1;transform:translateY(0);pointer-events:auto;
 }
 
-/* ===== 封面 / 结尾 ===== */
+/* ===== English text / English text ===== */
 .cover{
   display:flex;flex-direction:column;align-items:center;text-align:center;gap:20px;
 }
@@ -162,7 +162,7 @@ html,body{
 .slide.active .cover-chip{opacity:1;transform:translateY(0)}
 .cover-chip.hot{background:rgba(49,125,120,.12);border-color:var(--accent);color:var(--accent)}
 
-/* ===== 截图+说明布局 ===== */
+/* ===== English text+English text ===== */
 .shot-layout{
   display:flex;align-items:center;gap:48px;width:100%;height:100%;
   padding:60px 64px 72px;
@@ -202,7 +202,7 @@ html,body{
   margin-top:7px;
 }
 
-/* ===== Composer 特写 ===== */
+/* ===== Composer English text ===== */
 .composer-feature{
   display:flex;flex-direction:column;align-items:center;gap:28px;text-align:center;
   padding:60px 80px 72px;width:100%;
@@ -323,7 +323,7 @@ html,body{
 .mini-ticket{width:78px;height:82px;border:2px solid #657681;border-radius:7px;background:#e8ecee;overflow:hidden;position:relative;padding:7px}.mini-ticket::after{content:"";position:absolute;left:0;right:0;top:38px;height:2px;background:#657681}.ticket-strip{display:flex;flex-direction:column;gap:5px;transform:translateY(-2px)}.ticket-strip i{height:22px;background:#fff;border-left:5px solid #6b8ca4;box-shadow:0 0 0 1px #cfd7db}.slide.active .ticket-strip{animation:ticketRoll 2s cubic-bezier(.2,.75,.2,1) both}@keyframes ticketRoll{from{transform:translateY(-2px)}to{transform:translateY(-55px)}}
 .mini-ink{width:82px;height:82px;position:relative}.mini-ink::before{content:"";position:absolute;width:12px;height:12px;border-radius:50%;background:#263f3c;left:35px;top:35px}.mini-ink i{position:absolute;width:34px;height:2px;background:#a6b7b2;left:41px;top:40px;transform-origin:left center}.mini-ink i::after{content:"";position:absolute;width:9px;height:9px;border-radius:50%;background:#dfe7e4;right:-4px;top:-4px;border:1px solid #8ba19a}.mini-ink i:nth-child(1){transform:rotate(0)}.mini-ink i:nth-child(2){transform:rotate(60deg)}.mini-ink i:nth-child(3){transform:rotate(120deg)}.mini-ink i:nth-child(4){transform:rotate(180deg)}.mini-ink i:nth-child(5){transform:rotate(240deg)}.mini-ink i:nth-child(6){transform:rotate(300deg)}.slide.active .mini-ink i:nth-child(5){animation:inkPick 1.8s ease both}@keyframes inkPick{0%{background:#a6b7b2}60%,100%{background:#ba785e;height:4px}}
 
-/* ===== 页码指示器 ===== */
+/* ===== English text ===== */
 .pager{
   position:absolute;bottom:28px;left:50%;transform:translateX(-50%);
   display:flex;gap:7px;z-index:10;
@@ -335,7 +335,7 @@ html,body{
 .pager-dot.active{background:var(--accent);width:24px;border-radius:4px}
 .pager-dot:hover{background:var(--muted)}
 
-/* ===== 角标 ===== */
+/* ===== English text ===== */
 .corner-logo{
   position:absolute;top:24px;left:40px;
   display:flex;align-items:center;gap:10px;
@@ -360,40 +360,40 @@ html,body{
 <div class="stage">
   <div class="dots"></div>
 
-  <!-- 进度条 -->
+  <!-- English text -->
   <div class="progress-bar">
     <div class="progress-fill" id="progressFill"></div>
     <div class="progress-segs" id="progressSegs"></div>
   </div>
 
-  <!-- 角标 -->
+  <!-- English text -->
   <div class="corner-logo">
     <div class="s"><img src="images/logo-nav.png" alt=""></div>
-    <span>Decision Brief · 别纠结</span>
+    <span>Decision Brief · English text</span>
   </div>
   <div class="corner-lang">
-    <a href="index.html">中文</a>
+    <a href="index.html">English text</a>
   </div>
 
-  <!-- 幻灯片 -->
+  <!-- English text -->
   <div class="slides" id="slidesEl">
 
-    <!-- Slide 0: 封面 -->
+    <!-- Slide 0: English text -->
     <div class="slide" data-dur="4000">
       <div class="cover">
         <div class="cover-brand">
           <div class="cover-seal"><img class="brand-logo-img" src="images/logo-nav.png" alt="Decision Brief logo"></div>
-          <div class="cover-title">Decision Brief · 别纠结</div>
+          <div class="cover-title">Decision Brief · English text</div>
         </div>
         <h1 class="cover-h1">Compress your dilemma into one sentence first.</h1>
         <p class="cover-sub">Write one sentence, speak it, or add a photo. Decision Brief separates the dilemma into evidence, risks, and a next step.</p>
         <div class="cover-seals">
-          <div class="cover-seal-item cs-1" style="transition-delay:.1s"><div class="c">自</div><div class="l">Auto</div></div>
-          <div class="cover-seal-item cs-2" style="transition-delay:.2s"><div class="c">理</div><div class="l">Rational</div></div>
-          <div class="cover-seal-item cs-3" style="transition-delay:.3s"><div class="c">随</div><div class="l">Random</div></div>
-          <div class="cover-seal-item cs-4" style="transition-delay:.4s"><div class="c">然</div><div class="l">Nature</div></div>
-          <div class="cover-seal-item cs-5" style="transition-delay:.5s"><div class="c">问</div><div class="l">Dialogue</div></div>
-          <div class="cover-seal-item cs-6" style="transition-delay:.6s"><div class="c">局</div><div class="l">Culture</div></div>
+          <div class="cover-seal-item cs-1" style="transition-delay:.1s"><div class="c">English text</div><div class="l">Auto</div></div>
+          <div class="cover-seal-item cs-2" style="transition-delay:.2s"><div class="c">English text</div><div class="l">Rational</div></div>
+          <div class="cover-seal-item cs-3" style="transition-delay:.3s"><div class="c">English text</div><div class="l">Random</div></div>
+          <div class="cover-seal-item cs-4" style="transition-delay:.4s"><div class="c">English text</div><div class="l">Nature</div></div>
+          <div class="cover-seal-item cs-5" style="transition-delay:.5s"><div class="c">English text</div><div class="l">Dialogue</div></div>
+          <div class="cover-seal-item cs-6" style="transition-delay:.6s"><div class="c">English text</div><div class="l">Culture</div></div>
         </div>
         <div class="cover-chips">
           <span class="cover-chip hot" style="transition-delay:.7s">⌨️ Type</span>
@@ -403,7 +403,7 @@ html,body{
       </div>
     </div>
 
-    <!-- Slide 1: 首页 - 模式选择 -->
+    <!-- Slide 1: English text - English text -->
     <div class="slide" data-dur="4500">
       <div class="shot-layout">
         <div class="shot-visual">
@@ -425,7 +425,7 @@ html,body{
       </div>
     </div>
 
-    <!-- Slide 2: Composer 三模态输入 (NEW) -->
+    <!-- Slide 2: Composer English text (NEW) -->
     <div class="slide" data-dur="5500">
       <div class="composer-feature">
         <div class="composer-tag">STEP 02 · NEW</div>
@@ -512,7 +512,7 @@ html,body{
       </div>
     </div>
 
-    <!-- Slide 4: 自然启示 -->
+    <!-- Slide 4: English text -->
     <div class="slide" data-dur="3800">
       <div class="shot-layout">
         <div class="shot-visual">
@@ -531,7 +531,7 @@ html,body{
       </div>
     </div>
 
-    <!-- Slide 5: 对话引导 -->
+    <!-- Slide 5: English text -->
     <div class="slide" data-dur="3800">
       <div class="shot-layout">
         <div class="shot-visual">
@@ -550,7 +550,7 @@ html,body{
       </div>
     </div>
 
-    <!-- Slide 6: 决策档案 -->
+    <!-- Slide 6: English text -->
     <div class="slide" data-dur="3800">
       <div class="shot-layout">
         <div class="shot-visual">
@@ -570,7 +570,7 @@ html,body{
       </div>
     </div>
 
-    <!-- Slide 7: 统计复盘 -->
+    <!-- Slide 7: English text -->
     <div class="slide" data-dur="3800">
       <div class="shot-layout">
         <div class="shot-visual">
@@ -589,7 +589,7 @@ html,body{
       </div>
     </div>
 
-    <!-- Slide 8: 设置/TTS -->
+    <!-- Slide 8: English text/TTS -->
     <div class="slide" data-dur="3800">
       <div class="shot-layout">
         <div class="shot-visual">
@@ -609,7 +609,7 @@ html,body{
       </div>
     </div>
 
-    <!-- Slide 9: 结尾 CTA -->
+    <!-- Slide 9: English text CTA -->
     <div class="slide" data-dur="4500">
       <div class="cover">
         <div class="cover-seal" style="width:64px;height:64px;border-radius:12px"><img class="brand-logo-img" src="images/logo-nav.png" alt="Decision Brief logo"></div>
@@ -625,7 +625,7 @@ html,body{
 
   </div>
 
-  <!-- 页码指示器 -->
+  <!-- English text -->
   <div class="pager" id="pager"></div>
 </div>
 
@@ -701,7 +701,7 @@ function goTo(i){
   setSlide(i);
 }
 
-// Composer 打字动画
+// Composer English text
 const phrases = [
   "What's for lunch?",
   "Should I take this offer?",
