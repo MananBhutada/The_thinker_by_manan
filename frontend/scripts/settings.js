@@ -259,7 +259,7 @@ const Settings = (() => {
     const wrap = document.createElement('div');
     wrap.innerHTML =
       fieldHTML('llm_apiKey', I18N.t('settings.llm.apiKey'), '', 'password', keyPh) +
-      fieldHTML('llm_model', I18N.t('settings.llm.model'), cfg.model || '', 'text', 'gpt-4o-mini') +
+      fieldHTML('llm_model', I18N.t('settings.llm.model'), cfg.model || '', 'text', 'gpt-6-luna') +
       fieldHTML('llm_baseUrl', I18N.t('settings.llm.baseUrl'), cfg.baseUrl || '', 'text', 'https://api.openai.com/v1');
     const save = document.createElement('button');
     save.className = 'btn btn-block';
