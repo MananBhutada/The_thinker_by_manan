@@ -144,6 +144,13 @@
       </div>
     </div>
   </main>
+  <div class="page" id="page-graph">
+    <div class="graph-header"><div><div class="graph-kicker">FOUNDER GRAPH</div><h1>Think in systems.</h1><p>Dump the chaos. Map what connects, what depends on what, and what is still unknown.</p></div><button type="button" class="btn btn-ghost graph-refresh" id="graphRefreshBtn">Refresh</button></div>
+    <div class="graph-input-wrap"><textarea id="graphInput" rows="4" placeholder="Dump everything on your mind… ideas, hiring, money, product, customers, dates."></textarea><button type="button" class="btn" id="graphExtractBtn">Map my thinking</button></div>
+    <div class="graph-canvas-wrap"><svg id="founderGraphSvg" viewBox="0 0 900 560" role="img" aria-label="Founder decision graph"></svg></div>
+    <div class="graph-lower"><section class="graph-panel"><h2>What the graph sees</h2><ul id="graphInsights"></ul></section><section class="graph-panel"><h2>Nodes</h2><div id="graphNodeList"></div></section></div>
+  </div>
+
 </div>
 
 <!-- 右侧Drawer -->
@@ -267,7 +274,9 @@
 <script src="scripts/api.js?v=9"></script>
 <script src="scripts/brief.js?v=20"></script>
 <script src="scripts/voice.js?v=6"></script>
-<script src="scripts/provider.js?v=1"></script>\n<script src="scripts/chat.js?v=8"></script>\n<script src="scripts/graph.js?v=1"></script>
+<script src="scripts/provider.js?v=1"></script>
+<script src="scripts/chat.js?v=8"></script>
+<script src="scripts/graph.js?v=1"></script>
 <script src="scripts/archive.js?v=6"></script>
 <script src="scripts/stats.js?v=6"></script>
 <script src="scripts/settings.js?v=10"></script>
