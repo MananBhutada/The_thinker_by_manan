@@ -101,22 +101,22 @@ class ChatRequest(BaseModel):
       - weatherAppsecret English textEnglish text weatherKey English text
     """
 
-    question: str = Field(..., description="English text")
+    question: str = Field(..., min_length=1, max_length=4000, description="English text")
     mode: Literal["auto", "rational", "random", "nature", "dialogue", "fengshui"] = Field(
         default="auto", description="English text"
     )
     # LLM/English textEnglish textEnglish text
-    apiKey: Optional[str] = Field(default=None)
-    llmModel: Optional[str] = Field(default=None)
-    llmBaseUrl: Optional[str] = Field(default=None)
-    weatherKey: Optional[str] = Field(default=None, description="English text Keyv0.7.0 English text")
-    weatherBaseUrl: Optional[str] = Field(default=None, description="English text Base URL")
-    weatherAppsecret: Optional[str] = Field(default=None, description="English textEnglish text weatherKey")
-    weatherCity: Optional[str] = Field(default=None)
+    apiKey: Optional[str] = Field(default=None, max_length=512)
+    llmModel: Optional[str] = Field(default=None, max_length=128)
+    llmBaseUrl: Optional[str] = Field(default=None, max_length=2048)
+    weatherKey: Optional[str] = Field(default=None, max_length=512, description="English text Keyv0.7.0 English text")
+    weatherBaseUrl: Optional[str] = Field(default=None, max_length=2048, description="English text Base URL")
+    weatherAppsecret: Optional[str] = Field(default=None, max_length=512, description="English textEnglish text weatherKey")
+    weatherCity: Optional[str] = Field(default=None, max_length=128)
     # English textrational English text
     values: Optional[Dict[str, int]] = Field(default=None)
     # English textbase64 data URLEnglish text
-    image: Optional[str] = Field(default=None, description="English textbase64 data URL")
+    image: Optional[str] = Field(default=None, max_length=7000000, description="English textbase64 data URL")
 
 
 class ChatResponse(BaseModel):
