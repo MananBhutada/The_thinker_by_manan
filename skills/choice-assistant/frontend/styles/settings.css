@@ -1,6 +1,6 @@
 /* ============================================================
-   设置页样式
-   含：用户卡 / 设置列表 / 表单 sheet / 价值观滑块
+   English text
+   English textEnglish text / English text / English text sheet / English text
    ============================================================ */
 
 .settings-scroll {
@@ -13,7 +13,7 @@
 .settings-scroll::-webkit-scrollbar { width: 3px; }
 .settings-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 3px; }
 
-/* 用户卡 */
+/* English text */
 .user-card {
   display: flex;
   align-items: center;
@@ -58,7 +58,7 @@
 }
 .user-login-btn:active { transform: scale(0.94); }
 
-/* 设置分组 */
+/* English text */
 .settings-group-title {
   font-size: 11px;
   font-weight: 700;
@@ -110,7 +110,7 @@
   flex-shrink: 0;
 }
 
-/* 分组标题前的图标色点 */
+/* English text */
 .setting-row .row-icon {
   width: 28px; height: 28px;
   border-radius: 9px;
@@ -128,7 +128,7 @@
 .row-icon.ic-mode    { background: var(--plum); }
 .row-icon.ic-values  { background: var(--cinnabar); }
 
-/* 设置版本号 */
+/* English text */
 .setting-version {
   text-align: center;
   color: var(--ink-faint);
@@ -136,7 +136,7 @@
   padding: 16px 0 8px;
 }
 
-/* ============ Sheet 内表单 ============ */
+/* ============ Sheet English text ============ */
 .sheet-section {
   margin-bottom: 16px;
 }
@@ -147,7 +147,7 @@
   margin-bottom: 10px;
 }
 
-/* 主题三选 */
+/* English text */
 .choice-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -220,7 +220,7 @@
 .skin-preview[data-preview="console"] i:nth-child(2) { background:#d8e7e4; }
 .skin-preview[data-preview="console"] i:nth-child(3) { border:1px solid #d3ded8; background:#fff; }
 
-/* 语言列表 */
+/* English text */
 .lang-list {
   display: flex;
   flex-direction: column;
@@ -252,7 +252,7 @@
 }
 .lang-opt.active .check { opacity: 1; }
 
-/* 模式选择网格（设置内） */
+/* English textEnglish text */
 .mode-pick-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -279,7 +279,7 @@
   border-color: var(--ink);
 }
 
-/* 价值观滑块 */
+/* English text */
 .value-slider {
   margin-bottom: 14px;
 }
@@ -327,7 +327,7 @@
   cursor: pointer;
 }
 
-/* 保存按钮浮动区 */
+/* English text */
 .settings-save {
   position: sticky;
   bottom: 0;
@@ -336,7 +336,7 @@
 }
 
 /* ============================================================
-   关于卡片（5 段：为什么 / 功能 / 免责 / 协议 / 依赖）
+   English text5 English textEnglish text / English text / English text / English text / English text
    ============================================================ */
 .about-wrap {
   padding: 4px 0 12px;
@@ -412,7 +412,7 @@
 }
 
 /* ============================================================
-   语音朗读（TTS）设置
+   English textTTSEnglish text
    ============================================================ */
 .tts-wrap {
   padding: 4px 0 12px;
@@ -450,7 +450,7 @@
 .tts-toggle-row .tts-row-label {
   margin-bottom: 0;
 }
-/* iOS 风格开关 */
+/* iOS English text */
 .switch {
   position: relative;
   display: inline-block;
@@ -514,13 +514,13 @@
   flex: 1;
 }
 
-/* TTS 图标颜色 */
+/* TTS English text */
 .ic-tts {
   background: rgba(73,106,85,0.12);
   color: var(--moss);
 }
 
-/* 天气配置申请指引 */
+/* English text */
 .weather-tip {
   background: rgba(49,125,120,0.06);
   border: 1px solid rgba(49,125,120,0.18);
