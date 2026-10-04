@@ -1,18 +1,18 @@
 (() => {
-  const OPTIONS = ['现在就做', '明天再定', '先问朋友', '换个方案', '暂时放下', '凭直觉选'];
+  const OPTIONS = ['English text', 'English text', 'English text', 'English text', 'English text', 'English text'];
   const EFFECTS = [
-    { variant: 'pointer', title: '指针盘', note: '转动后落在第 1 项', seed: 'preview-10', picked: 0 },
-    { variant: 'sticks', title: '签筒', note: '晃两次后弹出第 2 签', seed: 'preview-6', picked: 1 },
-    { variant: 'dice', title: '立体骰子', note: '翻滚后显示 3 点', seed: 'preview-1', picked: 2 },
-    { variant: 'cards', title: '六张抽卡', note: '洗牌后翻开第 4 张', seed: 'preview-0', picked: 3 },
-    { variant: 'tickets', title: '纸条机', note: '滚动后停在第 5 项', seed: 'preview-3', picked: 4 },
-    { variant: 'ink', title: '墨迹择路', note: '六条路亮起第 6 条', seed: 'preview-13', picked: 5 }
+    { variant: 'pointer', title: 'English text', note: 'English text 1 English text', seed: 'preview-10', picked: 0 },
+    { variant: 'sticks', title: 'English text', note: 'English text 2 English text', seed: 'preview-6', picked: 1 },
+    { variant: 'dice', title: 'English text', note: 'English text 3 English text', seed: 'preview-1', picked: 2 },
+    { variant: 'cards', title: 'English text', note: 'English text 4 English text', seed: 'preview-0', picked: 3 },
+    { variant: 'tickets', title: 'English text', note: 'English text 5 English text', seed: 'preview-3', picked: 4 },
+    { variant: 'ink', title: 'English text', note: 'English text 6 English text', seed: 'preview-13', picked: 5 }
   ];
 
   function renderEffect(effect, mount) {
     mount.replaceChildren(Brief.renderBrief({
       tone: 'random',
-      modeName: '天意',
+      modeName: 'English text',
       percent: 100,
       title: effect.title,
       options: OPTIONS,
@@ -39,8 +39,8 @@
     replay.type = 'button';
     replay.className = 'preview-replay';
     replay.textContent = '↻';
-    replay.title = '重新播放';
-    replay.setAttribute('aria-label', '重新播放' + effect.title);
+    replay.title = 'English text';
+    replay.setAttribute('aria-label', 'English text' + effect.title);
 
     const mount = document.createElement('div');
     mount.className = 'preview-mount';
