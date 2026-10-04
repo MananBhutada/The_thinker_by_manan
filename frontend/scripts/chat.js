@@ -253,7 +253,12 @@ const Chat = (() => {
     const t = document.createElement('div');
     t.className = 'thinking';
     t.style.color = 'var(--cinnabar)';
-    const msg = (e && e.status === 'network') ? I18N.t('common.networkError') : I18N.t('common.error');
+    let msg = I18N.t('common.error');
+    if (e && e.status === 'network') {
+      msg = I18N.t('common.networkError');
+    } else if (e && e.message) {
+      msg = String(e.message).slice(0, 420);
+    }
     t.textContent = msg;
     wrap.appendChild(t);
     getContainer().appendChild(wrap);
