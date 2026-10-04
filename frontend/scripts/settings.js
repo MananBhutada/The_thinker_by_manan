@@ -15,7 +15,7 @@ const Settings = (() => {
     $('setSkin').addEventListener('click', openSkin);
     $('setDefaultMode').addEventListener('click', openDefaultMode);
     $('setValues').addEventListener('click', openValues);
-    $('setAIConfig').addEventListener('click', () => openLLM());
+    $('setAIConfig').addEventListener('click', () => FounderProvider.open());
     $('setWeatherConfig').addEventListener('click', () => openWeather());
     $('setTTS').addEventListener('click', openTTS);
     $('setAbout').addEventListener('click', openAbout);
