@@ -1,11 +1,11 @@
-"""决策记录 CRUD 路由。
+"""English text CRUD English text
 
-- POST   /api/decision        保存（新增/覆盖）
-- GET    /api/decision/{id}   查询单条
-- PATCH  /api/decision/{id}   部分更新（executed/regret/dialogueHistory）
-- DELETE /api/decision/{id}   删除
+- POST   /api/decision        English textEnglish text/English text
+- GET    /api/decision/{id}   English text
+- PATCH  /api/decision/{id}   English textexecuted/regret/dialogueHistory
+- DELETE /api/decision/{id}   English text
 
-全部走 SQLite 持久化层（db.py），不再使用内存 _DECISIONS。
+English text SQLite English textdb.pyEnglish text _DECISIONS
 """
 
 from typing import Any, Dict
@@ -20,7 +20,7 @@ router = APIRouter()
 
 @router.post("/api/decision")
 def save_decision(body: DecisionSave) -> Dict[str, Any]:
-    """保存一条决策记录，自动补齐 id 与 createdAt。返回保存后的 dict。"""
+    """English textEnglish text id English text createdAtEnglish text dict"""
     payload = body.model_dump(exclude_none=True)
     saved = db.save_decision(payload)
     return saved
@@ -28,7 +28,7 @@ def save_decision(body: DecisionSave) -> Dict[str, Any]:
 
 @router.get("/api/decision/{decision_id}")
 def get_decision(decision_id: str) -> Dict[str, Any]:
-    """按 id 查询单条决策记录。不存在返回 404。"""
+    """English text id English textEnglish text 404"""
     dec = db.get_decision(decision_id)
     if not dec:
         raise HTTPException(status_code=404, detail="decision not found")
@@ -37,7 +37,7 @@ def get_decision(decision_id: str) -> Dict[str, Any]:
 
 @router.patch("/api/decision/{decision_id}")
 def update_decision(decision_id: str, body: DecisionPatch) -> Dict[str, Any]:
-    """更新 executed/regret/dialogueHistory。返回更新后的 dict。"""
+    """English text executed/regret/dialogueHistoryEnglish text dict"""
     patches = body.model_dump(exclude_none=True)
     updated = db.update_decision(decision_id, patches)
     if not updated:
@@ -47,7 +47,7 @@ def update_decision(decision_id: str, body: DecisionPatch) -> Dict[str, Any]:
 
 @router.delete("/api/decision/{decision_id}")
 def delete_decision(decision_id: str) -> Dict[str, Any]:
-    """删除一条决策记录。不存在返回 404。"""
+    """English textEnglish text 404"""
     ok = db.delete_decision(decision_id)
     if not ok:
         raise HTTPException(status_code=404, detail="decision not found")
