@@ -108,6 +108,14 @@ const API = (() => {
       return request('/api/stats');
     },
 
+    /** Founder Graph */
+    getGraph() { return request('/api/graph'); },
+    extractGraph(text, provider) {
+      const body = { text, provider: provider.provider };
+      if (provider.provider === 'byok') Object.assign(body, { apiKey: provider.apiKey, llmModel: provider.llmModel, llmBaseUrl: provider.llmBaseUrl });
+      return request('/api/graph/extract', { method: 'POST', body });
+    },
+
     /** GET /api/config — LLM + English text */
     getConfig() {
       return request('/api/config');
