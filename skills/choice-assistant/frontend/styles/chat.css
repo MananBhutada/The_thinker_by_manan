@@ -1,10 +1,10 @@
 /* ============================================================
-   首页（聊天）样式
-   含：顶栏 / decision-hero / 模式选择器 / 聊天区
-       决策简报卡 / 信心环 / 6 模式结果卡 / 输入区
+   English textEnglish textEnglish text
+   English textEnglish text / decision-hero / English text / English text
+       English text / English text / 6 English text / English text
    ============================================================ */
 
-/* ============ 顶栏 ============ */
+/* ============ English text ============ */
 .topbar {
   display: flex;
   align-items: center;
@@ -56,7 +56,7 @@
 }
 .quiet-action:active { transform: scale(0.94); background: rgba(25,26,22,0.1); }
 
-/* ============ decision-hero 大卡片 ============ */
+/* ============ decision-hero English text ============ */
 .chat-scroll {
   flex: 1;
   overflow-y: auto;
@@ -116,7 +116,7 @@
   line-height: 1.55;
 }
 
-/* ============ 模式选择器（嵌于 hero 内） ============ */
+/* ============ English textEnglish text hero English text ============ */
 .mode-grid {
   margin-top: 10px;
   display: grid;
@@ -164,7 +164,7 @@
 }
 .mode-card.active .mode-name { opacity: 0.9; }
 
-/* ============ 聊天消息区 ============ */
+/* ============ English text ============ */
 .chat-container {
   padding: 0 12px;
   display: flex;
@@ -208,7 +208,7 @@
 }
 .bubble-image:last-child { margin-bottom: 0; }
 
-/* 自动模式识别提示条 */
+/* English text */
 .auto-hint {
   display: flex;
   align-items: center;
@@ -224,7 +224,7 @@
 }
 .auto-hint svg { width: 12px; height: 12px; flex-shrink: 0; }
 
-/* ============ 决策简报卡（核心视觉） ============ */
+/* ============ English textEnglish text ============ */
 .brief {
   border: 1px solid var(--line);
   border-radius: 28px;
@@ -272,7 +272,7 @@
 
 .brief-body { padding: 12px 14px 14px; }
 
-/* 当前判断 + 信心环 */
+/* English text + English text */
 .verdict {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -294,14 +294,14 @@
   color: var(--text-primary);
 }
 
-/* 信心环：conic-gradient 按百分比动态渲染 */
+/* English textconic-gradient English text */
 .confidence {
   width: 50px; height: 50px;
   border-radius: 50%;
   display: grid;
   place-items: center;
   color: var(--ink);
-  /* JS 按 percent 设置：conic-gradient(var(--ink) 0 Ndeg, rgba(25,26,22,0.12) Ndeg 360deg) */
+  /* JS English text percent English textconic-gradient(var(--ink) 0 Ndeg, rgba(25,26,22,0.12) Ndeg 360deg) */
   position: relative;
 }
 .confidence::after {
@@ -319,7 +319,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* 保留 / 放下 双栏 */
+/* English text / English text English text */
 .brief-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -340,7 +340,7 @@
   line-height: 1.55;
 }
 
-/* 下一步 */
+/* English text */
 .next-step {
   margin-top: 10px;
   padding: 10px 12px;
@@ -355,7 +355,7 @@
   font-weight: 600;
 }
 
-/* 八字信息条（风水模式） */
+/* English textEnglish text */
 .brief-bazi {
   padding: 8px 14px;
   font-size: 11px;
@@ -364,7 +364,7 @@
   border-bottom: 1px solid var(--line);
 }
 
-/* ============ 理性模式：利弊清单 ============ */
+/* ============ English textEnglish text ============ */
 .rational-detail {
   margin-top: 10px;
   border-top: 1px solid var(--line);
@@ -405,7 +405,7 @@
   padding: 4px 0;
 }
 
-/* ============ 随机模式：多种抽取形式 ============ */
+/* ============ English textEnglish text ============ */
 .random-draw {
   width: min(100%, 470px);
   margin: 14px auto 2px;
@@ -429,7 +429,7 @@
   overflow: visible;
 }
 
-/* 指针抽签盘 */
+/* English text */
 .random-draw-wash { fill: var(--random-wash); }
 .random-draw-track,
 .random-draw-sweep {
@@ -493,7 +493,7 @@
   stroke-width: 2;
 }
 
-/* 签筒：晃两次，再弹出一根签 */
+/* English textEnglish textEnglish text */
 .random-stick {
   stroke: var(--random-bamboo);
   stroke-width: 8;
@@ -561,7 +561,7 @@
   animation: random-stick-mark-win 1.05s .92s cubic-bezier(.2,.82,.2,1) both;
 }
 
-/* 骰子：Zdog 伪 3D，结果面由脚本固定到 1-6 */
+/* English textZdog English text 3DEnglish text 1-6 */
 .random-dice-canvas-stage {
   position: relative;
   width: min(100%, 220px);
@@ -597,7 +597,7 @@
   animation: random-zdog-die-shadow 1.5s ease-out both;
 }
 
-/* 洗牌翻签 */
+/* English text */
 .random-card-form {
   transform: translate(var(--card-x), var(--card-y)) rotate(var(--card-angle));
   transform-box: fill-box;
@@ -668,7 +668,7 @@
   animation: random-card-front-show 1ms 1.08s forwards;
 }
 
-/* 纸条抽取 */
+/* English text */
 .random-ticket-window {
   fill: var(--surface);
   stroke: var(--random-line);
@@ -708,7 +708,7 @@
   animation: random-ticket-roll 1.4s cubic-bezier(.14,.78,.18,1) both;
 }
 
-/* 墨迹择路 */
+/* English text */
 .random-ink-branch {
   fill: none;
   stroke: var(--ink-faint);
@@ -881,7 +881,7 @@
   }
 }
 
-/* ============ 自然模式：信号卡 ============ */
+/* ============ English textEnglish text ============ */
 .nature-card {
   margin-top: 10px;
   border-top: 1px solid var(--line);
@@ -973,7 +973,7 @@
   font-size: 9px;
 }
 
-/* ============ 对话模式：选项 ============ */
+/* ============ English textEnglish text ============ */
 .dialogue-options {
   margin-top: 10px;
   display: flex;
@@ -1005,7 +1005,7 @@
 }
 .dialogue-record strong { color: var(--plum); }
 
-/* ============ 风水模式：生辰追问 ============ */
+/* ============ English textEnglish text ============ */
 .fengshui-ask {
   margin-top: 10px;
   padding: 12px;
@@ -1037,7 +1037,7 @@
   margin-bottom: 8px;
 }
 
-/* ============ 快捷示例 ============ */
+/* ============ English text ============ */
 .quick-row {
   display: flex;
   gap: 6px;
@@ -1070,7 +1070,7 @@
 }
 .quick-chip:active { transform: scale(0.94); background: var(--paper-2); }
 
-/* ============ 输入区 composer（豆包风大圆角卡片） ============ */
+/* ============ English text composerEnglish text ============ */
 .composer {
   position: absolute;
   left: 0; right: 0;
@@ -1196,11 +1196,11 @@
 .send-button:active { transform: scale(0.92); }
 .send-button:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; background: var(--ink); }
 
-/* 兼容旧的 .composer-actions / .icon-button（桌面端桌面 CSS 可能还会用到） */
+/* English text .composer-actions / .icon-buttonEnglish text CSS English text */
 .composer-actions { display: none; }
 .icon-button { display: none; }
 
-/* 麦克风按钮激活态 */
+/* English text */
 .mic-button.listening {
   background: var(--cinnabar) !important;
   color: var(--white) !important;
@@ -1211,7 +1211,7 @@
   50%      { box-shadow: 0 0 0 8px rgba(180,90,66,0); }
 }
 
-/* 简报卡上的朗读按钮 */
+/* English text */
 .brief-action-btn.speak-button {
   width: 28px;
   height: 28px;
@@ -1231,7 +1231,7 @@
   background: rgba(49,125,120,0.1);
 }
 
-/* AI 思考占位 */
+/* AI English text */
 .thinking {
   display: flex;
   align-items: center;
@@ -1245,7 +1245,7 @@
   width: fit-content;
 }
 
-/* API Key 提示横幅 */
+/* API Key English text */
 .api-key-banner {
   display: none;
   align-items: center;
