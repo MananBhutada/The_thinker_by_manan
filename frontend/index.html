@@ -82,30 +82,24 @@
         <p class="hero-sub" data-i18n="hero.copy">State the choice. BlindSpot AI surfaces assumptions, risks, missing information, and next questions.</p>
       </section>
 
-      <section class="mode-grid" id="modeSelector" role="radiogroup" aria-label="Decision mode selector">
-        <button type="button" class="mode-card active" data-mode="auto" role="radio" aria-checked="true" data-i18n-title="mode.auto.desc">
-          <svg class="mode-seal" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="21" rx="4" fill="#317d78"/><rect x="3.5" y="3.5" width="17" height="17" rx="3" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="0.8"/><text x="12" y="16.5" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">English</text></svg>
-          <span data-i18n="mode.auto">Auto</span>
+      <section class="mode-grid" id="modeSelector" role="radiogroup" aria-label="Founder coaching lens">
+        <button type="button" class="mode-card active" data-mode="founder" role="radio" aria-checked="true" data-i18n-title="mode.founder.desc">
+          <span class="mode-seal mode-seal-text">F</span><span data-i18n="mode.founder">Founder</span>
         </button>
-        <button type="button" class="mode-card" data-mode="rational" role="radio" aria-checked="false" data-i18n-title="mode.rational.desc">
-          <svg class="mode-seal" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="21" rx="4" fill="#365385"/><rect x="3.5" y="3.5" width="17" height="17" rx="3" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="0.8"/><text x="12" y="16.5" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">English</text></svg>
-          <span data-i18n="mode.rational">Reason</span>
+        <button type="button" class="mode-card" data-mode="product" role="radio" aria-checked="false" data-i18n-title="mode.product.desc">
+          <span class="mode-seal mode-seal-text">P</span><span data-i18n="mode.product">Product</span>
         </button>
-        <button type="button" class="mode-card" data-mode="random" role="radio" aria-checked="false" data-i18n-title="mode.random.desc">
-          <svg class="mode-seal" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="21" rx="4" fill="var(--random-head)"/><rect x="3.5" y="3.5" width="17" height="17" rx="3" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="0.8"/><text x="12" y="16.5" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">English</text></svg>
-          <span data-i18n="mode.random">Random</span>
+        <button type="button" class="mode-card" data-mode="people" role="radio" aria-checked="false" data-i18n-title="mode.people.desc">
+          <span class="mode-seal mode-seal-text">H</span><span data-i18n="mode.people">People</span>
         </button>
-        <button type="button" class="mode-card" data-mode="nature" role="radio" aria-checked="false" data-i18n-title="mode.nature.desc">
-          <svg class="mode-seal" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="21" rx="4" fill="#486a55"/><rect x="3.5" y="3.5" width="17" height="17" rx="3" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="0.8"/><text x="12" y="16.5" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">English</text></svg>
-          <span data-i18n="mode.nature">Nature</span>
+        <button type="button" class="mode-card" data-mode="money" role="radio" aria-checked="false" data-i18n-title="mode.money.desc">
+          <span class="mode-seal mode-seal-text">$</span><span data-i18n="mode.money">Money</span>
         </button>
-        <button type="button" class="mode-card" data-mode="dialogue" role="radio" aria-checked="false" data-i18n-title="mode.dialogue.desc">
-          <svg class="mode-seal" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="21" rx="4" fill="#69526f"/><rect x="3.5" y="3.5" width="17" height="17" rx="3" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="0.8"/><text x="12" y="16.5" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">English</text></svg>
-          <span data-i18n="mode.dialogue">Dialogue</span>
+        <button type="button" class="mode-card" data-mode="growth" role="radio" aria-checked="false" data-i18n-title="mode.growth.desc">
+          <span class="mode-seal mode-seal-text">G</span><span data-i18n="mode.growth">Growth</span>
         </button>
-        <button type="button" class="mode-card" data-mode="fengshui" role="radio" aria-checked="false" data-i18n-title="mode.fengshui.desc">
-          <svg class="mode-seal" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="21" rx="4" fill="#b45a42"/><rect x="3.5" y="3.5" width="17" height="17" rx="3" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="0.8"/><text x="12" y="16.5" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">English</text></svg>
-          <span data-i18n="mode.fengshui">Traditional</span>
+        <button type="button" class="mode-card" data-mode="conflict" role="radio" aria-checked="false" data-i18n-title="mode.conflict.desc">
+          <span class="mode-seal mode-seal-text">C</span><span data-i18n="mode.conflict">Conflict</span>
         </button>
       </section>
 
@@ -269,13 +263,13 @@
 
 <script src="vendor/zdog.dist.min.js?v=1.1.3"></script>
 <script src="scripts/i18n.js?v=8"></script>
-<script src="scripts/api.js?v=7"></script>
-<script src="scripts/brief.js?v=17"></script>
+<script src="scripts/api.js?v=8"></script>
+<script src="scripts/brief.js?v=19"></script>
 <script src="scripts/voice.js?v=6"></script>
 <script src="scripts/chat.js?v=6"></script>
 <script src="scripts/archive.js?v=6"></script>
 <script src="scripts/stats.js?v=6"></script>
-<script src="scripts/settings.js?v=8"></script>
+<script src="scripts/settings.js?v=9"></script>
 <script src="scripts/app.js?v=9"></script>
 </body>
 </html>
