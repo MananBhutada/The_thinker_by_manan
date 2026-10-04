@@ -1,7 +1,7 @@
-"""GET /api/archive - 分页查询决策历史列表。
+"""GET /api/archive - English text
 
-参数：page=1&pageSize=20
-返回：{ ok, list, total, page, pageSize }
+English textpage=1&pageSize=20
+English text{ ok, list, total, page, pageSize }
 """
 
 from typing import Any, Dict
@@ -15,10 +15,10 @@ router = APIRouter()
 
 @router.get("/api/archive")
 def get_archive(page: int = 1, pageSize: int = 20) -> Dict[str, Any]:
-    """分页查询决策历史（按 createdAt 降序）。
+    """English textEnglish text createdAt English text
 
-    - page 从 1 开始；pageSize 默认 20
-    - 无记录时返回空列表（不返回 mock 示例数据）
+    - page English text 1 English textpageSize English text 20
+    - English textEnglish text mock English text
     """
     if page < 1:
         page = 1
