@@ -1,12 +1,12 @@
-"""POST /api/chat - 接收用户问题 + 模式，返回 AI 回复。
+"""POST /api/chat - English text + English textEnglish text AI English text
 
-流程：
-  1. 合并请求级临时覆盖配置（apiKey/llmModel/... > 环境变量 > SQLite > config.json）
-  2. mode == "auto" 时调用 mode_recognizer.explain 识别实际模式
-  3. mode == "nature" 时走 nature_service.generate_nature_brief
-  4. 其它模式调用 llm_service.call_llm 拿到 ModeResult dict
-  5. 自动落库到 SQLite decisions 表
-  6. 返回 ChatResponse（brief/nature/mode/reply/result/autoRecognized）
+English text
+  1. English textapiKey/llmModel/... > English text > SQLite > config.json
+  2. mode == "auto" English text mode_recognizer.explain English text
+  3. mode == "nature" English text nature_service.generate_nature_brief
+  4. English text llm_service.call_llm English text ModeResult dict
+  5. English text SQLite decisions English text
+  6. English text ChatResponsebrief/nature/mode/reply/result/autoRecognized
 """
 
 from typing import Any, Dict, Optional
@@ -24,10 +24,10 @@ router = APIRouter()
 
 
 def _request_overrides(req: ChatRequest) -> dict:
-    """从请求体提取临时覆盖配置（映射到 config 键名）。
+    """English textEnglish text config English text
 
-    v0.7.0 起 weatherKey（高德 Key）为主字段；
-    weatherAppsecret 兼容旧版，自动并入 weather_key。
+    v0.7.0 English text weatherKeyEnglish text KeyEnglish text
+    weatherAppsecret English textEnglish text weather_key
     """
     weather_key = req.weatherKey or req.weatherAppsecret
     return {
@@ -42,7 +42,7 @@ def _request_overrides(req: ChatRequest) -> dict:
 
 
 def _merge_overrides(base: dict, overrides: dict) -> dict:
-    """在 base 之上叠加请求级覆盖（仅覆盖非空字段）。"""
+    """English text base English textEnglish text"""
     cfg = dict(base)
     if not overrides:
         return cfg
@@ -53,16 +53,16 @@ def _merge_overrides(base: dict, overrides: dict) -> dict:
 
 
 def _try_build_brief(result: Dict[str, Any], mode: str = "auto") -> Optional[Brief]:
-    """从 ModeResult 构造 Brief。
+    """English text ModeResult English text Brief
 
-    优先读取 result 中的 summary/confidence/perspectives/nextSteps/risks；
-    缺失时从模式字段推导（conclusion/signal/suggestion/pros/cons），
-    confidence 按模式给默认值，确保档案页和统计页有有效数据。
+    English text result English text summary/confidence/perspectives/nextSteps/risks
+    English textconclusion/signal/suggestion/pros/cons
+    confidence English textEnglish text
     """
     if not isinstance(result, dict):
         return None
 
-    # 默认值表（与 llm_service._MOCK_BRIEFS 保持一致）
+    # English textEnglish text llm_service._MOCK_BRIEFS English text
     default_confidence = {
         "rational": 78,
         "random": 55,
@@ -91,14 +91,14 @@ def _try_build_brief(result: Dict[str, Any], mode: str = "auto") -> Optional[Bri
     next_steps = list(result.get("nextSteps", []) or [])
     risks = list(result.get("risks", []) or [])
 
-    # 从模式字段推导 perspectives / risks
+    # English text perspectives / risks
     if not perspectives:
         pros = result.get("pros") or []
         cons = result.get("cons") or []
         if pros:
-            perspectives.append("支持：" + "；".join(str(p) for p in pros[:3]))
+            perspectives.append("English text" + "".join(str(p) for p in pros[:3]))
         if cons:
-            risks.append("风险：" + "；".join(str(c) for c in cons[:3]))
+            risks.append("English text" + "".join(str(c) for c in cons[:3]))
     if not next_steps and result.get("suggestion"):
         next_steps.append(str(result["suggestion"]))
 
@@ -120,28 +120,28 @@ def _try_build_brief(result: Dict[str, Any], mode: str = "auto") -> Optional[Bri
 
 @router.post("/api/chat", response_model=ChatResponse)
 def chat(req: ChatRequest) -> ChatResponse:
-    """接收用户问题 + 模式，返回决策简报与自然语言回复。
+    """English text + English textEnglish text
 
-    - auto 模式：调用 mode_recognizer.explain 自动识别，并把识别结果写入 autoRecognized
-    - nature 模式：走 nature_service，brief 为空
-    - 其它模式：调用 call_llm 拿 ModeResult，并尝试从 result 提取 Brief
-    - 结果自动落库到 decisions 表
+    - auto English textEnglish text mode_recognizer.explain English textEnglish text autoRecognized
+    - nature English textEnglish text nature_servicebrief English text
+    - English textEnglish text call_llm English text ModeResultEnglish text result English text Brief
+    - English text decisions English text
     """
     merged_config = _merge_overrides(get_effective_config(), _request_overrides(req))
 
-    # 用户语言偏好，用于无 Key 时的 mock 数据语言；demo_mode 决定是否允许 mock 降级
+    # English textEnglish text Key English text mock English textdemo_mode English text mock English text
     prefs = get_preferences()
     language = prefs.get("language", "zh-CN")
     allow_mock = bool(prefs.get("demo_mode", False))
 
-    # 1. auto 模式识别
+    # 1. auto English text
     auto_recognized: Optional[Dict[str, Any]] = None
     effective_mode = req.mode
     if effective_mode == "auto":
         auto_recognized = explain_mode(req.question)
         effective_mode = str(auto_recognized.get("mode") or "auto")
 
-    # 2. 分模式处理
+    # 2. English text
     brief: Optional[Brief] = None
     nature: Optional[Dict[str, Any]] = None
     result: Optional[Dict[str, Any]] = None
@@ -156,10 +156,10 @@ def chat(req: ChatRequest) -> ChatResponse:
             poem = nature.get("poem", "")
             suggestion = nature.get("suggestion", "")
             reply = (
-                f"已用「nature」模式分析你的问题「{req.question}」。\n"
-                f"自然信号：{signal}\n"
+                f"English textnatureEnglish text{req.question}\n"
+                f"English text{signal}\n"
                 f"{poem}\n"
-                f"建议：{suggestion}"
+                f"English text{suggestion}"
             )
         else:
             result = call_llm(req.question, effective_mode, merged_config,
@@ -168,13 +168,13 @@ def chat(req: ChatRequest) -> ChatResponse:
             brief = _try_build_brief(result, mode=effective_mode)
             summary = result.get("summary") or result.get("conclusion") or ""
             reply = (
-                f"已用「{effective_mode}」模式分析你的问题「{req.question}」。\n"
+                f"English text{effective_mode}English text{req.question}\n"
                 f"{summary}"
             )
     except NoApiKeyError:
-        raise HTTPException(status_code=402, detail="需要配置 LLM API Key 才能使用。可点击「体验 Demo」查看演示效果。")
+        raise HTTPException(status_code=402, detail="English text LLM API Key English textEnglish textEnglish text DemoEnglish text")
 
-    # 3. 自动落库
+    # 3. English text
     decision_id: Optional[str] = None
     try:
         saved = db.save_decision({
@@ -187,10 +187,10 @@ def chat(req: ChatRequest) -> ChatResponse:
         })
         decision_id = saved.get("id")
     except Exception as e:
-        # 落库失败不阻塞主流程
-        print(f"[chat] 落库失败: {type(e).__name__}")
+        # English text
+        print(f"[chat] English text: {type(e).__name__}")
 
-    # 4. 返回
+    # 4. English text
     return ChatResponse(
         brief=brief,
         nature=nature,
