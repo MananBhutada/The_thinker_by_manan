@@ -9,7 +9,7 @@ English text
   6. English text ChatResponsebrief/nature/mode/reply/result/autoRecognized
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional\nimport os
 
 from fastapi import APIRouter, HTTPException
 
@@ -127,7 +127,7 @@ def chat(req: ChatRequest) -> ChatResponse:
     - English textEnglish text call_llm English text ModeResultEnglish text result English text Brief
     - English text decisions English text
     """
-    merged_config = _merge_overrides(get_effective_config(), _request_overrides(req))
+    if req.provider == "free" and not os.environ.get("FOUNDEROS_FREE_AI_API_KEY"):\n        raise HTTPException(status_code=503, detail="FounderOS Free AI is not configured on this deployment yet.")\n    if req.provider == "byok" and not req.apiKey:\n        raise HTTPException(status_code=402, detail="Choose Use my API key and provide a key for this request.")\n    merged_config = _merge_overrides(get_effective_config(), _request_overrides(req))
 
     # English textEnglish text Key English text mock English textdemo_mode English text mock English text
     prefs = get_preferences()
