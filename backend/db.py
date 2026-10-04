@@ -1,11 +1,11 @@
-"""SQLite 持久化层。
+"""SQLite English text
 
-替代 HTML 版本的 IndexedDB，提供 decisions 和 config 两张表。
-单文件 SQLite，无需服务器，适合本地单机工具。
+English text HTML English text IndexedDBEnglish text decisions English text config English text
+English text SQLiteEnglish textEnglish text
 
-表结构：
-  - decisions: 决策记录（id/question/mode/result/brief/createdAt/executed/regret/dialogueHistory）
-  - config: 配置项（key/value），存储 LLM/天气 API Key 和用户偏好
+English text
+  - decisions: English textid/question/mode/result/brief/createdAt/executed/regret/dialogueHistory
+  - config: English textkey/valueEnglish text LLM/English text API Key English text
 """
 
 import json
@@ -14,12 +14,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
-# SQLite 数据库文件路径（与 backend/ 同级，gitignore 已忽略 *.db）
+# SQLite English textEnglish text backend/ English textgitignore English text *.db
 DB_PATH = Path(__file__).parent / "choice.db"
 
 
 def get_conn() -> sqlite3.Connection:
-    """获取 SQLite 连接。每次调用创建新连接，避免线程问题。"""
+    """English text SQLite English textEnglish textEnglish text"""
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
@@ -28,7 +28,7 @@ def get_conn() -> sqlite3.Connection:
 
 
 def init_db() -> None:
-    """初始化数据库表。应用启动时调用一次。"""
+    """English textEnglish text"""
     with get_conn() as conn:
         conn.executescript(
             """
@@ -54,11 +54,11 @@ def init_db() -> None:
         )
 
 
-# ─── decisions 表操作 ───────────────────────────────────────────
+# ─── decisions English text ───────────────────────────────────────────
 
 
 def save_decision(dec: dict) -> dict:
-    """新增/更新一条决策记录。返回传入的 dec（补齐默认值）。"""
+    """English text/English textEnglish text decEnglish text"""
     if not dec.get("id"):
         dec["id"] = f"dec_{datetime.now().strftime('%Y%m%d%H%M%S')}_{_random_suffix()}"
     if not dec.get("createdAt"):
@@ -87,14 +87,14 @@ def save_decision(dec: dict) -> dict:
 
 
 def get_decision(decision_id: str) -> Optional[dict]:
-    """按 id 查询单条决策记录。"""
+    """English text id English text"""
     with get_conn() as conn:
         row = conn.execute("SELECT * FROM decisions WHERE id = ?", (decision_id,)).fetchone()
     return _row_to_decision(row) if row else None
 
 
 def list_decisions(limit: int = 100, offset: int = 0) -> list[dict]:
-    """查询决策历史列表（按 createdAt 降序）。"""
+    """English textEnglish text createdAt English text"""
     with get_conn() as conn:
         rows = conn.execute(
             "SELECT * FROM decisions ORDER BY created_at DESC LIMIT ? OFFSET ?",
@@ -104,7 +104,7 @@ def list_decisions(limit: int = 100, offset: int = 0) -> list[dict]:
 
 
 def update_decision(decision_id: str, patches: dict) -> Optional[dict]:
-    """部分更新决策记录（仅 executed/regret/dialogueHistory 可更新）。"""
+    """English textEnglish text executed/regret/dialogueHistory English text"""
     allowed = {"executed", "regret", "dialogueHistory"}
     updates = {k: v for k, v in patches.items() if k in allowed}
     if not updates:
@@ -129,24 +129,24 @@ def update_decision(decision_id: str, patches: dict) -> Optional[dict]:
 
 
 def delete_decision(decision_id: str) -> bool:
-    """删除一条决策记录。返回是否删除成功。"""
+    """English textEnglish text"""
     with get_conn() as conn:
         cur = conn.execute("DELETE FROM decisions WHERE id = ?", (decision_id,))
         return cur.rowcount > 0
 
 
 def count_decisions() -> int:
-    """决策总数。"""
+    """English text"""
     with get_conn() as conn:
         row = conn.execute("SELECT COUNT(*) AS n FROM decisions").fetchone()
     return row["n"]
 
 
-# ─── config 表操作 ──────────────────────────────────────────────
+# ─── config English text ──────────────────────────────────────────────
 
 
 def get_config_value(key: str, default: Any = None) -> Any:
-    """读取单个配置项。"""
+    """English text"""
     with get_conn() as conn:
         row = conn.execute("SELECT value FROM config WHERE key = ?", (key,)).fetchone()
     if not row:
@@ -158,7 +158,7 @@ def get_config_value(key: str, default: Any = None) -> Any:
 
 
 def set_config_value(key: str, value: Any) -> None:
-    """写入单个配置项（upsert）。"""
+    """English textupsert"""
     with get_conn() as conn:
         conn.execute(
             "INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)",
@@ -167,7 +167,7 @@ def set_config_value(key: str, value: Any) -> None:
 
 
 def get_all_config() -> dict:
-    """读取全部配置项，返回 {key: value} 字典。"""
+    """English textEnglish text {key: value} English text"""
     with get_conn() as conn:
         rows = conn.execute("SELECT key, value FROM config").fetchall()
     out = {}
@@ -180,16 +180,16 @@ def get_all_config() -> dict:
 
 
 def delete_config_value(key: str) -> None:
-    """删除单个配置项。"""
+    """English text"""
     with get_conn() as conn:
         conn.execute("DELETE FROM config WHERE key = ?", (key,))
 
 
-# ─── 辅助函数 ───────────────────────────────────────────────────
+# ─── English text ───────────────────────────────────────────────────
 
 
 def _row_to_decision(row: sqlite3.Row) -> dict:
-    """把数据库行转换为 Decision dict。"""
+    """English text Decision dict"""
     out = {
         "id": row["id"],
         "question": row["question"],
@@ -207,7 +207,7 @@ def _row_to_decision(row: sqlite3.Row) -> dict:
 
 
 def _random_suffix() -> str:
-    """6 位随机后缀（base36）。"""
+    """6 English textbase36"""
     import random
     import string
     return "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
