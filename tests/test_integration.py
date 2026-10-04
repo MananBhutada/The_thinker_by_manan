@@ -1,10 +1,10 @@
-"""端到端集成测试：6 模式全链路 + 配置流程 + 数据持久化。
+"""English text6 English text + English text + English text
 
-直接对运行中的后端（默认 http://localhost:8765）做真实 HTTP 调用，
-不走 TestClient，用于验证：
-1. 6 模式（auto/rational/random/nature/dialogue/fengshui）的 /api/chat 全链路
-2. 配置流程：POST /api/config → GET 脱敏 → DELETE 清除
-3. 数据持久化：chat 自动落库 → archive 列表 → decision 查询/更新 → stats 统计
+English textEnglish text http://localhost:8765English text HTTP English text
+English text TestClientEnglish text
+1. 6 English textauto/rational/random/nature/dialogue/fengshuiEnglish text /api/chat English text
+2. English textPOST /api/config → GET English text → DELETE English text
+3. English textchat English text → archive English text → decision English text/English text → stats English text
 4. preferences GET/POST
 """
 
@@ -15,7 +15,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-# 把 backend 加入 sys.path 以便复用 schemas
+# English text backend English text sys.path English text schemas
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "backend"))
 
 BASE_URL = os.environ.get("CHOICE_TEST_BASE_URL", "http://localhost:8765")
@@ -23,18 +23,18 @@ BASE_URL = os.environ.get("CHOICE_TEST_BASE_URL", "http://localhost:8765")
 
 @pytest.fixture(scope="module")
 def client():
-    """HTTP 客户端。"""
+    """HTTP English text"""
     with httpx.Client(base_url=BASE_URL, timeout=30.0) as c:
-        # 先确认服务在跑
+        # English text
         try:
             r = c.get("/api/health")
             r.raise_for_status()
         except Exception as e:
-            pytest.skip(f"后端未运行在 {BASE_URL}：{e}")
+            pytest.skip(f"English text {BASE_URL}{e}")
         yield c
 
 
-# ============================== 1. 健康检查 ==============================
+# ============================== 1. English text ==============================
 
 def test_health(client):
     r = client.get("/api/health")
@@ -49,7 +49,7 @@ def test_modes(client):
     r = client.get("/api/modes")
     assert r.status_code == 200
     data = r.json()
-    # 后端返回 {modes: [...], quickQuestions: [...]}
+    # English text {modes: [...], quickQuestions: [...]}
     assert "modes" in data
     assert "quickQuestions" in data
     modes = data["modes"]
@@ -61,13 +61,13 @@ def test_modes(client):
     assert len(data["quickQuestions"]) >= 1
 
 
-# ============================== 2. 6 模式全链路 ==============================
+# ============================== 2. 6 English text ==============================
 
 def test_chat_auto(client):
-    r = client.post("/api/chat", json={"question": "今天午餐吃什么", "mode": "auto"})
+    r = client.post("/api/chat", json={"question": "English text", "mode": "auto"})
     assert r.status_code == 200
     d = r.json()
-    # auto 模式识别后 mode 字段是识别出的子模式（不再是 'auto'）
+    # auto English text mode English textEnglish text 'auto'
     assert d["mode"] in {"rational", "random", "nature", "dialogue", "fengshui"}
     assert d["autoRecognized"] is not None
     assert d["autoRecognized"]["mode"] == d["mode"]
@@ -77,37 +77,37 @@ def test_chat_auto(client):
 
 
 def test_chat_rational(client):
-    r = client.post("/api/chat", json={"question": "买电车还是油车", "mode": "rational"})
+    r = client.post("/api/chat", json={"question": "English text", "mode": "rational"})
     assert r.status_code == 200
     d = r.json()
     assert d["mode"] == "rational"
     assert d["reply"]
     assert d["result"] is not None
-    # rational 应有 conclusion 或 pros/cons
+    # rational English text conclusion English text pros/cons
     res = d["result"]
     assert "conclusion" in res or "pros" in res or "score" in res
     assert d["decisionId"]
 
 
 def test_chat_random(client):
-    r = client.post("/api/chat", json={"question": "今晚看哪部电影", "mode": "random"})
+    r = client.post("/api/chat", json={"question": "English text", "mode": "random"})
     assert r.status_code == 200
     d = r.json()
     assert d["mode"] == "random"
     assert d["reply"]
     res = d["result"]
-    # random 应返回 options 或 wheelResult
+    # random English text options English text wheelResult
     assert "options" in res or "wheelResult" in res
     assert d["decisionId"]
 
 
 def test_chat_nature(client):
-    r = client.post("/api/chat", json={"question": "要不要换城市生活", "mode": "nature"})
+    r = client.post("/api/chat", json={"question": "English text", "mode": "nature"})
     assert r.status_code == 200
     d = r.json()
     assert d["mode"] == "nature"
     assert d["reply"]
-    # nature 模式应返回 nature 字段
+    # nature English text nature English text
     assert d["nature"] is not None
     n = d["nature"]
     assert "signal" in n or "suggestion" in n
@@ -115,33 +115,33 @@ def test_chat_nature(client):
 
 
 def test_chat_dialogue(client):
-    r = client.post("/api/chat", json={"question": "要不要辞职创业", "mode": "dialogue"})
+    r = client.post("/api/chat", json={"question": "English text", "mode": "dialogue"})
     assert r.status_code == 200
     d = r.json()
     assert d["mode"] == "dialogue"
     assert d["reply"]
     res = d["result"]
-    # dialogue 应有 options（追问选项）或 needBirth/question
+    # dialogue English text optionsEnglish textEnglish text needBirth/question
     assert "options" in res or "question" in res or "needBirth" in res
     assert d["decisionId"]
 
 
 def test_chat_fengshui(client):
-    r = client.post("/api/chat", json={"question": "新办公室座位朝向", "mode": "fengshui"})
+    r = client.post("/api/chat", json={"question": "English text", "mode": "fengshui"})
     assert r.status_code == 200
     d = r.json()
     assert d["mode"] == "fengshui"
     assert d["reply"]
     res = d["result"]
-    # fengshui 应有 bazi / baziAudit / needBirth
+    # fengshui English text bazi / baziAudit / needBirth
     assert "bazi" in res or "baziAudit" in res or "needBirth" in res
     assert d["decisionId"]
 
 
-# ============================== 3. 配置流程 ==============================
+# ============================== 3. English text ==============================
 
 def test_config_flow(client):
-    # 1. 先 GET 当前配置（脱敏）
+    # 1. English text GET English textEnglish text
     r = client.get("/api/config")
     assert r.status_code == 200
     before = r.json()
@@ -149,23 +149,23 @@ def test_config_flow(client):
     assert "weather" in before
     assert "hasLlm" in before
     assert "hasWeather" in before
-    # 脱敏：不应直接返回明文 key
+    # English textEnglish text key
     assert "apiKey" not in before["llm"]
     assert before["llm"].get("hasKey") in (True, False)
 
-    # 2. POST 保存一个测试 model（不动 api_key 以免污染）
+    # 2. POST English text modelEnglish text api_key English text
     r = client.post("/api/config", json={"llm_model": "test-model-integration"})
     assert r.status_code == 200
     saved = r.json()
     assert saved["llm"]["model"] == "test-model-integration"
 
-    # 3. GET 验证已保存
+    # 3. GET English text
     r = client.get("/api/config")
     assert r.status_code == 200
     after = r.json()
     assert after["llm"]["model"] == "test-model-integration"
 
-    # 4. POST 一个完整 LLM key（仅用于测试）
+    # 4. POST English text LLM keyEnglish text
     r = client.post("/api/config", json={
         "llm_api_key": "sk-test-integration-key",
         "llm_base_url": "https://api.test.com/v1",
@@ -173,52 +173,52 @@ def test_config_flow(client):
     assert r.status_code == 200
     assert r.json()["llm"]["hasKey"] is True
 
-    # 5. GET 确认 hasKey 为 True，但不应回显明文 key
+    # 5. GET English text hasKey English text TrueEnglish text key
     r = client.get("/api/config")
     data = r.json()
     assert data["llm"]["hasKey"] is True
-    assert "sk-test-integration-key" not in r.text  # 明文不应出现在响应中
+    assert "sk-test-integration-key" not in r.text  # English text
 
-    # 6. DELETE 清除
+    # 6. DELETE English text
     r = client.delete("/api/config")
     assert r.status_code == 200
 
-    # 7. GET 确认已清除
+    # 7. GET English text
     r = client.get("/api/config")
     data = r.json()
     assert data["llm"]["hasKey"] is False
     assert data["weather"]["hasAppid"] is False
 
 
-# ============================== 4. 数据持久化全链路 ==============================
+# ============================== 4. English text ==============================
 
 def test_persistence_flow(client):
-    # 1. 发起一次 chat，拿到 decisionId
-    r = client.post("/api/chat", json={"question": "持久化测试问题", "mode": "random"})
+    # 1. English text chatEnglish text decisionId
+    r = client.post("/api/chat", json={"question": "English text", "mode": "random"})
     assert r.status_code == 200
     did = r.json()["decisionId"]
     assert did
 
-    # 2. GET /api/decision/{id} 查询
+    # 2. GET /api/decision/{id} English text
     r = client.get(f"/api/decision/{did}")
     assert r.status_code == 200
     d = r.json()
     assert d["id"] == did
-    assert d["question"] == "持久化测试问题"
+    assert d["question"] == "English text"
     assert d["mode"] == "random"
     assert d["result"] is not None
 
-    # 3. PATCH 标记 executed
+    # 3. PATCH English text executed
     r = client.patch(f"/api/decision/{did}", json={"executed": True})
     assert r.status_code == 200
     assert r.json()["executed"] is True
 
-    # 4. PATCH 标记 regret
+    # 4. PATCH English text regret
     r = client.patch(f"/api/decision/{did}", json={"regret": True})
     assert r.status_code == 200
     assert r.json()["regret"] is True
 
-    # 5. GET /api/archive 验证列表包含该记录
+    # 5. GET /api/archive English text
     r = client.get("/api/archive")
     assert r.status_code == 200
     arc = r.json()
@@ -228,7 +228,7 @@ def test_persistence_flow(client):
     ids = [item["id"] for item in arc["list"]]
     assert did in ids
 
-    # 6. GET /api/stats 验证统计
+    # 6. GET /api/stats English text
     r = client.get("/api/stats")
     assert r.status_code == 200
     s = r.json()
@@ -237,14 +237,14 @@ def test_persistence_flow(client):
     assert "executedRate" in s
     assert "regretRate" in s
     assert "weekTrend" in s
-    # random 模式至少有 1 条
+    # random English text 1 English text
     assert s["modeDistribution"].get("random", 0) >= 1
 
     # 7. DELETE /api/decision/{id}
     r = client.delete(f"/api/decision/{did}")
     assert r.status_code == 200
 
-    # 8. GET 已删除应 404
+    # 8. GET English text 404
     r = client.get(f"/api/decision/{did}")
     assert r.status_code == 404
 
@@ -252,13 +252,13 @@ def test_persistence_flow(client):
 # ============================== 5. preferences ==============================
 
 def test_preferences_flow(client):
-    # 1. GET 当前（扁平结构）
+    # 1. GET English textEnglish text
     r = client.get("/api/preferences")
     assert r.status_code == 200
     before = r.json()
-    assert "default_mode" in before or "language" in before  # 扁平结构
+    assert "default_mode" in before or "language" in before  # English text
 
-    # 2. POST 修改 default_mode / theme / language
+    # 2. POST English text default_mode / theme / language
     r = client.post("/api/preferences", json={
         "default_mode": "rational",
         "theme": "dark",
@@ -270,7 +270,7 @@ def test_preferences_flow(client):
     assert saved.get("theme") == "dark"
     assert saved.get("language") == "zh-CN"
 
-    # 3. GET 验证
+    # 3. GET English text
     r = client.get("/api/preferences")
     assert r.status_code == 200
     after = r.json()
@@ -278,7 +278,7 @@ def test_preferences_flow(client):
     assert after.get("theme") == "dark"
     assert after.get("language") == "zh-CN"
 
-    # 4. 恢复（避免污染其它测试）
+    # 4. English textEnglish text
     client.post("/api/preferences", json={
         "default_mode": before.get("default_mode", "auto"),
         "theme": before.get("theme", "auto"),
@@ -286,7 +286,7 @@ def test_preferences_flow(client):
     })
 
 
-# ============================== 6. archive 分页 ==============================
+# ============================== 6. archive English text ==============================
 
 def test_archive_pagination(client):
     r = client.get("/api/archive?page=1&pageSize=5")
@@ -299,11 +299,11 @@ def test_archive_pagination(client):
     assert len(d["list"]) <= 5
 
 
-# ============================== 7. 输入校验 ==============================
+# ============================== 7. English text ==============================
 
 def test_chat_missing_question(client):
     r = client.post("/api/chat", json={"mode": "auto"})
-    assert r.status_code == 422  # Pydantic 校验失败
+    assert r.status_code == 422  # Pydantic English text
 
 
 def test_chat_invalid_mode(client):
