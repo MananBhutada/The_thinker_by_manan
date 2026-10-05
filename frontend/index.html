@@ -3,292 +3,63 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#f4f5ef">
-<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#0a0c11">
+<meta name="color-scheme" content="dark">
 <title>FounderOS · Think in systems</title>
-<link rel="stylesheet" href="styles/main.css?v=13">
-<link rel="stylesheet" href="styles/chat.css?v=17">
-<link rel="stylesheet" href="styles/archive.css?v=7">
-<link rel="stylesheet" href="styles/stats.css?v=7">
-<link rel="stylesheet" href="styles/settings.css?v=7">
-<link rel="stylesheet" href="styles/desktop.css?v=9">
-<link rel="stylesheet" href="styles/skins.css?v=7">
+<link rel="stylesheet" href="styles/workspace.css?v=3">
+<style>
+html,body{margin:0;height:100%;background:#0a0c11}.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}.modal-overlay{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.62);z-index:100}.modal-overlay.show{display:grid}.modal{width:min(520px,calc(100% - 32px));max-height:80vh;overflow:auto;border:1px solid rgba(255,255,255,.14);border-radius:18px;background:#11151d;color:#e8ebf3;padding:20px}.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:120;padding:10px 14px;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:#11151d;color:#e8ebf3;opacity:0;pointer-events:none;transition:opacity .2s}.toast.show{opacity:1}
+</style>
 </head>
 <body>
-  <a class="skip-link" href="#mainContent">Skip to main content</a>
-<div class="app-shell">
-  <!-- 顶栏 -->
-  <header class="topbar">
-    <button type="button" class="menu-toggle" id="menuToggle" aria-label="Menu">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-    </button>
-    <div class="crumb" id="crumb">FounderOS / Workspace</div>
-    <div class="spacer"></div>
-    <button type="button" class="new-chat-btn" id="newChatBtn" aria-label="New chat">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-      <span data-i18n="topbar.newChat">New chat</span>
-    </button>
-  </header>
-
-  <!-- 侧栏 -->
-  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
-    <div class="sidebar-head">
-      <div class="sidebar-logo">
-        <div class="sidebar-logo-seal" aria-hidden="true">
-          <img src="assets/logo-nav.png" alt="">
-        </div>
-        <span>FounderOS</span>
-      </div>
-      <div class="sidebar-sub">Your founder brain, mapped.</div>
-    </div>
-
-    <nav class="sidebar-nav">
-      <button type="button" class="nav-item active" data-tab="chat">
-        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/></svg></span>
-        <span>Workspace</span>
-      </button>
-      <button type="button" class="nav-item" data-tab="archive">
-        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>
-        <span data-i18n="nav.archive">Archive</span>
-      </button>
-      <button type="button" class="nav-item" data-tab="stats">
-        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19V5"/><path d="M8 19v-6"/><path d="M13 19V9"/><path d="M18 19V7"/></svg></span>
-        <span data-i18n="nav.stats">Stats</span>
-      </button>
-      <button type="button" class="nav-item" data-tab="settings">
-        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2 3.4-.2-.1a1.7 1.7 0 0 0-1.9.3 1.7 1.7 0 0 0-.8 1.6V22H9v-.2a1.7 1.7 0 0 0-.8-1.6 1.7 1.7 0 0 0-1.9-.3l-.2.1-2-3.4.1-.1A1.7 1.7 0 0 0 4.6 15 1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1 2-3.4.2.1a1.7 1.7 0 0 0 1.9-.3A1.7 1.7 0 0 0 9 1.8V2h6v-.2a1.7 1.7 0 0 0 .8 1.6 1.7 1.7 0 0 0 1.9.3l.2-.1 2 3.4-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.1v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg></span>
-        <span data-i18n="nav.settings">Settings</span>
-      </button>
-    </nav>
-
-    <div class="sidebar-title" data-i18n="sidebar.recent">Recent decisions</div>
-    <div class="sidebar-recent" id="sidebarRecent">
-      <!-- 由 JS 动态填充 -->
-    </div>
-
-    <div class="sidebar-foot">
-      <span id="sideLang">English</span>
-      <span id="sideVersion">v0.9.1</span>
-    </div>
+<a class="skip-link" href="#mainContent">Skip to main content</a>
+<div class="app-shell founder-os">
+  <aside class="sidebar" id="sidebar" aria-label="FounderOS menu">
+    <div class="sidebar-head"><div class="sidebar-logo"><span>FounderOS</span></div><div class="sidebar-sub">Your founder brain, mapped.</div></div>
+    <nav class="sidebar-nav"><button type="button" class="nav-item" data-tab="archive">Archive</button><button type="button" class="nav-item" data-tab="settings">Settings</button></nav>
+    <div class="sidebar-foot"><span>FounderOS</span><span>v1.0</span></div>
   </aside>
 
-  <!-- 主区 -->
-  <main class="main founder-main" id="mainContent" tabindex="-1">
-  <div class="founder-workspace">
-    <section class="mind-panel" aria-label="Founder mind map">
-      <header class="mind-header">
-        <div>
-          <div class="mind-kicker">FOUNDEROS</div>
-          <h1>Everything in your head.<br><em>One living map.</em></h1>
-          <p>Dump the messy version. FounderOS turns ideas, worries, decisions, money and dependencies into a structured tree without forcing you to think linearly.</p>
+  <main class="main fw" id="mainContent" tabindex="-1" aria-label="FounderOS workspace">
+    <div class="fw-workspace" id="fwWorkspace">
+      <div class="fw-stage is-empty" id="fwStage">
+        <svg id="fwSvg" class="fw-svg" role="group" aria-label="Founder graph. Use Tab to move between nodes, Enter to open one, Escape to close."></svg>
+        <div class="fw-tip" id="fwTip" hidden role="presentation"></div>
+        <header class="fw-top">
+          <button type="button" class="fw-icon" id="menuToggle" aria-label="Open menu">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
+          <div class="fw-brand"><h1>FounderOS</h1><p>Your company, mapped as you think.</p></div>
+          <div class="fw-spacer"></div><span class="fw-count" id="fwCount"></span>
+          <button type="button" class="fw-pill" id="fwIgnoredBtn" hidden></button>
+          <button type="button" class="fw-pill fw-engine" id="fwEngine">FounderOS Free AI</button>
+          <button type="button" class="fw-icon" id="fwRefresh" aria-label="Refresh map">↻</button>
+          <button type="button" class="fw-root-btn" id="fwRootBtn" aria-label="Open startup context"><span id="fwRootName">Your startup</span></button>
+        </header>
+        <div class="fw-empty" id="fwEmpty">
+          <p class="fw-empty-title">Start with the messy version.</p>
+          <p class="fw-empty-sub">Say everything on your mind at once. Money, people, product, fears, half-ideas. FounderOS keeps it messy and makes it visible.</p>
+          <div class="fw-empty-ex"><button type="button" data-example="I want to launch a new product, but I'm low on runway, maybe I need a CTO, marketing is getting expensive, and if we raise funding I might hire two people later.">Launch vs runway vs CTO</button><button type="button" data-example="We have 3 pilot customers but no pricing yet. I'm unsure whether to hire a sales person or build the dashboard first.">Pilots, pricing, hiring</button></div>
         </div>
-        <div class="mind-status"><span></span> LIVE WORKSPACE</div>
-      </header>
-
-      <div class="mind-canvas">
-        <svg id="founderGraphSvg" viewBox="0 0 1080 680" role="img" aria-label="Founder thinking tree"></svg>
-        <div class="mind-empty" id="graphEmpty">
-          <span>Start with the messy version.</span>
-          <small>“I want to launch X, but I need money, users, a CTO, and I’m not sure what comes first…”</small>
-        </div>
-        <div class="node-inspector" id="nodeInspector" hidden></div>
+        <div class="fw-controls" role="group" aria-label="Graph controls"><button type="button" id="fwZoomIn" aria-label="Zoom in">+</button><button type="button" id="fwZoomOut" aria-label="Zoom out">−</button><button type="button" id="fwFit" aria-label="Fit graph">⌗</button></div>
+        <div class="fw-legend" aria-hidden="true"><span><i class="lg-solid"></i>belongs to</span><span><i class="lg-dash"></i>cross-link</span><span><i class="lg-dot"></i>AI blind spot</span></div>
+        <form class="fw-dock" id="fwDock" novalidate><label for="fwInput" class="sr-only">Tell FounderOS what's on your mind</label><textarea id="fwInput" rows="1" maxlength="12000" placeholder="Tell FounderOS what’s on your mind…" spellcheck="true"></textarea><button type="submit" class="fw-map" id="fwMapBtn"><span>Map</span> →</button><div class="fw-dock-status" id="fwDockStatus" hidden role="status"></div><div class="fw-dock-error" id="fwDockError" hidden role="alert"></div></form>
       </div>
-
-      <div class="mind-input">
-        <textarea id="graphInput" rows="2" maxlength="12000" placeholder="Dump everything on your mind — ideas, people, money, fears, dates, half-formed thoughts…"></textarea>
-        <div class="mind-input-footer">
-          <span>AI maps structure. <b>You stay in control.</b></span>
-          <button type="button" id="graphExtractBtn">Map my thinking <span>↗</span></button>
-        </div>
-      </div>
-    </section>
-
-    <aside class="coach-panel" aria-label="Founder BlindSpot coach">
-      <div class="coach-head">
-        <div>
-          <div class="coach-kicker">BLINDSPOT COACH</div>
-          <h2>Pressure-test the map.</h2>
-        </div>
-        <button type="button" class="coach-refresh" id="graphRefreshBtn" aria-label="Refresh founder map">↻</button>
-      </div>
-
-      <div class="coach-mode-row" id="modeSelector" role="radiogroup" aria-label="Coaching lens">
-        <button type="button" class="mode-card active" data-mode="founder" role="radio" aria-checked="true">Founder</button>
-        <button type="button" class="mode-card" data-mode="product" role="radio" aria-checked="false">Product</button>
-        <button type="button" class="mode-card" data-mode="people" role="radio" aria-checked="false">People</button>
-        <button type="button" class="mode-card" data-mode="money" role="radio" aria-checked="false">Money</button>
-        <button type="button" class="mode-card" data-mode="growth" role="radio" aria-checked="false">Growth</button>
-        <button type="button" class="mode-card" data-mode="conflict" role="radio" aria-checked="false">Conflict</button>
-      </div>
-
-      <div class="coach-flow" id="chatScroll">
-        <div class="coach-intro">
-          <span class="coach-dot"></span>
-          <p>Ask about anything on the map. I’ll surface assumptions, blind spots, tensions and missing evidence — not make the decision for you.</p>
-        </div>
-        <div class="chat-flow" id="chatContainer"></div>
-      </div>
-
-      <div class="quick-row" id="quickExamples">
-        <button type="button" class="quick-chip">What am I missing?</button>
-        <button type="button" class="quick-chip">What depends on this?</button>
-        <button type="button" class="quick-chip">What should I validate first?</button>
-      </div>
-
-      <div class="composer">
-        <label for="inputText" class="sr-only">Ask Founder BlindSpot</label>
-        <div class="composer-preview" id="imagePreview" hidden>
-          <div class="image-thumb">
-            <img id="imagePreviewImg" alt="preview">
-            <button type="button" class="image-remove" id="imageRemove" aria-label="Remove image">×</button>
-          </div>
-        </div>
-        <textarea id="inputText" rows="2" maxlength="4000" placeholder="Ask about your thinking…" autocomplete="off" spellcheck="true"></textarea>
-        <div class="composer-toolbar">
-          <div class="composer-tools-left">
-            <button type="button" class="tool-button" id="imageBtn" aria-label="Upload image">＋</button>
-            <input type="file" id="imageInput" accept="image/*" hidden aria-label="Choose an image">
-          </div>
-          <div class="composer-tools-right">
-            <button type="button" class="tool-button mic-button" id="micBtn" aria-label="Voice input">◉</button>
-            <button type="button" class="send-button" id="sendBtn" aria-label="Send">↗</button>
-          </div>
-        </div>
-      </div>
-    </aside>
-  </div>
-</main>
-
-
+      <aside class="fw-panel" id="fwPanel" role="complementary" aria-label="Selected node and contextual coach" aria-hidden="true"></aside>
+      <div class="fw-panel-chrome"><button type="button" class="fw-panel-grip" id="fwPanelGrip" aria-label="Expand or collapse panel"><i></i></button><button type="button" class="fw-panel-close" id="fwPanelClose" aria-label="Close panel">×</button></div>
+    </div>
+    <div class="sr-only" id="fwLive" role="status" aria-live="polite"></div>
+  </main>
 </div>
-
-<!-- 右侧Drawer -->
-<div class="drawer-overlay" id="drawerOverlay"></div>
-<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Drawer">
-  <div class="drawer-header">
-    <button type="button" class="drawer-back" id="drawerBack" aria-label="Back">
-      <svg width="14" height="14" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M10 2L2 10l8 8"/></svg>
-      <span data-i18n="drawer.back">English</span>
-    </button>
-    <div class="drawer-title" id="drawerTitle">Archive</div>
-  </div>
-  <div class="drawer-body" id="drawerBody">
-    <!-- Archive视图（保留旧 ID 供 archive.js 使用） -->
-    <div class="page" id="page-archive">
-      <div class="archive-list" id="archiveList"></div>
-      <div class="detail-view" id="detailView" aria-hidden="true">
-        <div class="detail-header">
-          <button type="button" class="detail-back" id="detailBack" aria-label="Back to archive">
-            <svg viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M10 2L2 10l8 8"/></svg>
-            <span data-i18n="archive.back">English</span>
-          </button>
-          <div class="detail-title" data-i18n="archive.detail">Details</div>
-        </div>
-        <div class="detail-body" id="detailBody"></div>
-      </div>
-    </div>
-
-    <!-- Stats视图（保留旧 ID 供 stats.js 使用） -->
-    <div class="page" id="page-stats">
-      <div class="stats-scroll" id="statsScroll"></div>
-    </div>
-
-    <!-- Settings视图（保留旧 ID 供 settings.js 使用） -->
-    <div class="page" id="page-settings">
-      <div class="settings-scroll" id="settingsScroll">
-        <div class="user-card">
-          <div class="user-avatar">B</div>
-          <div class="user-info">
-            <div class="ui-name" data-i18n="app.title">BlindSpot AI</div>
-            <div class="ui-sub" data-i18n="app.subtitle">See the choice clearly before you act</div>
-          </div>
-        </div>
-
-        <div class="settings-group-title" data-i18n="settings.preferences">User preferences</div>
-        <div class="settings-list">
-          <button type="button" class="setting-row" id="setLanguage">
-            <span class="row-icon ic-lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></span>
-            <div class="setting-copy"><b data-i18n="settings.language">Interface language</b><span id="languageValue">English</span></div>
-            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-          </button>
-          <button type="button" class="setting-row" id="setTheme">
-            <span class="row-icon ic-theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg></span>
-            <div class="setting-copy"><b data-i18n="settings.theme">English</b><span id="themeValue">Follow system</span></div>
-            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-          </button>
-          <button type="button" class="setting-row" id="setSkin">
-            <span class="row-icon ic-skin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.5a2 2 0 0 0 0-4H12a1.5 1.5 0 0 1 0-3h2a5 5 0 0 0 0-10Z"/><circle cx="7.5" cy="12" r=".8" fill="currentColor"/><circle cx="10" cy="7.5" r=".8" fill="currentColor"/><circle cx="15.5" cy="8" r=".8" fill="currentColor"/></svg></span>
-            <div class="setting-copy"><b data-i18n="settings.skin">English</b><span id="skinValue">Original</span></div>
-            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-          </button>
-          <button type="button" class="setting-row" id="setDefaultMode">
-            <span class="row-icon ic-mode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></span>
-            <div class="setting-copy"><b data-i18n="settings.defaultMode">DefaultDecision mode</b><span id="defaultModeValue">Auto</span></div>
-            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-          </button>
-          <button type="button" class="setting-row" id="setValues">
-            <span class="row-icon ic-values"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>
-            <div class="setting-copy"><b data-i18n="settings.values">English</b><span id="valuesValue">Default</span></div>
-            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-          </button>
-        </div>
-
-        <div class="settings-group-title" data-i18n="settings.llm">AI configuration</div>
-        <div class="settings-list">
-          <button type="button" class="setting-row" id="setAIConfig">
-            <span class="row-icon ic-llm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M9 2h6M8 12h.01M16 12h.01M8 16h8"/></svg></span>
-            <div class="setting-copy"><b data-i18n="settings.llm">AI configuration</b><span id="aiConfigValue" data-i18n="settings.llm.apiKey">API Key</span></div>
-            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-          </button>
-          <button type="button" class="setting-row" id="setWeatherConfig">
-            <span class="row-icon ic-weather"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 18a4 4 0 0 0 0-8 6 6 0 0 0-11.5 2A4 4 0 0 0 6 18z"/></svg></span>
-            <div class="setting-copy"><b data-i18n="settings.weather">NatureWeather configuration</b><span id="weatherConfigValue" data-i18n="settings.weather.simulated">If no weather API is configured, simulated data will be used</span></div>
-            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-          </button>
-        </div>
-
-        <div class="settings-group-title" data-i18n="settings.tts">Text to speech</div>
-        <div class="settings-list">
-          <button type="button" class="setting-row" id="setTTS">
-            <span class="row-icon ic-tts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg></span>
-            <div class="setting-copy"><b data-i18n="settings.tts">Text to speech</b><span id="ttsValue">Default voice</span></div>
-            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-          </button>
-        </div>
-
-        <div class="settings-group-title">About</div>
-        <div class="settings-list">
-          <button type="button" class="setting-row" id="setAbout">
-            <div class="setting-copy"><b data-i18n="settings.about">AboutBlindSpot AI</b></div>
-            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-          </button>
-          <div class="setting-row">
-            <div class="setting-copy"><b data-i18n="settings.version">Version</b><span>0.9.1 · Desktop</span></div>
-          </div>
-        </div>
-        <div class="setting-version">BlindSpot AI · Desktop Edition</div>
-      </div>
-    </div>
-  </div>
-</aside>
-
-<!-- Modal / Toast -->
-<div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-label="Dialogue" aria-hidden="true">
-  <div class="modal" id="modalContent" role="document"></div>
-</div>
+<div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-hidden="true"><div class="modal" id="modalContent"></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-
-<script src="vendor/zdog.dist.min.js?v=1.1.3"></script>
-<script src="scripts/i18n.js?v=9"></script>
-<script src="scripts/api.js?v=9"></script>
-<script src="scripts/brief.js?v=20"></script>
-<script src="scripts/voice.js?v=6"></script>
-<script src="scripts/provider.js?v=2"></script>
-<script src="scripts/chat.js?v=9"></script>
-<script src="scripts/graph.js?v=3"></script>
-<script src="scripts/archive.js?v=6"></script>
-<script src="scripts/stats.js?v=6"></script>
-<script src="scripts/settings.js?v=10"></script>
-<script src="scripts/app.js?v=9"></script>
+<script>
+window.App={openModal:(node)=>{const o=document.getElementById('modalOverlay'),c=document.getElementById('modalContent');c.innerHTML='';if(typeof node==='string')c.innerHTML=node;else if(node)c.appendChild(node);o.classList.add('show');o.setAttribute('aria-hidden','false')},closeModal:()=>{const o=document.getElementById('modalOverlay');o.classList.remove('show');o.setAttribute('aria-hidden','true')},toast:(m)=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._x);t._x=setTimeout(()=>t.classList.remove('show'),2600)},confirm:(m)=>Promise.resolve(window.confirm(m))};
+document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target.id==='modalOverlay')App.closeModal()});document.getElementById('menuToggle').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));
+</script>
+<script src="scripts/api.js?v=11"></script>
+<script src="scripts/provider.js?v=4"></script>
+<script src="scripts/graph.js?v=9"></script>
+<script src="scripts/workspace.js?v=5"></script>
 </body>
 </html>
