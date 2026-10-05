@@ -386,12 +386,62 @@ def _existing_digest(graph: Dict[str, Any]) -> str:
     return "\n".join(lines) + "\n\n"
 
 
+def _fallback_extract(text: str, existing: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Small deterministic fallback so Map still works when the hosted model is unavailable."""
+    t = " ".join(str(text or "").split())[:12000]
+    low = t.lower()
+    root_title = "Your Startup"
+    m = re.search(r"(?:startup|company|business)\\s*(?:is|called|named)\\s+([A-Za-z0-9][A-Za-z0-9 .&_-]{1,70})", t, re.I)
+    if m: root_title = m.group(1).strip(" .,-")[:80]
+    specs = [
+        ("money", "Money", "money"), ("runway", "Runway", "runway"),
+        ("fund", "Funding", "investment"), ("raise", "Funding", "investment"),
+        ("hire", "Hiring", "people"), ("cto", "CTO Hire", "people"),
+        ("people", "People", "people"), ("product", "Product", "product"),
+        ("build", "Product Build", "initiative"), ("customer", "Customers", "customer"),
+        ("sales", "Sales", "initiative"), ("marketing", "Marketing", "initiative"),
+        ("tax", "Tax", "constraint"), ("cost", "Costs", "cost"),
+        ("price", "Pricing", "decision"), ("pricing", "Pricing", "decision"),
+        ("risk", "Risk", "risk"), ("launch", "Launch", "initiative"),
+        ("idea", "Idea", "idea"), ("future", "Future Plan", "future_plan"),
+    ]
+    nodes=[]; seen=set()
+    def add(title, typ, details):
+        key=title.lower()+"|"+typ
+        if key in seen: return None
+        seen.add(key); nid="fallback-"+re.sub(r"[^a-z0-9]+","-",title.lower()).strip("-")[:28]
+        if any(n["id"]==nid for n in nodes): nid += "-"+str(len(nodes)+1)
+        nodes.append(_normalize_node({"id":nid,"title":title,"type":typ,"state":"known","confidence":55,"summary":details[:140],"details":details},nid,"fallback"))
+        return nid
+    root_children=[]
+    for key,title,typ in specs:
+        if key in low:
+            details = t[:500] if title in ("Product","Money","People") else f"Mentioned in founder input: {t[:360]}"
+            nid=add(title,typ,details)
+            if nid: root_children.append(nid)
+    if not nodes:
+        nid=add("Founder thought", "idea", t or "No detail recorded."); root_children.append(nid)
+    edges=[{"source":"root","target":nid,"kind":"structural","relationship":"contains","confidence":20} for nid in root_children]
+    if "runway" in {n["title"].lower() for n in nodes} and "money" in {n["title"].lower() for n in nodes}:
+        a=next(n["id"] for n in nodes if n["title"].lower()=="money"); b=next(n["id"] for n in nodes if n["title"].lower()=="runway")
+        edges.append({"source":a,"target":b,"kind":"semantic","relationship":"supports","confidence":45})
+    if "cto" in low and "product" in low:
+        a=next((n["id"] for n in nodes if "cto" in n["title"].lower()),None); b=next((n["id"] for n in nodes if n["title"].lower()=="product"),None)
+        if a and b: edges.append({"source":a,"target":b,"kind":"semantic","relationship":"supports","confidence":40})
+    return {"root":{"title":root_title,"summary":t[:400],"objective":""},"nodes":nodes[:18],"edges":edges[:30],"insights":[],"questions":[]}
+
+
 def extract_graph(text: str, config: Dict[str, Any], existing: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     existing = upgrade_graph(existing) if existing else None
     prompt = GRAPH_PROMPT + "\n" + (_existing_digest(existing) if existing else "") + "Founder input:\n" + text[:12000]
     existing_ids = {n["id"] for n in existing["nodes"]} if existing else set()
     stamp = time.strftime("%Y-%m-%d") + ": " + " ".join(text.split())[:90]
-    return normalize_graph(call_openai_llm(prompt, config), existing_ids=existing_ids, created_from=stamp)
+    try:
+        raw = call_openai_llm(prompt, config)
+        return normalize_graph(raw, existing_ids=existing_ids, created_from=stamp)
+    except Exception as exc:
+        print(f"[graph] LLM unavailable; using deterministic fallback: {type(exc).__name__}")
+        return normalize_graph(_fallback_extract(text, existing=existing), existing_ids=existing_ids, created_from=stamp)
 
 
 _RISKY = {"risk", "unknown", "assumption", "constraint", "problem"}
