@@ -4,7 +4,7 @@ The stored graph is a hybrid of three things:
   * a semantic hierarchy      -> edges with kind="structural" (root -> branch -> leaf)
   * a dependency/idea network -> edges with kind="semantic" (cross-links, dashed in the UI)
   * AI proposals              -> nodes with proposal=True linked by kind="proposal" edges
-                                 (never facts until the founder accepts them)
+                                 (only for gaps the founder did NOT already state; never facts until accepted)
 """
 import re
 import time
@@ -53,8 +53,9 @@ NODE RULES
 - Prefer 8-18 meaningful nodes over many fragments. Use 1-3 levels of hierarchy.
 
 BLIND SPOTS / AI PROPOSALS
-- You MAY add at most 3 nodes with "proposal": true for important gaps that follow directly from the founder's text
-  (e.g. "Have you calculated runway after hiring?"). Phrase them as questions, type unknown|risk|assumption.
+- You MAY add at most 3 nodes with "proposal": true for important gaps that follow directly from the founder's text.
+- CRITICAL: if the FOUNDER THEMSELVES asks a question or names an unknown (for example "what are the legal requirements...", "do I need a patent?", "how do I become compliant?"), that is FOUNDER CONTEXT and MUST be mapped as a normal node (usually unknown|decision|constraint|risk), NOT an AI proposal. Preserve the founder's question in that node's details/summary. Never label founder questions as "AI-proposed blind spots".
+- A proposal is ONLY an additional question the AI introduces that the founder did not already ask or state. Do not paraphrase a founder question into a proposal.
 - Each proposal needs ONE edge {kind:"proposal", relationship:"questions", source:<the node it questions>, target:<the proposal node>}.
 - Proposals are suggestions, never facts. Do not create proposals for generic advice.
 
@@ -431,6 +432,23 @@ def _fallback_extract(text: str, existing: Optional[Dict[str, Any]] = None) -> D
     return {"root":{"title":root_title,"summary":t[:400],"objective":""},"nodes":nodes[:18],"edges":edges[:30],"insights":[],"questions":[]}
 
 
+def _deproposalize_founder_questions(graph: Dict[str, Any], founder_text: str) -> Dict[str, Any]:
+    # Prevent the model from re-labelling a founder question as an AI blind spot.
+    if not founder_text or not isinstance(graph, dict): return graph
+    source = " ".join(str(founder_text).lower().split())
+    phrases = [p.strip() for p in re.split(r"[?.!;\\n]+", source) if len(p.strip()) >= 24]
+    if not phrases: return graph
+    for n in graph.get("nodes") or []:
+        if not n.get("proposal"): continue
+        blob = " ".join(str(n.get(k) or "").lower() for k in ("title", "summary", "details"))
+        if any(p in blob or blob in p for p in phrases):
+            n["proposal"] = False; n["status"] = "active"
+    proposal_ids = {n["id"] for n in graph.get("nodes") or [] if n.get("proposal")}
+    for e in graph.get("edges") or []:
+        if e.get("kind") == "proposal" and e.get("target") not in proposal_ids:
+            e["kind"] = "semantic"; e["relationship"] = "related"
+    return graph
+
 def extract_graph(text: str, config: Dict[str, Any], existing: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     existing = upgrade_graph(existing) if existing else None
     prompt = GRAPH_PROMPT + "\n" + (_existing_digest(existing) if existing else "") + "Founder input:\n" + text[:12000]
@@ -438,6 +456,7 @@ def extract_graph(text: str, config: Dict[str, Any], existing: Optional[Dict[str
     stamp = time.strftime("%Y-%m-%d") + ": " + " ".join(text.split())[:90]
     try:
         raw = call_openai_llm(prompt, config)
+        raw = _deproposalize_founder_questions(raw, text)
         return normalize_graph(raw, existing_ids=existing_ids, created_from=stamp)
     except Exception as exc:
         print(f"[graph] LLM unavailable; using deterministic fallback: {type(exc).__name__}")
