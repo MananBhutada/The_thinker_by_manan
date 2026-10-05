@@ -57,15 +57,80 @@ const FounderWorkspace = (() => {
   function capitalText(n){const c=n.capital||{};if(c.amount==null)return "";return(c.currency||"INR")+" "+Number(c.amount).toLocaleString()+(c.status&&c.status!=="none"?" · "+c.status:"");}
   function lensHtml(){const L=[["founder","Founder"],["product","Product"],["people","People"],["money","Money"],["growth","Growth"],["conflict","Conflict"]];return '<div class="fp-lens" role="radiogroup" aria-label="Coaching lens">'+L.map(([k,n])=>'<button type="button" role="radio" aria-checked="'+(k===mode)+'" class="'+(k===mode?"on":"")+'" data-lens="'+k+'">'+n+"</button>").join("")+"</div>";}
   const trunc=(t,n)=>(t.length>n?t.slice(0,n-1)+"…":t);
-  function renderPanel(id){const n=nodeData(id);if(!n)return closePanel();const isRoot=id==="root",fam=isRoot?"root":FounderGraph.family(n.type),typeTxt=isRoot?"Startup":FounderGraph.typeLabel(n.type),stateTxt=isRoot?"":n.proposal?"proposed":n.state,cap=isRoot?"":capitalText(n);
-    let h='<header class="fp-head t-'+fam+'"><div class="fp-meta"><span class="fp-type"><b class="fp-dot"></b>'+esc(typeTxt)+"</span>"+(stateTxt?'<span class="fp-state s-'+esc(n.state)+'">'+esc(stateTxt)+"</span>":"")+"</div><h2 id="fpTitle" tabindex="-1">"+esc(n.title)+"</h2></header><div class="fp-scroll" id="fpScroll">";
-    if(n.proposal)h+='<section class="fp-proposal"><p><strong>AI-proposed blind spot.</strong> This is a question, not a fact. You decide whether it belongs on your map.</p><div class="fp-actions"><button type="button" class="fp-btn is-primary" data-prop="accept">Accept</button><button type="button" class="fp-btn" data-prop="ignore">Ignore</button><button type="button" class="fp-btn is-danger" data-prop="reject">Reject</button></div></section>';
-    const ctx=isRoot?(n.summary||""):(n.details||n.summary||""); h+='<section class="fp-block"><h3>Context</h3><p class="fp-ctx">'+(ctx?esc(ctx):'<span class="fp-faint">Nothing recorded yet. Tell FounderOS more, or ask below.</span>')+"</p>"+(isRoot&&n.objective?'<p class="fp-objective"><span>Objective</span>'+esc(n.objective)+"</p>":"")+"</section>";
-    if(!isRoot){h+='<div class="fp-stats"><div><span>Confidence</span><div class="fp-bar" role="img" aria-label="Confidence '+(n.confidence||0)+' percent"><i style="width:'+(n.confidence||0)+'%"></i></div><b>'+(n.confidence||0)+"%</b></div>"+(cap?"<div><span>Capital</span><b>"+esc(cap)+"</b></div>":"")+"</div>"+listBlock("Evidence",n.evidence)+listBlock("Assumptions",n.assumptions)+listBlock("Dependencies",n.dependencies);}
-    h+=relatedBlock(id);if(n.createdFrom)h+='<p class="fp-origin">From: '+esc(n.createdFrom)+"</p>";h+='<section class="fp-chat" aria-label="Chat about '+esc(n.title)+'"><div class="fp-chat-head"><h3>Chat about this</h3>'+lensHtml()+'</div><div class="fp-thread" id="fpThread" aria-live="polite"></div></section></div>";
-    const q=isRoot?QUICK.root:n.proposal?QUICK.proposal:QUICK[n.type]||(fam==="money"?QUICK.money:QUICK.default);
-    h+='<footer class="fp-foot"><div class="fp-quick">'+q.map(t=>'<button type="button" class="fp-q">'+esc(t)+"</button>").join("")+'</div><div class="fp-ask"><label class="sr-only" for="fpInput">Ask about '+esc(n.title)+'</label><textarea id="fpInput" rows="1" maxlength="1500" placeholder="Ask about '+esc(trunc(n.title,28))+'…"></textarea><button type="button" id="fpSend" class="fp-send" aria-label="Send question">↑</button></div><div class="fp-row"><button type="button" class="fp-link" id="fpEngine">'+esc(FounderProvider.label(FounderProvider.current()))+'</button>'+(isRoot?"":'<button type="button" class="fp-link is-danger" id="fpDelete">Remove node</button>')+'</div></footer>';
-    const p=$("fwPanel");p.innerHTML=h;p.dataset.node=id;bindPanel(id);renderThread(id);
+  function renderPanel(id){
+    const n=nodeData(id);
+    if(!n) return closePanel();
+    const isRoot=id==="root";
+    const fam=isRoot?"root":FounderGraph.family(n.type);
+    const typeTxt=isRoot?"Startup":FounderGraph.typeLabel(n.type);
+    const stateTxt=isRoot?"":(n.proposal?"proposed":n.state);
+    const cap=isRoot?"":capitalText(n);
+
+    let h=`<header class="fp-head t-${fam}">
+      <div class="fp-meta">
+        <span class="fp-type"><b class="fp-dot"></b>${esc(typeTxt)}</span>
+        ${stateTxt ? `<span class="fp-state s-${esc(n.state)}">${esc(stateTxt)}</span>` : ""}
+      </div>
+      <h2 id="fpTitle" tabindex="-1">${esc(n.title)}</h2>
+    </header>
+    <div class="fp-scroll" id="fpScroll">`;
+
+    if(n.proposal){
+      h+=`<section class="fp-proposal">
+        <p><strong>AI-proposed blind spot.</strong> This is a question, not a fact. You decide whether it belongs on your map.</p>
+        <div class="fp-actions">
+          <button type="button" class="fp-btn is-primary" data-prop="accept">Accept</button>
+          <button type="button" class="fp-btn" data-prop="ignore">Ignore</button>
+          <button type="button" class="fp-btn is-danger" data-prop="reject">Reject</button>
+        </div>
+      </section>`;
+    }
+
+    const ctx=isRoot?(n.summary||""):(n.details||n.summary||"");
+    h+=`<section class="fp-block">
+      <h3>Context</h3>
+      <p class="fp-ctx">${ctx?esc(ctx):'<span class="fp-faint">Nothing recorded yet. Tell FounderOS more, or ask below.</span>'}</p>
+      ${isRoot&&n.objective?`<p class="fp-objective"><span>Objective</span>${esc(n.objective)}</p>`:""}
+    </section>`;
+
+    if(!isRoot){
+      h+=`<div class="fp-stats">
+        <div>
+          <span>Confidence</span>
+          <div class="fp-bar" role="img" aria-label="Confidence ${n.confidence||0} percent"><i style="width:${n.confidence||0}%"></i></div>
+          <b>${n.confidence||0}%</b>
+        </div>
+        ${cap?`<div><span>Capital</span><b>${esc(cap)}</b></div>`:""}
+      </div>`;
+      h+=listBlock("Evidence",n.evidence)+listBlock("Assumptions",n.assumptions)+listBlock("Dependencies",n.dependencies);
+    }
+
+    h+=relatedBlock(id);
+    if(n.createdFrom) h+=`<p class="fp-origin">From: ${esc(n.createdFrom)}</p>`;
+    h+=`<section class="fp-chat" aria-label="Chat about ${esc(n.title)}">
+      <div class="fp-chat-head"><h3>Chat about this</h3>${lensHtml()}</div>
+      <div class="fp-thread" id="fpThread" aria-live="polite"></div>
+    </section></div>`;
+
+    const q=isRoot?QUICK.root:(n.proposal?QUICK.proposal:(QUICK[n.type]||(fam==="money"?QUICK.money:QUICK.default)));
+    h+=`<footer class="fp-foot">
+      <div class="fp-quick">${q.map(t=>`<button type="button" class="fp-q">${esc(t)}</button>`).join("")}</div>
+      <div class="fp-ask">
+        <label class="sr-only" for="fpInput">Ask about ${esc(n.title)}</label>
+        <textarea id="fpInput" rows="1" maxlength="1500" placeholder="Ask about ${esc(trunc(n.title,28))}…"></textarea>
+        <button type="button" id="fpSend" class="fp-send" aria-label="Send question">↑</button>
+      </div>
+      <div class="fp-row">
+        <button type="button" class="fp-link" id="fpEngine">${esc(FounderProvider.label(FounderProvider.current()))}</button>
+        ${isRoot?"":'<button type="button" class="fp-link is-danger" id="fpDelete">Remove node</button>'}
+      </div>
+    </footer>`;
+
+    const p=$("fwPanel");
+    p.innerHTML=h;
+    p.dataset.node=id;
+    bindPanel(id);
+    renderThread(id);
   }
   function bindPanel(id){const p=$("fwPanel");p.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>FounderGraph.select(b.dataset.go));p.querySelectorAll("[data-lens]").forEach(b=>b.onclick=()=>{mode=b.dataset.lens;p.querySelectorAll("[data-lens]").forEach(x=>{const on=x.dataset.lens===mode;x.classList.toggle("on",on);x.setAttribute("aria-checked",String(on));});});p.querySelectorAll("[data-prop]").forEach(b=>b.onclick=()=>resolveProposal(id,b.dataset.prop));p.querySelectorAll(".fp-q").forEach(b=>b.onclick=()=>ask(id,b.textContent));const input=$("fpInput");input.addEventListener("input",()=>{input.style.height="auto";input.style.height=Math.min(input.scrollHeight,110)+"px";});input.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();ask(id,input.value);}});$("fpSend").onclick=()=>ask(id,input.value);$("fpEngine").onclick=async()=>{const pv=await FounderProvider.get({force:true});updateChrome();if(pv)$("fpEngine").textContent=FounderProvider.label(pv);};const del=$("fpDelete");if(del)del.onclick=async()=>{const ok=window.App&&App.confirm?await App.confirm("Remove “"+titleOf(id)+"” from your map? Its children stay and move up a level."):confirm("Remove this node?");if(!ok)return;try{const g=await API.deleteGraphNode(id);closePanel();apply(g,{});say("Node removed");}catch(e){toast(e.message||"Could not remove");}};}
   function openPanel(id,opts={}){lastFocus=opts.source==="keyboard"?document.querySelector('.gn[data-id="'+CSS.escape(id)+'"]'):lastFocus;const wasOpen=panelOpen;panelOpen=true;const p=$("fwPanel");renderPanel(id);p.classList.add("is-open");p.setAttribute("aria-hidden","false");$("fwWorkspace").classList.add("has-panel");p.classList.remove("is-peek");syncInsets();if(opts.source==="keyboard"||opts.focusPanel)setTimeout(()=>$("fpTitle")&&$("fpTitle").focus({preventScroll:true}),40);if(!wasOpen)FounderGraph.focusOn(id);say("Selected "+titleOf(id));}
