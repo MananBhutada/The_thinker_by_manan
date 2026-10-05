@@ -136,9 +136,11 @@ def chat(req: ChatRequest) -> ChatResponse:
     if req.provider == "free":
         overrides.update({
             "llm_api_key": os.environ.get("FOUNDEROS_FREE_AI_API_KEY", ""),
-            "llm_model": os.environ.get(
-                "FOUNDEROS_FREE_AI_MODEL",
-                "nvidia/nemotron-3.5-lightning:free",
+            "llm_model": (
+                os.environ.get("FOUNDEROS_FREE_AI_MODEL", "").strip()
+                if os.environ.get("FOUNDEROS_FREE_AI_MODEL", "").strip()
+                not in {"qwen/qwen3.8-27b:free", "qwen/qwen3.8-27b"}
+                else "nvidia/nemotron-3.5-lightning:free"
             ),
             "llm_base_url": os.environ.get(
                 "FOUNDEROS_FREE_AI_BASE_URL",
