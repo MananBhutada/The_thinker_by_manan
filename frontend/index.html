@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0c11">
 <meta name="color-scheme" content="dark">
 <title>FounderOS · Think in systems</title>
-<link rel="stylesheet" href="styles/workspace.css?v=3">
+<link rel="stylesheet" href="styles/workspace.css?v=4">
 <style>
 html,body{margin:0;height:100%;background:#0a0c11}.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}.modal-overlay{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.62);z-index:100}.modal-overlay.show{display:grid}.modal{width:min(520px,calc(100% - 32px));max-height:80vh;overflow:auto;border:1px solid rgba(255,255,255,.14);border-radius:18px;background:#11151d;color:#e8ebf3;padding:20px}.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:120;padding:10px 14px;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:#11151d;color:#e8ebf3;opacity:0;pointer-events:none;transition:opacity .2s}.toast.show{opacity:1}
 </style>
@@ -54,12 +54,13 @@ html,body{margin:0;height:100%;background:#0a0c11}.sr-only{position:absolute!imp
 <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-hidden="true"><div class="modal" id="modalContent"></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 <script>
+window.addEventListener("error",e=>{console.error("FounderOS runtime error:",e.error||e.message);const t=document.getElementById("toast");if(t){t.textContent="FounderOS hit a runtime error. Refresh the workspace.";t.classList.add("show");setTimeout(()=>t.classList.remove("show"),5000);}});window.addEventListener("unhandledrejection",e=>{console.error("FounderOS unhandled rejection:",e.reason);});
 window.App={openModal:(node)=>{const o=document.getElementById('modalOverlay'),c=document.getElementById('modalContent');c.innerHTML='';if(typeof node==='string')c.innerHTML=node;else if(node)c.appendChild(node);o.classList.add('show');o.setAttribute('aria-hidden','false')},closeModal:()=>{const o=document.getElementById('modalOverlay');o.classList.remove('show');o.setAttribute('aria-hidden','true')},toast:(m)=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._x);t._x=setTimeout(()=>t.classList.remove('show'),2600)},confirm:(m)=>Promise.resolve(window.confirm(m))};
 document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target.id==='modalOverlay')App.closeModal()});document.getElementById('menuToggle').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));
 </script>
-<script src="scripts/api.js?v=11"></script>
-<script src="scripts/provider.js?v=4"></script>
-<script src="scripts/graph.js?v=9"></script>
-<script src="scripts/workspace.js?v=5"></script>
+<script src="scripts/api.js?v=12"></script>
+<script src="scripts/provider.js?v=5"></script>
+<script src="scripts/graph.js?v=10"></script>
+<script src="scripts/workspace.js?v=6"></script>
 </body>
 </html>
