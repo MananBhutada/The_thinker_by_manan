@@ -1,6 +1,7 @@
 const FounderGraph = (() => {
   const $ = id => document.getElementById(id);
-  let graph = { root: { title: "Your startup", summary: "" }, nodes: [], edges: [], insights: [], questions: [] };
+  let graph = { root:{title:"Your startup",summary:""}, nodes:[], edges:[], insights:[], questions:[] };
+  let activeNode = null;
 
   const labels = {
     goal:"Goal", idea:"Idea", initiative:"Initiative", problem:"Problem", customer:"Customer",
@@ -11,183 +12,235 @@ const FounderGraph = (() => {
   };
 
   async function load() {
-    try {
-      graph = await API.getGraph();
-      render();
-    } catch (e) {
-      graph = { root:{title:"Your startup",summary:""}, nodes:[], edges:[], insights:[], questions:[] };
-      render();
-    }
+    try { graph = await API.getGraph(); render(); }
+    catch (e) { render(); }
   }
 
-  function makeSvg(tag, attrs = {}, text = "") {
+  function svg(tag, attrs={}, text="") {
     const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
-    Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k, v));
+    Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v));
     if (text) el.textContent = text;
     return el;
   }
 
-  function buildTree(nodes, edges) {
-    const byId = Object.fromEntries(nodes.map(n => [n.id, n]));
+  function layout(nodes, edges) {
+    const ids = new Set(nodes.map(n => n.id));
     const parent = {};
-    (edges || []).forEach(e => {
-      if (!byId[e.source] || !byId[e.target] || parent[e.source] || parent[e.target]) return;
+    // Use dependency / support semantics to create the visible tree.
+    edges.forEach(e => {
+      if (!ids.has(e.source) || !ids.has(e.target) || parent[e.source] || parent[e.target]) return;
       if (e.relationship === "depends_on") parent[e.source] = e.target;
       else if (["supports","unlocks","causes","measures","tests"].includes(e.relationship)) parent[e.target] = e.source;
-      else if (e.relationship === "conflicts_with" || e.relationship === "alternative_to") parent[e.target] = e.source;
+      else if (["alternative_to","conflicts_with"].includes(e.relationship)) parent[e.target] = e.source;
     });
 
+    // Remove cycles.
     nodes.forEach(n => {
       const seen = new Set([n.id]);
       let p = parent[n.id];
       while (p) {
         if (seen.has(p)) { delete parent[n.id]; break; }
-        seen.add(p);
-        p = parent[p];
+        seen.add(p); p = parent[p];
       }
     });
 
-    const levels = {};
-    const queue = nodes.filter(n => !parent[n.id]).map(n => [n.id, 1]);
+    const children = {};
+    nodes.forEach(n => children[n.id] = []);
+    nodes.forEach(n => { if (parent[n.id] && children[parent[n.id]]) children[parent[n.id]].push(n.id); });
+
+    const level = {};
+    const queue = nodes.filter(n => !parent[n.id]).map(n => [n.id,1]);
     while (queue.length) {
-      const item = queue.shift();
-      const id = item[0], level = item[1];
-      levels[id] = Math.min(level, 4);
-      edges.forEach(e => {
-        if (e.source === id && !levels[e.target]) queue.push([e.target, level + 1]);
-        if (e.target === id && !levels[e.source]) queue.push([e.source, level + 1]);
-      });
+      const [id,l] = queue.shift();
+      if (level[id]) continue;
+      level[id] = Math.min(l,4);
+      (children[id] || []).forEach(child => queue.push([child,l+1]));
     }
-    nodes.forEach(n => { if (!levels[n.id]) levels[n.id] = 1; });
+    nodes.forEach(n => { if (!level[n.id]) level[n.id]=1; });
+
+    const buckets = {1:[],2:[],3:[],4:[]};
+    nodes.forEach(n => buckets[level[n.id]].push(n));
 
     const pos = {};
-    const buckets = {1:[],2:[],3:[],4:[]};
-    nodes.forEach(n => buckets[levels[n.id]].push(n));
-    const xs = {1:300, 2:545, 3:775, 4:980};
-    [1,2,3,4].forEach(level => {
-      const bucket = buckets[level];
-      bucket.forEach((n, i) => {
-        const step = 540 / Math.max(1, bucket.length);
-        pos[n.id] = { x:xs[level], y:70 + step * (i + 0.5) };
+    const width = 980;
+    const y = {1:165,2:300,3:435,4:570};
+    [1,2,3,4].forEach(l => {
+      const arr = buckets[l];
+      const step = width / Math.max(arr.length,1);
+      arr.forEach((n,i) => {
+        pos[n.id] = { x: 40 + step*(i+.5), y:y[l] };
       });
     });
-    return { parent, levels, pos };
+    return { parent, children, level, pos };
+  }
+
+  function edgePath(a,b,vertical=true) {
+    if (vertical) {
+      const mid = (a.y+b.y)/2;
+      return "M "+a.x+" "+a.y+" C "+a.x+" "+mid+" "+b.x+" "+mid+" "+b.x+" "+b.y;
+    }
+    return "M "+a.x+" "+a.y+" C "+((a.x+b.x)/2)+" "+a.y+" "+((a.x+b.x)/2)+" "+b.y+" "+b.x+" "+b.y;
   }
 
   function render() {
-    const svg = $("founderGraphSvg");
-    if (!svg) return;
+    const canvas = $("founderGraphSvg");
+    if (!canvas) return;
     const nodes = Array.isArray(graph.nodes) ? graph.nodes : [];
     const edges = Array.isArray(graph.edges) ? graph.edges : [];
     const empty = $("graphEmpty");
     if (empty) empty.hidden = nodes.length > 0;
-    svg.innerHTML = "";
+    canvas.innerHTML = "";
 
-    const tree = buildTree(nodes, edges);
-    const pos = tree.pos, parent = tree.parent;
-    const rootX = 64, rootY = 340;
+    const tree = layout(nodes,edges);
+    const {parent,pos} = tree;
 
-    svg.appendChild(makeSvg("path", { d:"M 98 340 C 145 340 175 340 242 340", class:"root-trunk" }));
+    // Root = the founder's startup context.
+    const root = { x:540, y:55 };
+    const rootG = svg("g",{class:"mind-root"});
+    rootG.appendChild(svg("rect",{x:root.x-110,y:root.y-24,width:220,height:48,rx:15,class:"root-card"}));
+    rootG.appendChild(svg("text",{x:root.x,y:root.y-2,class:"root-title"},String(graph.root?.title || "Your startup").slice(0,30)));
+    rootG.appendChild(svg("text",{x:root.x,y:root.y+14,class:"root-label"},"STARTUP CONTEXT"));
+    canvas.appendChild(rootG);
 
+    // Solid tree branches: what belongs under what.
     nodes.filter(n => !parent[n.id]).forEach(n => {
-      const p = pos[n.id];
+      const p=pos[n.id];
       if (!p) return;
-      svg.appendChild(makeSvg("path", {
-        d:"M 98 340 C 150 340 185 " + p.y + " " + (p.x - 58) + " " + p.y,
-        class:"mind-edge branch-" + String(n.type || "idea").replace(/[^a-z0-9_-]/gi,"")
-      }));
+      canvas.appendChild(svg("path",{d:edgePath({x:root.x,y:root.y+24},{x:p.x,y:p.y-23}),class:"mind-edge tree-edge"}));
+    });
+    nodes.forEach(n => {
+      const pid=parent[n.id];
+      if (!pid || !pos[pid] || !pos[n.id]) return;
+      canvas.appendChild(svg("path",{d:edgePath({x:pos[pid].x,y:pos[pid].y+22},{x:pos[n.id].x,y:pos[n.id].y-22}),class:"mind-edge tree-edge"}));
     });
 
+    // Dashed links: related, but not part of the hierarchy.
     edges.forEach(e => {
-      const a = pos[e.source], b = pos[e.target];
-      if (!a || !b || parent[e.source] === e.target || parent[e.target] === e.source) return;
-      svg.appendChild(makeSvg("path", {
-        d:"M " + (a.x + 54) + " " + a.y + " C " + ((a.x+b.x)/2) + " " + a.y + " " + ((a.x+b.x)/2) + " " + b.y + " " + (b.x-54) + " " + b.y,
-        class:"mind-edge cross-link " + (e.relationship || "")
+      const a=pos[e.source], b=pos[e.target];
+      if (!a || !b) return;
+      const isTree = parent[e.source]===e.target || parent[e.target]===e.source;
+      if (isTree) return;
+      canvas.appendChild(svg("path",{
+        d:edgePath({x:a.x,y:a.y},{x:b.x,y:b.y},false),
+        class:"mind-edge semantic-edge "+(e.relationship||"")
       }));
     });
-
-    const rootGroup = makeSvg("g", { class:"mind-root" });
-    rootGroup.appendChild(makeSvg("circle", { cx:rootX, cy:rootY, r:34 }));
-    rootGroup.appendChild(makeSvg("text", { x:rootX, y:rootY-2, class:"root-title" }, (graph.root && graph.root.title || "Your startup").slice(0,18)));
-    rootGroup.appendChild(makeSvg("text", { x:rootX, y:rootY+14, class:"root-label" }, "YOUR BRAIN"));
-    svg.appendChild(rootGroup);
 
     nodes.forEach(n => {
-      const p = pos[n.id];
+      const p=pos[n.id];
       if (!p) return;
-      const g = makeSvg("g", {
-        class:"mind-node type-" + (n.type || "idea"),
-        transform:"translate(" + p.x + " " + p.y + ")",
-        tabindex:"0",
-        role:"button",
-        "aria-label":n.title
+      const g=svg("g",{
+        class:"mind-node type-"+(n.type||"idea")+(activeNode?.id===n.id?" is-active":""),
+        transform:"translate("+p.x+" "+p.y+")",
+        tabindex:"0",role:"button","aria-label":"Open "+n.title
       });
-      g.appendChild(makeSvg("path", { d:"M -54 0 H 54 Q 62 0 62 8 V 28 Q 62 36 54 36 H -54 Q -62 36 -62 28 V 8 Q -62 0 -54 0 Z", class:"node-card" }));
-      g.appendChild(makeSvg("circle", { cx:"-45", cy:"12", r:"4", class:"node-dot" }));
-      g.appendChild(makeSvg("text", { x:"-33", y:"14", class:"node-title" }, String(n.title || "Untitled").slice(0,26)));
-      g.appendChild(makeSvg("text", { x:"-33", y:"28", class:"node-meta" }, (labels[n.type] || n.type || "Idea") + " · " + (n.state || "unknown")));
-      g.addEventListener("click", () => inspect(n));
-      g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inspect(n); }});
-      svg.appendChild(g);
+      g.appendChild(svg("rect",{x:-76,y:-22,width:152,height:44,rx:11,class:"node-card"}));
+      g.appendChild(svg("circle",{cx:-63,cy:-8,r:4,class:"node-dot"}));
+      g.appendChild(svg("text",{x:-53,y:-5,class:"node-title"},String(n.title||"Untitled").slice(0,25)));
+      g.appendChild(svg("text",{x:-53,y:12,class:"node-meta"},(labels[n.type]||n.type||"Idea")+" · "+(n.state||"unknown")));
+      g.addEventListener("click",()=>inspect(n));
+      g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();inspect(n);}});
+      canvas.appendChild(g);
     });
 
-    const list = $("graphNodeList");
-    if (list) list.innerHTML = "";
-  }
-
-  function escapeHtml(value) {
-    return String(value ?? "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#39;" }[ch]));
-  }
-
-  function inspect(n) {
-    if (!n) return;
-    const box = $("nodeInspector");
-    if (!box) return;
-    const capital = n.capital && n.capital.amount != null
-      ? (n.capital.currency || "INR") + " " + Number(n.capital.amount).toLocaleString("en-IN") + " · " + (n.capital.status || "estimated")
-      : "No capital recorded";
-    box.innerHTML =
-      '<button class="inspector-close" aria-label="Close">×</button>' +
-      '<span class="inspector-type">' + escapeHtml(labels[n.type] || n.type || "Idea") + '</span>' +
-      '<h3>' + escapeHtml(n.title) + '</h3>' +
-      '<p>' + escapeHtml(n.details || "No supporting context recorded yet.") + '</p>' +
-      '<div><span>STATE</span><b>' + escapeHtml(n.state || "unknown") + '</b></div>' +
-      '<div><span>CONFIDENCE</span><b>' + escapeHtml(n.confidence || 0) + '%</b></div>' +
-      '<div><span>CAPITAL</span><b>' + escapeHtml(capital) + '</b></div>';
-    box.hidden = false;
-    box.querySelector(".inspector-close").onclick = () => { box.hidden = true; };
-  }
-
-  async function extract() {
-    const input = $("graphInput");
-    if (!input || !input.value.trim()) return;
-    const provider = await FounderProvider.open();
-    if (!provider) return;
-    const btn = $("graphExtractBtn");
-    btn.disabled = true;
-    btn.innerHTML = "Mapping…";
-    try {
-      graph = await API.extractGraph(input.value.trim(), provider);
-      render();
-      input.value = "";
-      App.toast("Your thinking is mapped.");
-    } catch (e) {
-      App.toast(e.message || "Graph extraction failed");
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = 'Map my thinking <span>↗</span>';
+    // Small context label for the root summary.
+    if (graph.root?.summary) {
+      canvas.appendChild(svg("text",{x:540,y:92,class:"root-summary"},String(graph.root.summary).slice(0,110)));
     }
   }
 
+  function escapeHtml(v) {
+    return String(v ?? "").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
+  }
+
+  function inspect(n) {
+    activeNode=n;
+    render();
+    const box=$("nodeInspector");
+    if (!box) return;
+    const capital=n.capital && n.capital.amount!=null
+      ? (n.capital.currency||"INR")+" "+Number(n.capital.amount).toLocaleString("en-IN")+" · "+(n.capital.status||"estimated")
+      : "Not recorded";
+
+    box.innerHTML =
+      '<button class="inspector-close" aria-label="Close">×</button>'+
+      '<span class="inspector-type">'+escapeHtml(labels[n.type]||n.type||"Idea")+'</span>'+
+      '<h3>'+escapeHtml(n.title)+'</h3>'+
+      '<p class="inspector-context">'+escapeHtml(n.details||"No context recorded yet.")+'</p>'+
+      '<div class="inspector-meta"><span>STATE</span><b>'+escapeHtml(n.state||"unknown")+'</b></div>'+
+      '<div class="inspector-meta"><span>CONFIDENCE</span><b>'+escapeHtml(n.confidence||0)+'%</b></div>'+
+      '<div class="inspector-meta"><span>CAPITAL</span><b>'+escapeHtml(capital)+'</b></div>'+
+      '<div class="node-chat">'+
+        '<div class="node-chat-label">CHAT WITH THIS NODE</div>'+
+        '<textarea id="nodeChatInput" rows="2" placeholder="Ask about '+escapeHtml(n.title)+'…"></textarea>'+
+        '<button type="button" id="nodeChatSend">Ask ↗</button>'+
+        '<div id="nodeChatReply" class="node-chat-reply" hidden></div>'+
+      '</div>';
+
+    box.hidden=false;
+    box.querySelector(".inspector-close").onclick=()=>{activeNode=null;box.hidden=true;render();};
+    box.querySelector("#nodeChatSend").onclick=()=>chatWithNode(n);
+    box.querySelector("#nodeChatInput").addEventListener("keydown",e=>{
+      if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();chatWithNode(n);}
+    });
+  }
+
+  async function chatWithNode(n) {
+    const input=$("nodeChatInput"), reply=$("nodeChatReply"), btn=$("nodeChatSend");
+    if (!input || !input.value.trim()) return;
+    const question=input.value.trim();
+    const provider=await FounderProvider.open();
+    if (!provider) return;
+    btn.disabled=true; btn.textContent="Thinking…"; reply.hidden=false; reply.textContent="";
+    const context =
+      "NODE CONTEXT\\n"+
+      "Title: "+n.title+"\\n"+
+      "Type: "+(n.type||"idea")+"\\n"+
+      "State: "+(n.state||"unknown")+"\\n"+
+      "Details: "+(n.details||"none")+"\\n"+
+      "Confidence: "+(n.confidence||0)+"%\\n\\n"+
+      "FOUNDER QUESTION\\n"+question;
+    const extra={provider:provider.provider};
+    if(provider.provider==="byok"){
+      extra.apiKey=provider.apiKey;
+      extra.llmModel=provider.llmModel;
+      extra.llmBaseUrl=provider.llmBaseUrl;
+    }
+    try {
+      const response=await API.chat(context,"founder",extra);
+      reply.textContent=response.reply||"No response returned.";
+    } catch(e) {
+      reply.textContent=e.message||"Node chat failed.";
+    } finally {
+      btn.disabled=false; btn.textContent="Ask ↗";
+    }
+  }
+
+  async function extract() {
+    const input=$("graphInput");
+    if(!input || !input.value.trim()) return;
+    const provider=await FounderProvider.open();
+    if(!provider) return;
+    const btn=$("graphExtractBtn");
+    btn.disabled=true; btn.textContent="Mapping…";
+    try {
+      graph=await API.extractGraph(input.value.trim(),provider);
+      activeNode=null;
+      render();
+      input.value="";
+      App.toast("Your thinking is mapped.");
+    } catch(e) { App.toast(e.message||"Graph extraction failed"); }
+    finally { btn.disabled=false; btn.textContent="Map my thinking ↗"; }
+  }
+
   function init() {
-    const btn = $("graphExtractBtn");
-    if (btn) btn.onclick = extract;
-    const refresh = $("graphRefreshBtn");
-    if (refresh) refresh.onclick = load;
+    const btn=$("graphExtractBtn");
+    if(btn) btn.onclick=extract;
+    const refresh=$("graphRefreshBtn");
+    if(refresh) refresh.onclick=load;
     render();
     load();
   }
 
-  return { init, load, render };
+  return {init,load,render};
 })();
