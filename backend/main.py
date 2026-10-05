@@ -14,6 +14,7 @@ English text
 import sys
 import hashlib
 import hmac
+import os
 import secrets
 from pathlib import Path
 
