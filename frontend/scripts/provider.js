@@ -1,5 +1,6 @@
 /* FounderOS request-scoped AI provider chooser. Nothing is persisted client-side. */
-const FounderProvider = (() => {\n  let last = { provider:"free" };
+const FounderProvider = (() => {
+  let last = { provider:"free" };
   function open() {
     return new Promise(resolve => {
       const body = document.createElement("div");
@@ -14,7 +15,8 @@ const FounderProvider = (() => {\n  let last = { provider:"free" };
 
       body.querySelector('[data-provider="free"]').onclick = () => {
         App.closeModal();
-        last = { provider:"free" };\n        resolve(last);
+        last = { provider:"free" };
+        resolve(last);
       };
 
       body.querySelector('[data-provider="byok"]').onclick = () => {
@@ -35,7 +37,8 @@ const FounderProvider = (() => {\n  let last = { provider:"free" };
             return;
           }
           App.closeModal();
-          last = { provider:"byok", apiKey:key, llmModel:model, llmBaseUrl:base };\n          resolve(last);
+          last = { provider:"byok", apiKey:key, llmModel:model, llmBaseUrl:base };
+          resolve(last);
         };
       };
 
@@ -54,5 +57,12 @@ const FounderProvider = (() => {\n  let last = { provider:"free" };
     fresh.then(value => resolve(value));
   }
 
-  async function get(opts={}) {\n    if (!opts.force && last && last.provider === "free") return last;\n    return open();\n  }\n  function current() { return last; }\n  function label(p) { return p && p.provider === "byok" ? "My API key" : "FounderOS Free AI"; }\n  function reset() { last = { provider:"free" }; }\n  return { open, get, current, label, reset };
+  async function get(opts={}) {
+    if (!opts.force && last && last.provider === "free") return last;
+    return open();
+  }
+  function current() { return last; }
+  function label(p) { return p && p.provider === "byok" ? "My API key" : "FounderOS Free AI"; }
+  function reset() { last = { provider:"free" }; }
+  return { open, get, current, label, reset };
 })();
