@@ -159,7 +159,24 @@ const FounderWorkspace = (() => {
       };
     });
   }
-  function init(){bindSidebar();FounderGraph.init({svg:$("fwSvg"),stage:$("fwStage"),tip:$("fwTip"),graph});FounderGraph.on("select",(id,opts)=>{if(id)openPanel(id,opts||{});else if(!(opts&&opts.silent))closePanel();});FounderGraph.on("open-chat",id=>{openPanel(id,{focusPanel:true});setTimeout(()=>$("fpInput")&&$("fpInput").focus(),120);});FounderGraph.on("moved",schedulePositionSave);$("fwDock").addEventListener("submit",e=>{e.preventDefault();map();});$("fwInput").addEventListener("input",autosize);$("fwInput").addEventListener("keydown",e=>{if((e.key==="Enter"&&(e.metaKey||e.ctrlKey))||(e.key==="Enter"&&!e.shiftKey&&!e.isComposing&&!mobile())){e.preventDefault();map();}});$("fwFit").onclick=()=>FounderGraph.fit(true);$("fwZoomIn").onclick=()=>FounderGraph.zoomBy(1.3);$("fwZoomOut").onclick=()=>FounderGraph.zoomBy(1/1.3);$("fwRefresh").onclick=async()=>{await load();say("Map refreshed")};$("fwRootBtn").onclick=()=>FounderGraph.select("root",{source:"pointer"});$("fwEngine").onclick=async()=>{await FounderProvider.get({force:true});updateChrome();};$("fwIgnoredBtn").onclick=()=>{showIgnored=!showIgnored;apply(graph,{})};$("fwPanelClose").onclick=()=>closePanel();$("fwPanelGrip").onclick=()=>$("fwPanel").classList.toggle("is-peek");document.querySelectorAll("[data-example]").forEach(b=>b.onclick=()=>{$("fwInput").value=b.dataset.example;autosize();$("fwInput").focus();});document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(document.querySelector(".modal-overlay.show"))return;if(panelOpen){e.preventDefault();closePanel();}});window.addEventListener("resize",()=>syncInsets());load();}
+  function init(){bindSidebar();
+    const must=(id)=>{const x=$(id);if(!x)throw new Error("Missing workspace element #"+id);return x;};
+    must("fwSvg"); must("fwStage"); must("fwTip"); must("fwDock"); must("fwInput"); must("fwMapBtn");
+    FounderGraph.init({svg:$("fwSvg"),stage:$("fwStage"),tip:$("fwTip"),graph});
+    FounderGraph.on("select",(id,opts)=>{if(id)openPanel(id,opts||{});else if(!(opts&&opts.silent))closePanel();});
+    FounderGraph.on("open-chat",id=>{openPanel(id,{focusPanel:true});setTimeout(()=>$("fpInput")&&$("fpInput").focus(),120);});
+    FounderGraph.on("moved",schedulePositionSave);
+    $("fwDock").addEventListener("submit",e=>{e.preventDefault();map();});
+    $("fwInput").addEventListener("input",autosize);
+    $("fwInput").addEventListener("keydown",e=>{if((e.key==="Enter"&&(e.metaKey||e.ctrlKey))||(e.key==="Enter"&&!e.shiftKey&&!e.isComposing&&!mobile())){e.preventDefault();map();}});
+    $("fwFit").onclick=()=>FounderGraph.fit(true);$("fwZoomIn").onclick=()=>FounderGraph.zoomBy(1.3);$("fwZoomOut").onclick=()=>FounderGraph.zoomBy(1/1.3);
+    $("fwRefresh").onclick=async()=>{await load();say("Map refreshed")};$("fwRootBtn").onclick=()=>FounderGraph.select("root",{source:"pointer"});
+    $("fwEngine").onclick=async()=>{await FounderProvider.get({force:true});updateChrome();};$("fwIgnoredBtn").onclick=()=>{showIgnored=!showIgnored;apply(graph,{})};
+    $("fwPanelClose").onclick=()=>closePanel();$("fwPanelGrip").onclick=()=>$("fwPanel").classList.toggle("is-peek");
+    document.querySelectorAll("[data-example]").forEach(b=>b.onclick=()=>{$("fwInput").value=b.dataset.example;autosize();$("fwInput").focus();});
+    document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(document.querySelector(".modal-overlay.show"))return;if(panelOpen){e.preventDefault();closePanel();}});window.addEventListener("resize",()=>syncInsets());
+    load();
+  }
   return {init,load};
 })();
-document.addEventListener("DOMContentLoaded",()=>FounderWorkspace.init());
+document.addEventListener("DOMContentLoaded",()=>{try{FounderWorkspace.init();}catch(e){console.error("FounderOS init failed",e);const t=document.getElementById("toast");if(t){t.textContent="FounderOS failed to initialize: "+(e.message||e);t.classList.add("show");}else{document.body.insertAdjacentHTML("afterbegin","<div style=\"position:fixed;z-index:99999;top:12px;left:12px;right:12px;padding:14px;background:#2a1010;color:#fff;border:1px solid #f66;border-radius:12px;font:14px system-ui\">FounderOS failed to initialize: "+String(e.message||e).replace(/[<>&]/g,"")+"</div>");}}});
