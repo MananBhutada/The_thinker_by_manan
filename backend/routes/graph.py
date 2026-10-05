@@ -25,7 +25,7 @@ from services.graph_service import (
 import services.llm_service as _llm_service
 from services.llm_service import NoApiKeyError, call_llm
 
-_llm_service._LLM_TIMEOUT = max(getattr(_llm_service, "_LLM_TIMEOUT", 15.0), 75.0)
+_llm_service._LLM_TIMEOUT = min(max(getattr(_llm_service, "_LLM_TIMEOUT", 20.0), 8.0), 25.0)
 
 router = APIRouter()
 
@@ -96,7 +96,19 @@ def chat_about_node(req: GraphChatRequest):
     except NoApiKeyError:
         raise HTTPException(status_code=402, detail="No LLM API key is configured.")
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=str(exc)[:500])
+        # Keep the workspace interactive even when the hosted model times out.
+        result = {
+            "type": "auto",
+            "summary": "The hosted coach is temporarily unavailable. I can still help you reason from the graph once the model responds.",
+            "confidence": 0,
+            "perspectives": [
+                "The selected node should be considered together with its parent and connected nodes.",
+                "Any estimated, hypothetical or assumed information should stay explicitly uncertain.",
+            ],
+            "nextSteps": ["Try the question again in a moment.", "Validate the most important unknown before committing resources."],
+            "risks": ["AI reasoning is unavailable for this request; do not treat this fallback as a recommendation."],
+            "_source": "fallback",
+        }
 
     from routes.chat import _try_build_brief
     brief = _try_build_brief(result, mode=req.mode)
