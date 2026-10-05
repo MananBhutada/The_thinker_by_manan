@@ -130,7 +130,9 @@ def chat(req: ChatRequest) -> ChatResponse:
     """
     if req.provider == "free" and not os.environ.get("FOUNDEROS_FREE_AI_API_KEY"):
         raise HTTPException(status_code=503, detail="FounderOS Free AI is not configured on this deployment yet.")
-    if req.provider == "byok" and not req.apiKey:\n        raise HTTPException(status_code=402, detail="Choose Use my API key and provide a key for this request.")\n    overrides = _request_overrides(req)
+    if req.provider == "byok" and not req.apiKey:
+        raise HTTPException(status_code=402, detail="Choose Use my API key and provide a key for this request.")
+    overrides = _request_overrides(req)
     if req.provider == "free":
         overrides.update({
             "llm_api_key": os.environ.get("FOUNDEROS_FREE_AI_API_KEY", ""),
