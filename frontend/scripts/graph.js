@@ -1,246 +1,49 @@
+/* FounderOS organic SVG graph. No external graph dependency: force simulation, pan/zoom, drag, curved edges. */
 const FounderGraph = (() => {
-  const $ = id => document.getElementById(id);
-  let graph = { root:{title:"Your startup",summary:""}, nodes:[], edges:[], insights:[], questions:[] };
-  let activeNode = null;
-
-  const labels = {
-    goal:"Goal", idea:"Idea", initiative:"Initiative", problem:"Problem", customer:"Customer",
-    product:"Product", market:"Market", decision:"Decision", option:"Option", risk:"Risk",
-    dependency:"Dependency", constraint:"Constraint", fact:"Fact", assumption:"Assumption",
-    metric:"Metric", experiment:"Experiment", unknown:"Unknown", investment:"Investment",
-    cost:"Cost", revenue:"Revenue", runway:"Runway"
-  };
-
-  async function load() {
-    try { graph = await API.getGraph(); render(); }
-    catch (e) { render(); }
-  }
-
-  function svg(tag, attrs={}, text="") {
-    const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
-    Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v));
-    if (text) el.textContent = text;
-    return el;
-  }
-
-  function layout(nodes, edges) {
-    const ids = new Set(nodes.map(n => n.id));
-    const parent = {};
-    // Use dependency / support semantics to create the visible tree.
-    edges.forEach(e => {
-      if (!ids.has(e.source) || !ids.has(e.target) || parent[e.source] || parent[e.target]) return;
-      if (e.relationship === "depends_on") parent[e.source] = e.target;
-      else if (["supports","unlocks","causes","measures","tests"].includes(e.relationship)) parent[e.target] = e.source;
-      else if (["alternative_to","conflicts_with"].includes(e.relationship)) parent[e.target] = e.source;
-    });
-
-    // Remove cycles.
-    nodes.forEach(n => {
-      const seen = new Set([n.id]);
-      let p = parent[n.id];
-      while (p) {
-        if (seen.has(p)) { delete parent[n.id]; break; }
-        seen.add(p); p = parent[p];
-      }
-    });
-
-    const children = {};
-    nodes.forEach(n => children[n.id] = []);
-    nodes.forEach(n => { if (parent[n.id] && children[parent[n.id]]) children[parent[n.id]].push(n.id); });
-
-    const level = {};
-    const queue = nodes.filter(n => !parent[n.id]).map(n => [n.id,1]);
-    while (queue.length) {
-      const [id,l] = queue.shift();
-      if (level[id]) continue;
-      level[id] = Math.min(l,4);
-      (children[id] || []).forEach(child => queue.push([child,l+1]));
-    }
-    nodes.forEach(n => { if (!level[n.id]) level[n.id]=1; });
-
-    const buckets = {1:[],2:[],3:[],4:[]};
-    nodes.forEach(n => buckets[level[n.id]].push(n));
-
-    const pos = {};
-    const width = 980;
-    const y = {1:165,2:300,3:435,4:570};
-    [1,2,3,4].forEach(l => {
-      const arr = buckets[l];
-      const step = width / Math.max(arr.length,1);
-      arr.forEach((n,i) => {
-        pos[n.id] = { x: 40 + step*(i+.5), y:y[l] };
-      });
-    });
-    return { parent, children, level, pos };
-  }
-
-  function edgePath(a,b,vertical=true) {
-    if (vertical) {
-      const mid = (a.y+b.y)/2;
-      return "M "+a.x+" "+a.y+" C "+a.x+" "+mid+" "+b.x+" "+mid+" "+b.x+" "+b.y;
-    }
-    return "M "+a.x+" "+a.y+" C "+((a.x+b.x)/2)+" "+a.y+" "+((a.x+b.x)/2)+" "+b.y+" "+b.x+" "+b.y;
-  }
-
-  function render() {
-    const canvas = $("founderGraphSvg");
-    if (!canvas) return;
-    const nodes = Array.isArray(graph.nodes) ? graph.nodes : [];
-    const edges = Array.isArray(graph.edges) ? graph.edges : [];
-    const empty = $("graphEmpty");
-    if (empty) empty.hidden = nodes.length > 0;
-    canvas.innerHTML = "";
-
-    const tree = layout(nodes,edges);
-    const {parent,pos} = tree;
-
-    // Root = the founder's startup context.
-    const root = { x:540, y:55 };
-    const rootG = svg("g",{class:"mind-root"});
-    rootG.appendChild(svg("rect",{x:root.x-110,y:root.y-24,width:220,height:48,rx:15,class:"root-card"}));
-    rootG.appendChild(svg("text",{x:root.x,y:root.y-2,class:"root-title"},String(graph.root?.title || "Your startup").slice(0,30)));
-    rootG.appendChild(svg("text",{x:root.x,y:root.y+14,class:"root-label"},"STARTUP CONTEXT"));
-    canvas.appendChild(rootG);
-
-    // Solid tree branches: what belongs under what.
-    nodes.filter(n => !parent[n.id]).forEach(n => {
-      const p=pos[n.id];
-      if (!p) return;
-      canvas.appendChild(svg("path",{d:edgePath({x:root.x,y:root.y+24},{x:p.x,y:p.y-23}),class:"mind-edge tree-edge"}));
-    });
-    nodes.forEach(n => {
-      const pid=parent[n.id];
-      if (!pid || !pos[pid] || !pos[n.id]) return;
-      canvas.appendChild(svg("path",{d:edgePath({x:pos[pid].x,y:pos[pid].y+22},{x:pos[n.id].x,y:pos[n.id].y-22}),class:"mind-edge tree-edge"}));
-    });
-
-    // Dashed links: related, but not part of the hierarchy.
-    edges.forEach(e => {
-      const a=pos[e.source], b=pos[e.target];
-      if (!a || !b) return;
-      const isTree = parent[e.source]===e.target || parent[e.target]===e.source;
-      if (isTree) return;
-      canvas.appendChild(svg("path",{
-        d:edgePath({x:a.x,y:a.y},{x:b.x,y:b.y},false),
-        class:"mind-edge semantic-edge "+(e.relationship||"")
-      }));
-    });
-
-    nodes.forEach(n => {
-      const p=pos[n.id];
-      if (!p) return;
-      const g=svg("g",{
-        class:"mind-node type-"+(n.type||"idea")+(activeNode?.id===n.id?" is-active":""),
-        transform:"translate("+p.x+" "+p.y+")",
-        tabindex:"0",role:"button","aria-label":"Open "+n.title
-      });
-      g.appendChild(svg("rect",{x:-76,y:-22,width:152,height:44,rx:11,class:"node-card"}));
-      g.appendChild(svg("circle",{cx:-63,cy:-8,r:4,class:"node-dot"}));
-      g.appendChild(svg("text",{x:-53,y:-5,class:"node-title"},String(n.title||"Untitled").slice(0,25)));
-      g.appendChild(svg("text",{x:-53,y:12,class:"node-meta"},(labels[n.type]||n.type||"Idea")+" · "+(n.state||"unknown")));
-      g.addEventListener("click",()=>inspect(n));
-      g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();inspect(n);}});
-      canvas.appendChild(g);
-    });
-
-    // Small context label for the root summary.
-    if (graph.root?.summary) {
-      canvas.appendChild(svg("text",{x:540,y:92,class:"root-summary"},String(graph.root.summary).slice(0,110)));
-    }
-  }
-
-  function escapeHtml(v) {
-    return String(v ?? "").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
-  }
-
-  function inspect(n) {
-    activeNode=n;
-    render();
-    const box=$("nodeInspector");
-    if (!box) return;
-    const capital=n.capital && n.capital.amount!=null
-      ? (n.capital.currency||"INR")+" "+Number(n.capital.amount).toLocaleString("en-IN")+" · "+(n.capital.status||"estimated")
-      : "Not recorded";
-
-    box.innerHTML =
-      '<button class="inspector-close" aria-label="Close">×</button>'+
-      '<span class="inspector-type">'+escapeHtml(labels[n.type]||n.type||"Idea")+'</span>'+
-      '<h3>'+escapeHtml(n.title)+'</h3>'+
-      '<p class="inspector-context">'+escapeHtml(n.details||"No context recorded yet.")+'</p>'+
-      '<div class="inspector-meta"><span>STATE</span><b>'+escapeHtml(n.state||"unknown")+'</b></div>'+
-      '<div class="inspector-meta"><span>CONFIDENCE</span><b>'+escapeHtml(n.confidence||0)+'%</b></div>'+
-      '<div class="inspector-meta"><span>CAPITAL</span><b>'+escapeHtml(capital)+'</b></div>'+
-      '<div class="node-chat">'+
-        '<div class="node-chat-label">CHAT WITH THIS NODE</div>'+
-        '<textarea id="nodeChatInput" rows="2" placeholder="Ask about '+escapeHtml(n.title)+'…"></textarea>'+
-        '<button type="button" id="nodeChatSend">Ask ↗</button>'+
-        '<div id="nodeChatReply" class="node-chat-reply" hidden></div>'+
-      '</div>';
-
-    box.hidden=false;
-    box.querySelector(".inspector-close").onclick=()=>{activeNode=null;box.hidden=true;render();};
-    box.querySelector("#nodeChatSend").onclick=()=>chatWithNode(n);
-    box.querySelector("#nodeChatInput").addEventListener("keydown",e=>{
-      if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();chatWithNode(n);}
-    });
-  }
-
-  async function chatWithNode(n) {
-    const input=$("nodeChatInput"), reply=$("nodeChatReply"), btn=$("nodeChatSend");
-    if (!input || !input.value.trim()) return;
-    const question=input.value.trim();
-    const provider=await FounderProvider.open();
-    if (!provider) return;
-    btn.disabled=true; btn.textContent="Thinking…"; reply.hidden=false; reply.textContent="";
-    const context =
-      "NODE CONTEXT\\n"+
-      "Title: "+n.title+"\\n"+
-      "Type: "+(n.type||"idea")+"\\n"+
-      "State: "+(n.state||"unknown")+"\\n"+
-      "Details: "+(n.details||"none")+"\\n"+
-      "Confidence: "+(n.confidence||0)+"%\\n\\n"+
-      "FOUNDER QUESTION\\n"+question;
-    const extra={provider:provider.provider};
-    if(provider.provider==="byok"){
-      extra.apiKey=provider.apiKey;
-      extra.llmModel=provider.llmModel;
-      extra.llmBaseUrl=provider.llmBaseUrl;
-    }
-    try {
-      const response=await API.chat(context,"founder",extra);
-      reply.textContent=response.reply||"No response returned.";
-    } catch(e) {
-      reply.textContent=e.message||"Node chat failed.";
-    } finally {
-      btn.disabled=false; btn.textContent="Ask ↗";
-    }
-  }
-
-  async function extract() {
-    const input=$("graphInput");
-    if(!input || !input.value.trim()) return;
-    const provider=await FounderProvider.open();
-    if(!provider) return;
-    const btn=$("graphExtractBtn");
-    btn.disabled=true; btn.textContent="Mapping…";
-    try {
-      graph=await API.extractGraph(input.value.trim(),provider);
-      activeNode=null;
-      render();
-      input.value="";
-      App.toast("Your thinking is mapped.");
-    } catch(e) { App.toast(e.message||"Graph extraction failed"); }
-    finally { btn.disabled=false; btn.textContent="Map my thinking ↗"; }
-  }
-
-  function init() {
-    const btn=$("graphExtractBtn");
-    if(btn) btn.onclick=extract;
-    const refresh=$("graphRefreshBtn");
-    if(refresh) refresh.onclick=load;
-    render();
-    load();
-  }
-
-  return {init,load,render};
+  const NS="http://www.w3.org/2000/svg", ROOT="root";
+  const FAMILY={runway:"money",cost:"money",revenue:"money",investment:"money",metric:"money",people:"people",customer:"people",decision:"choice",option:"choice",risk:"risk",problem:"risk",constraint:"risk",unknown:"unknown",assumption:"unknown",experiment:"unknown",goal:"future",future_plan:"future",product:"build",initiative:"build",idea:"build",market:"build",dependency:"build",fact:"build"};
+  const LABEL={goal:"goal",idea:"idea",initiative:"initiative",problem:"problem",customer:"customer",product:"product",market:"market",decision:"decision",option:"option",risk:"risk",dependency:"dependency",constraint:"constraint",fact:"fact",assumption:"assumption",metric:"metric",experiment:"experiment",unknown:"unknown",investment:"investment",cost:"cost",revenue:"revenue",runway:"runway",future_plan:"future plan",people:"people"};
+  const REL={depends_on:"depends on",supports:"supports",conflicts_with:"conflicts with",unlocks:"unlocks",alternative_to:"alternative to",causes:"causes",measures:"measures",tests:"tests",related:"related to",questions:"questions"};
+  const DIRECTED=new Set(["depends_on","unlocks","causes"]);
+  let svg,stage,tip,viewport,edgesLayer,nodesLayer,graph={root:{title:"Your startup"},nodes:[],edges:[]},selected=null,view={x:0,y:0,k:1},insets={right:0,bottom:96,left:0,top:56},raf=0,alpha=0,drag=null,pan=null,pointers=new Map(),pinch=null;
+  const sims=new Map(), handlers={};
+  const emit=(e,...a)=>(handlers[e]||[]).forEach(f=>f(...a));
+  const on=(e,f)=>{(handlers[e]=handlers[e]||[]).push(f);};
+  const el=(tag,a={},text)=>{const e=document.createElementNS(NS,tag);Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v));if(text!=null)e.textContent=text;return e;};
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const reduced=()=>matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const hash=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return(h>>>0)/4294967295;};
+  const data=id=>id===ROOT?Object.assign({id:ROOT,type:"root",title:graph.root.title||"Your startup"},graph.root):graph.nodes.find(n=>n.id===id);
+  const structural=()=>{const p={},kids={};(graph.edges||[]).forEach(e=>{if(e.kind==="structural"){if(p[e.target])return;p[e.target]=e.source;(kids[e.source]??=[]).push(e.target);}});return{p,kids};};
+  const depth=(id,p)=>{let d=0,c=id;while(c&&c!==ROOT&&d<12){c=p[c];d++;}return d;};
+  const dims=s=>{const title=Math.min(String(s.title||"").length,26), meta=s.isRoot?"startup":(s.proposal?"blind spot · proposed":(LABEL[s.data?.type]||s.data?.type||"idea")+(s.data?.state&&s.data.state!=="known"?" · "+s.data.state:""));if(s.isRoot)return{w:Math.max(170,Math.min(280,title*8+60)),h:62};const base=s.size==="lg"?title*7.2:s.size==="sm"?title*6.1:title*6.7;return{w:clamp(Math.max(base,meta.length*6.3)+42,96,250),h:s.size==="lg"?46:s.size==="sm"?34:40};};
+  function seed(s,p){const parent=s.proposal?(graph.edges||[]).find(e=>e.kind==="proposal"&&e.target===s.id)?.source:p[s.id]||ROOT,a=sims.get(parent)||sims.get(ROOT),ang=hash(s.id)*Math.PI*2,r=s.isRoot?0:(a?.isRoot?190:155);s.x=(a?.x||0)+Math.cos(ang)*r;s.y=(a?.y||0)+Math.sin(ang)*r;s.placed=true;}
+  function buildDom(){nodesLayer.innerHTML="";sims.forEach(s=>{const d=s.data||{},fam=s.isRoot?"root":(FAMILY[d.type]||"build"),cls=["gn","t-"+fam,"z-"+s.size,"s-"+(d.state||"unknown")];if(s.isRoot)cls.push("is-root");if(s.proposal)cls.push("is-proposal");if(d.status==="ignored")cls.push("is-ignored");const g=el("g",{class:cls.join(" "),"data-id":s.id,tabindex:0,role:"button","aria-label":s.isRoot?"Startup: "+s.title+". Open startup context.":s.title+", "+(LABEL[d.type]||d.type||"idea")+". Open details and chat."});const body=el("g",{class:"gn-body"});body.appendChild(el("title",{},s.title));const r=s.isRoot?22:s.size==="lg"?15:12;body.appendChild(el("rect",{class:"gn-box",x:-s.w/2,y:-s.h/2,width:s.w,height:s.h,rx:r}));body.appendChild(el("circle",{class:"gn-dot",cx:-s.w/2+15,cy:-s.h/2+15,r:s.isRoot?5:4}));body.appendChild(el("text",{class:"gn-title",x:-s.w/2+27,y:s.isRoot?2:-2},s.title.slice(0,30)));body.appendChild(el("text",{class:"gn-meta",x:-s.w/2+27,y:s.isRoot?19:14},s.isRoot?"STARTUP":(s.proposal?"AI BLIND SPOT":(LABEL[d.type]||d.type||"idea")+(d.state&&d.state!=="known"?" · "+d.state:"))));g.appendChild(body);g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();select(s.id,{source:"keyboard"});}});g.addEventListener("pointerenter",e=>hover(s.id,e));g.addEventListener("pointerleave",()=>hover(null));s.g=g;nodesLayer.appendChild(g);});}
+  function path(a,b,kind,rel){const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,bend=(hash(a.id+b.id+(rel||""))-.5)*Math.min(150,len*.28)+(kind==="structural"?0:55);const mx=(a.x+b.x)/2+nx*bend,my=(a.y+b.y)/2+ny*bend;return `M ${a.x} ${a.y} Q ${mx} ${my} ${b.x} ${b.y}`;}
+  function buildEdges(){edgesLayer.innerHTML="";const by=new Map([...sims].map(([id,s])=>[id,s]));(graph.edges||[]).forEach((e,i)=>{const a=by.get(e.source),b=by.get(e.target);if(!a||!b)return;const cls="ge "+(e.kind==="structural"?"ge-struct":e.kind==="proposal"?"ge-prop":"ge-sem")+" rel-"+(e.relationship||"related")+(DIRECTED.has(e.relationship)?" is-directed":"");const p=el("path",{class:cls,"data-key":i});p.__edge={e,a,b};edgesLayer.appendChild(p);});}
+  function render(){const vals=[...sims.values()];vals.forEach(s=>{if(s.g)s.g.setAttribute("transform",`translate(${s.x.toFixed(1)} ${s.y.toFixed(1)})`);});edgesLayer.querySelectorAll("path").forEach(p=>{const q=p.__edge;p.setAttribute("d",path(q.a,q.b,q.e.kind,q.e.relationship));p.classList.toggle("is-hot",!!selected&&(q.e.source===selected||q.e.target===selected));});svg.classList.toggle("has-sel",!!selected);}
+  function tick(){if(!alpha)return;const vals=[...sims.values()];const es=graph.edges||[];for(let i=0;i<vals.length;i++){const a=vals[i];if(a.fixed)continue;for(let j=i+1;j<vals.length;j++){const b=vals[j];let dx=a.x-b.x,dy=a.y-b.y,d=Math.hypot(dx,dy)||1,min=(a.w+b.w)*.55+34;if(d<min){const f=(min-d)/d*.035;a.vx+=(dx*f);a.vy+=(dy*f);b.vx-=dx*f;b.vy-=dy*f;}}}
+    es.forEach(e=>{const a=sims.get(e.source),b=sims.get(e.target);if(!a||!b||a.fixed&&b.fixed)return;let dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1,target=e.kind==="structural"?150:210,f=(d-target)*.001*(e.kind==="structural"?1:.38);if(!a.fixed){a.vx+=dx/d*f;a.vy+=dy/d*f;}if(!b.fixed){b.vx-=dx/d*f;b.vy-=dy/d*f;}});
+    vals.forEach(s=>{if(s.fixed)return;s.vx+=(0-s.x)*.0009;s.vy+=(0-s.y)*.0009;s.vx*=.86;s.vy*=.86;s.x+=s.vx;s.y+=s.vy;});alpha*=.94;render();if(alpha>.015)raf=requestAnimationFrame(tick);else{alpha=0;emit("settled");}}
+  function kick(){cancelAnimationFrame(raf);alpha=Math.max(alpha,.35);raf=requestAnimationFrame(tick);}
+  function settle(){[...sims.values()].forEach(s=>{s.vx=s.vy=0;s.fixed=!!s.pinned||s.isRoot;});render();}
+  function setGraph(g,opts={}){graph=g||graph;graph.nodes??=[];graph.edges??=[];const {p}=structural(),degree={};graph.edges.forEach(e=>{degree[e.source]=(degree[e.source]||0)+1;degree[e.target]=(degree[e.target]||0)+1;});const ids=new Set([ROOT]);let fresh=[];let root=sims.get(ROOT);if(!root){root={id:ROOT,isRoot:true,x:0,y:0,vx:0,vy:0,fixed:true,pinned:true,placed:true};sims.set(ROOT,root);}root.title=graph.root.title||"Your startup";root.data=data(ROOT);graph.nodes.forEach(n=>{let s=sims.get(n.id);if(!s){s={id:n.id,x:0,y:0,vx:0,vy:0,fixed:false,pinned:false,placed:false,isNew:true};sims.set(n.id,s);fresh.push(s);}s.data=n;s.title=String(n.title||"Untitled");s.proposal=!!n.proposal;s.depth=s.proposal?2:depth(n.id,p);s.size=s.proposal?"sm":(s.depth<=1||degree[n.id]>=5?"lg":"md");if(n.pos&&!s.placed){s.x=n.pos[0];s.y=n.pos[1];s.placed=true;s.pinned=true;s.fixed=true;}});[...sims.keys()].forEach(id=>{if(!ids.has(id)&&id!==ROOT){sims.get(id).g?.remove();sims.delete(id);}});sims.forEach(s=>Object.assign(s,dims(s)));fresh.sort((a,b)=>a.depth-b.depth).forEach(s=>{if(!s.placed)seed(s,p);});buildDom();buildEdges();stage.classList.toggle("is-empty",!graph.nodes.length);if(reduced()){settle();}else{if(opts.initial)fresh.forEach(s=>s.fixed=false);fresh.forEach(s=>{if(!s.pinned)s.fixed=false;});alpha=opts.initial?1:.65;kick();}render();if(graph.nodes.length)setTimeout(()=>fit(!reduced()),opts.initial?300:0);return fresh.map(s=>s.id);}
+  function size(){const r=svg.getBoundingClientRect();return{w:r.width,h:r.height};}
+  function center(){const s=size();return{x:insets.left+(s.w-insets.left-insets.right)/2,y:insets.top+(s.h-insets.top-insets.bottom)/2};}
+  function applyView(){viewport.setAttribute("transform",`translate(${view.x.toFixed(1)} ${view.y.toFixed(1)}) scale(${view.k.toFixed(4)})`);svg.classList.toggle("is-far",view.k<.55);}
+  function fit(anim=true){const a=[...sims.values()];if(!a.length)return;let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;a.forEach(s=>{x0=Math.min(x0,s.x-s.w/2);x1=Math.max(x1,s.x+s.w/2);y0=Math.min(y0,s.y-s.h/2);y1=Math.max(y1,s.y+s.h/2);});const c=center(),z=clamp(Math.min((size().w-insets.left-insets.right-70)/Math.max(1,x1-x0),(size().h-insets.top-insets.bottom-90)/Math.max(1,y1-y0)),.3,1.15);const target={x:c.x-(x0+x1)/2*z,y:c.y-(y0+y1)/2*z,k:z};if(!anim||reduced()){view=target;applyView();return;}const from={...view},t0=performance.now();const step=t=>{const q=clamp((t-t0)/500,0,1),e=q<.5?4*q*q*q:1-Math.pow(-2*q+2,3)/2;view={x:from.x+(target.x-from.x)*e,y:from.y+(target.y-from.y)*e,k:from.k+(target.k-from.k)*e};applyView();if(q<1)requestAnimationFrame(step);};requestAnimationFrame(step);}
+  function zoomBy(f){const c=center(),k=clamp(view.k*f,.2,2.8),r=k/view.k;view={k,x:c.x-(c.x-view.x)*r,y:c.y-(c.y-view.y)*r};applyView();}
+  function focusOn(id,zoom){const s=sims.get(id);if(!s)return;const c=center(),k=zoom||clamp(view.k,.6,1);view={k,x:c.x-s.x*k,y:c.y-s.y*k};applyView();}
+  function select(id,opts={}){selected=id||null;render();emit("select",selected,opts);}
+  function hover(id,ev){svg.querySelectorAll(".is-hv").forEach(x=>x.classList.remove("is-hv"));if(!id){tip.hidden=true;return;}edgesLayer.querySelectorAll("path").forEach(p=>{const q=p.__edge;if(q.e.source===id||q.e.target===id)p.classList.add("is-hv");});if(tip){tip.textContent=neighbors(id).slice(0,4).map(n=>`${n.rel||"related"} ${data(n.id)?.title||n.id}`).join(" · ");tip.hidden=!tip.textContent;if(ev){const r=stage.getBoundingClientRect();tip.style.transform=`translate(${clamp(ev.clientX-r.left+12,8,r.width-250)}px,${clamp(ev.clientY-r.top+14,8,r.height-45)}px)`;}}}
+  function neighbors(id){const out=[];(graph.edges||[]).forEach(e=>{if(e.source===id)out.push({id:e.target,kind:e.kind,rel:e.relationship,dir:"out"});else if(e.target===id)out.push({id:e.source,kind:e.kind,rel:e.relationship,dir:"in"});});return out;}
+  function toWorld(e){const r=svg.getBoundingClientRect();return{x:(e.clientX-r.left-view.x)/view.k,y:(e.clientY-r.top-view.y)/view.k};}
+  function down(e){pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===2){pinch={d:Math.hypot(...(()=>{const a=[...pointers.values()];return[a[0].x-a[1].x,a[0].y-a[1].y]})()),k:view.k};drag=pan=null;return;}const node=e.target.closest?.(".gn");if(node){const s=sims.get(node.dataset.id),w=toWorld(e);drag={s,ox:w.x-s.x,oy:w.y-s.y,sx:e.clientX,sy:e.clientY,moved:false};s.fixed=true;}else pan={sx:e.clientX,sy:e.clientY,x:view.x,y:view.y,moved:false};svg.setPointerCapture?.(e.pointerId);}
+  function move(e){if(pointers.has(e.pointerId))pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pinch&&pointers.size===2){const a=[...pointers.values()],d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),r=svg.getBoundingClientRect(),cx=(a[0].x+a[1].x)/2-r.left,cy=(a[0].y+a[1].y)/2-r.top,k=clamp(pinch.k*d/pinch.d,.2,2.8),rr=k/view.k;view={k,x:cx-(cx-view.x)*rr,y:cy-(cy-view.y)*rr};applyView();return;}if(drag){const d=drag;if(!d.moved&&Math.hypot(e.clientX-d.sx,e.clientY-d.sy)<5)return;d.moved=true;const w=toWorld(e);d.s.x=w.x-d.ox;d.s.y=w.y-d.oy;d.s.pinned=true;render();}else if(pan){pan.moved=true;view.x=pan.x+(e.clientX-pan.sx);view.y=pan.y+(e.clientY-pan.sy);applyView();}}
+  function up(e){pointers.delete(e.pointerId);if(pointers.size<2)pinch=null;if(drag){const d=drag;drag=null;if(!d.moved){select(d.s.id,{source:"pointer"});}else emit("moved",d.s.id);}else if(pan){const p=pan;pan=null;if(!p.moved&&selected)select(null,{source:"background"});}}
+  function wheel(e){e.preventDefault();const r=svg.getBoundingClientRect(),dy=e.deltaMode===1?e.deltaY*16:e.deltaY,k=clamp(view.k*Math.exp(-dy*.0014),.2,2.8),rr=k/view.k,cx=e.clientX-r.left,cy=e.clientY-r.top;view={k,x:cx-(cx-view.x)*rr,y:cy-(cy-view.y)*rr};applyView();}
+  function defs(){const d=el("defs"),m=el("marker",{id:"fgArrow",viewBox:"0 0 10 10",refX:9,refY:5,markerWidth:8,markerHeight:8,orient:"auto"});m.appendChild(el("path",{d:"M1 1.5 L9 5 L1 8.5 z",class:"fg-arrow"}));d.appendChild(m);return d;}
+  function init(o){svg=o.svg;stage=o.stage;tip=o.tip;svg.innerHTML="";svg.appendChild(defs());viewport=el("g",{id:"fgViewport"});edgesLayer=el("g",{class:"layer-edges"});nodesLayer=el("g",{class:"layer-nodes"});viewport.append(edgesLayer,nodesLayer);svg.appendChild(viewport);svg.addEventListener("pointerdown",down);svg.addEventListener("pointermove",move);svg.addEventListener("pointerup",up);svg.addEventListener("pointercancel",up);svg.addEventListener("wheel",wheel,{passive:false});window.addEventListener("resize",()=>{if(!selected)fit(false);});applyView();setGraph(o.graph||graph,{initial:true});}
+  function positions(){const out={};sims.forEach((s,id)=>{if(id!==ROOT)out[id]=[+s.x.toFixed(1),+s.y.toFixed(1)];});return out;}
+  return {init,setGraph,select,selected:()=>selected,fit,zoomBy,focusOn,setInsets:i=>{insets=Object.assign(insets,i||{});},on,neighbors,node:data,positions,count:()=>({nodes:graph.nodes.length,links:graph.edges.filter(e=>e.kind!=="structural").length}),relText:r=>REL[r]||"related to",typeLabel:t=>LABEL[t]||t||"idea",family:t=>FAMILY[t]||"build"};
 })();
