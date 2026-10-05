@@ -3,7 +3,7 @@ import os
 from fastapi import APIRouter, HTTPException
 import db
 from models.graph_schemas import GraphExtractRequest
-from services.graph_service import extract_graph
+from services.graph_service import extract_graph, merge_graph
 
 router=APIRouter()
 
@@ -20,7 +20,8 @@ def _config(req):
 @router.post("/api/graph/extract")
 def extract(req: GraphExtractRequest):
     try:
-        graph=extract_graph(req.text,_config(req))
+        incoming=extract_graph(req.text,_config(req))
+        graph=merge_graph(db.get_graph(),incoming)
         db.save_graph(graph)
         return graph
     except HTTPException:
