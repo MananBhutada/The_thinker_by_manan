@@ -25,7 +25,7 @@ import httpx
 from config import get_effective_config, has_llm_config
 from models.schemas import Brief
 
-_LLM_TIMEOUT = 15.0
+_LLM_TIMEOUT = 20.0
 
 # English text Brief mock English textgenerate_brief English text
 _HUMANIZE = (
