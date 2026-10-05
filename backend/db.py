@@ -11,12 +11,19 @@ English text
 import json
 import sqlite3
 import contextvars
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
 # SQLite English textEnglish text backend/ English textgitignore English text *.db
 DB_PATH = Path(__file__).parent / "choice.db"
+
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+try:
+    import psycopg
+except ImportError:  # Optional until DATABASE_URL is configured.
+    psycopg = None
 
 # Request-local workspace isolation. The HTTP middleware sets this for every request.
 _workspace_id = contextvars.ContextVar("founderos_workspace_id", default="local")
@@ -41,7 +48,25 @@ def get_conn() -> sqlite3.Connection:
 
 
 def init_db() -> None:
-    """English textEnglish text"""
+    """Initialize local compatibility tables and the optional shared PostgreSQL store."""
+    if DATABASE_URL:
+        if psycopg is None:
+            raise RuntimeError("DATABASE_URL is set but psycopg is not installed.")
+        with psycopg.connect(DATABASE_URL) as conn:
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS founder_workspaces (
+                    workspace_id TEXT PRIMARY KEY,
+                    data TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+                """
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_founder_workspaces_updated_at "
+                "ON founder_workspaces(updated_at)"
+            )
+
     with get_conn() as conn:
         conn.executescript(
             """
@@ -243,10 +268,31 @@ def _empty_graph() -> dict:
     return {"root": {"title": "Your Startup", "summary": ""}, "nodes": [], "edges": [], "insights": [], "questions": []}
 
 
+def _empty_graph() -> dict:
+    return {"root": {"title": "Your Startup", "summary": ""}, "nodes": [], "edges": [], "insights": [], "questions": []}
+
+
 def save_graph(graph: dict) -> dict:
     payload = json.dumps(graph, ensure_ascii=False)
     now = datetime.now().isoformat()
     workspace_id = current_workspace_id()
+
+    if DATABASE_URL:
+        if psycopg is None:
+            raise RuntimeError("DATABASE_URL is set but psycopg is not installed.")
+        with psycopg.connect(DATABASE_URL) as conn:
+            conn.execute(
+                """
+                INSERT INTO founder_workspaces (workspace_id, data, updated_at)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (workspace_id) DO UPDATE SET
+                    data = EXCLUDED.data,
+                    updated_at = EXCLUDED.updated_at
+                """,
+                (workspace_id, payload, now),
+            )
+        return graph
+
     with get_conn() as conn:
         conn.execute(
             """
@@ -263,14 +309,29 @@ def save_graph(graph: dict) -> dict:
 
 def get_graph() -> dict:
     workspace_id = current_workspace_id()
-    with get_conn() as conn:
-        row = conn.execute(
-            "SELECT data FROM founder_workspaces WHERE workspace_id = ?",
-            (workspace_id,),
-        ).fetchone()
-    if not row:
-        return _empty_graph()
+
+    if DATABASE_URL:
+        if psycopg is None:
+            raise RuntimeError("DATABASE_URL is set but psycopg is not installed.")
+        with psycopg.connect(DATABASE_URL) as conn:
+            row = conn.execute(
+                "SELECT data FROM founder_workspaces WHERE workspace_id = %s",
+                (workspace_id,),
+            ).fetchone()
+        if not row:
+            return _empty_graph()
+        raw = row[0]
+    else:
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT data FROM founder_workspaces WHERE workspace_id = ?",
+                (workspace_id,),
+            ).fetchone()
+        if not row:
+            return _empty_graph()
+        raw = row["data"]
+
     try:
-        return json.loads(row["data"])
+        return json.loads(raw)
     except (json.JSONDecodeError, TypeError):
         return _empty_graph()
