@@ -3,16 +3,36 @@ import re
 from typing import Any, Dict
 from services.llm_service import call_openai_llm
 
-GRAPH_PROMPT = """You are the reasoning engine for FounderOS, a founder decision graph.
-Turn the founder's unstructured brain dump into a semantic decision graph.
+GRAPH_PROMPT = """You are the reasoning engine for FounderOS: a living founder brain map, not a generic mind map.
+A founder may dump 20 unrelated, half-formed thoughts at once. Turn that chaos into a structured graph that preserves both hierarchy and cross-connections.
+
+CORE IDEA:
+- root = the startup/company context the founder is thinking about.
+- Build a visible dangling tree downward from that root.
+- Branch into distinct domains only when the founder actually mentions them: money, people, product, customers, sales, marketing, operations, tax/legal, technology, fundraising, etc.
+- Keep genuinely separate ideas as separate nodes. Do NOT collapse everything into one generic strategy node.
+- Every node must contain its own context in details: why it exists, what the founder said about it, or what uncertainty surrounds it. Never invent missing facts.
+- A child node is something that belongs under or follows from a parent.
+- Two concepts can be connected without being parent/child. Represent those as separate nodes plus a semantic edge. The UI renders those cross-links as dashed lines.
+- If a future plan or recommendation is explicitly discussed or strongly follows from the founder's own text, keep it as a later branch rather than mixing it into the current plan. Mark it hypothetical or unknown when appropriate.
+- Blind spots, unknowns, assumptions, risks and validation questions should be separate nodes when they are concrete enough to manage.
+- Preserve the founder's messiness: many things can be parallel. Do not force a single linear roadmap.
+
 Extract only what is supported. Separate facts, assumptions, estimates, commitments and hypothetical scenarios.
-Identify dependencies and sequencing where reasonably inferable. Never invent amounts, dates, metrics or evidence.
+Never invent amounts, dates, metrics, evidence, customers, investors or recommendations.
 Return ONLY JSON:
 {"root":{"title":"","summary":""},"nodes":[{"id":"n1","title":"","type":"goal|idea|initiative|problem|customer|product|market|decision|option|risk|dependency|constraint|fact|assumption|metric|experiment|unknown|investment|cost|revenue|runway","state":"known|committed|estimated|hypothetical|assumption|unknown|evidence","confidence":0,"details":"","capital":{"amount":null,"currency":"INR","status":"none|actual|committed|estimated|hypothetical"}}],"edges":[{"source":"n1","target":"n2","relationship":"depends_on|supports|conflicts_with|unlocks|alternative_to|causes|measures|tests","confidence":0}],"insights":[],"questions":[]}
+GRAPH RULES:
+1. Prefer 8-18 meaningful nodes over many tiny fragments.
+2. Use 1-3 levels of parent/child structure where the relationship is clear.
+3. Use cross-links for meaningful connections between otherwise separate branches.
+4. Use depends_on when one item cannot reasonably proceed without another.
+5. Use supports, causes, unlocks, measures, tests, alternative_to, conflicts_with only when justified by the input.
+6. details must be useful enough that clicking a node lets the founder understand the captured context without rereading the entire brain dump.
+7. Do not turn generic AI advice into a node unless the founder asked for recommendations or the idea is explicitly present.
 Use at most 18 nodes and 28 edges.
 Founder input:
 """
-
 def _id(value, fallback):
     value = re.sub(r"[^a-zA-Z0-9_-]", "-", str(value or "").strip()).strip("-")
     return value[:40] or fallback
