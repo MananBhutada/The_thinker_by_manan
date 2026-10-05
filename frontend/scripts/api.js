@@ -116,6 +116,22 @@ const API = (() => {
       return request('/api/graph/extract', { method: 'POST', body });
     },
 
+    /** FounderOS graph interactions */
+    graphChat(payload, provider) {
+      const body = Object.assign({}, payload, { provider: provider.provider });
+      if (provider.provider === 'byok') Object.assign(body, { apiKey: provider.apiKey, llmModel: provider.llmModel, llmBaseUrl: provider.llmBaseUrl });
+      return request('/api/graph/chat', { method: 'POST', body });
+    },
+    resolveProposal(nodeId, action) {
+      return request('/api/graph/proposal', { method: 'POST', body: { nodeId, action } });
+    },
+    deleteGraphNode(nodeId) {
+      return request('/api/graph/node/' + encodeURIComponent(nodeId), { method: 'DELETE' });
+    },
+    saveGraphPositions(positions) {
+      return request('/api/graph/positions', { method: 'POST', body: { positions } });
+    },
+
     /** GET /api/config — LLM + English text */
     getConfig() {
       return request('/api/config');
