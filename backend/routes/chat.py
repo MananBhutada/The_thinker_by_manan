@@ -9,7 +9,8 @@ English text
   6. English text ChatResponsebrief/nature/mode/reply/result/autoRecognized
 """
 
-from typing import Any, Dict, Optional\nimport os
+from typing import Any, Dict, Optional
+import os
 
 from fastapi import APIRouter, HTTPException
 
@@ -127,7 +128,16 @@ def chat(req: ChatRequest) -> ChatResponse:
     - English textEnglish text call_llm English text ModeResultEnglish text result English text Brief
     - English text decisions English text
     """
-    if req.provider == "free" and not os.environ.get("FOUNDEROS_FREE_AI_API_KEY"):\n        raise HTTPException(status_code=503, detail="FounderOS Free AI is not configured on this deployment yet.")\n    if req.provider == "byok" and not req.apiKey:\n        raise HTTPException(status_code=402, detail="Choose Use my API key and provide a key for this request.")\n    merged_config = _merge_overrides(get_effective_config(), _request_overrides(req))
+    if req.provider == "free" and not os.environ.get("FOUNDEROS_FREE_AI_API_KEY"):
+        raise HTTPException(status_code=503, detail="FounderOS Free AI is not configured on this deployment yet.")
+    if req.provider == "byok" and not req.apiKey:\n        raise HTTPException(status_code=402, detail="Choose Use my API key and provide a key for this request.")\n    overrides = _request_overrides(req)
+    if req.provider == "free":
+        overrides.update({
+            "llm_api_key": os.environ.get("FOUNDEROS_FREE_AI_API_KEY", ""),
+            "llm_model": os.environ.get("FOUNDEROS_FREE_AI_MODEL", "qwen/qwen3.8-27b:free"),
+            "llm_base_url": os.environ.get("FOUNDEROS_FREE_AI_BASE_URL", "https://openrouter.ai/api/v1"),
+        })
+    merged_config = _merge_overrides(get_effective_config(), overrides)
 
     # English textEnglish text Key English text mock English textdemo_mode English text mock English text
     prefs = get_preferences()
