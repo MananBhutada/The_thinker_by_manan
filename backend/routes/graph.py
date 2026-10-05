@@ -37,9 +37,11 @@ def _config(req):
             raise HTTPException(status_code=503, detail="FounderOS Free AI is not configured on this deployment yet.")
         return {
             "llm_api_key": key,
-            "llm_model": os.environ.get(
-                "FOUNDEROS_FREE_AI_MODEL",
-                "nvidia/nemotron-3.5-lightning:free",
+            "llm_model": (
+                os.environ.get("FOUNDEROS_FREE_AI_MODEL", "").strip()
+                if os.environ.get("FOUNDEROS_FREE_AI_MODEL", "").strip()
+                not in {"qwen/qwen3.8-27b:free", "qwen/qwen3.8-27b"}
+                else "nvidia/nemotron-3.5-lightning:free"
             ),
             "llm_base_url": os.environ.get(
                 "FOUNDEROS_FREE_AI_BASE_URL",
