@@ -96,6 +96,8 @@ async def security_headers(request: Request, call_next):
     response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
     if request.url.path.startswith("/api/"):
         response.headers["Cache-Control"] = "no-store"
+    elif request.url.path.startswith("/scripts/") or request.url.path.startswith("/styles/") or request.url.path == "/":
+        response.headers["Cache-Control"] = "no-cache, private, must-revalidate"
     return response
 
 # ─── API English text ───────────────────────────────────────────────────
