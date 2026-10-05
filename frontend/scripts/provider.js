@@ -1,20 +1,58 @@
-/* Session/request-scoped AI provider chooser. No API key is persisted. */
+/* FounderOS request-scoped AI provider chooser. Nothing is persisted client-side. */
 const FounderProvider = (() => {
   function open() {
     return new Promise(resolve => {
-      const body=document.createElement('div');
-      body.innerHTML='<p class="provider-copy">Choose how to power this request. Your API key is used only for this request and is never saved by FounderOS.</p><div class="provider-options"><button type="button" class="provider-option" data-provider="byok"><strong>Use my API key</strong><span>OpenRouter, Qwen, OpenAI or another OpenAI-compatible provider.</span></button><button type="button" class="provider-option" data-provider="free"><strong>Use FounderOS Free AI</strong><span>Use the hosted free model directly. No key required.</span></button></div>';
-      body.querySelectorAll('[data-provider]').forEach(b=>b.onclick=()=>{
-        if(b.dataset.provider==='free'){ App.closeModal(); resolve({provider:'free'}); return; }
-        body.innerHTML='<p class="provider-copy">Nothing is stored. Paste your provider details for this request.</p><div class="field"><label>API key</label><input id="sessionApiKey" type="password" autocomplete="off" placeholder="sk-…"></div><div class="field"><label>Model</label><input id="sessionModel" value="qwen/qwen3.8-27b:free"></div><div class="field"><label>Base URL</label><input id="sessionBase" value="https://openrouter.ai/api/v1"></div><button class="btn btn-block" id="sessionStart">Continue</button>';
-        body.querySelector('#sessionStart').onclick=()=>{
-          const key=body.querySelector('#sessionApiKey').value.trim(), model=body.querySelector('#sessionModel').value.trim(), base=body.querySelector('#sessionBase').value.trim();
-          if(!key||!model||!base)return;
-          App.closeModal(); resolve({provider:'byok',apiKey:key,llmModel:model,llmBaseUrl:base});
+      const body = document.createElement("div");
+      body.className = "provider-sheet";
+      body.innerHTML =
+        '<p class="provider-copy">Choose the engine for this request. FounderOS never saves a personal API key.</p>' +
+        '<div class="provider-options">' +
+          '<button type="button" class="provider-option" data-provider="free"><span class="provider-icon">✦</span><span><strong>FounderOS Free AI</strong><small>No setup. Uses the hosted FounderOS model.</small></span><b>→</b></button>' +
+          '<button type="button" class="provider-option" data-provider="byok"><span class="provider-icon">⌘</span><span><strong>Use my API key</strong><small>OpenRouter, Qwen, OpenAI or another compatible provider.</small></span><b>→</b></button>' +
+        '</div>' +
+        '<button type="button" class="provider-cancel">Cancel</button>';
+
+      body.querySelector('[data-provider="free"]').onclick = () => {
+        App.closeModal();
+        resolve({ provider:"free" });
+      };
+
+      body.querySelector('[data-provider="byok"]').onclick = () => {
+        body.innerHTML =
+          '<div class="provider-back" role="button" tabindex="0">← Back</div>' +
+          '<p class="provider-copy">Used for this request only. Nothing is stored.</p>' +
+          '<div class="field"><label>API key</label><input id="sessionApiKey" type="password" autocomplete="off" placeholder="Paste your provider key"></div>' +
+          '<div class="field"><label>Model</label><input id="sessionModel" value="qwen/qwen3.8-27b:free"></div>' +
+          '<div class="field"><label>Base URL</label><input id="sessionBase" value="https://openrouter.ai/api/v1"></div>' +
+          '<button type="button" class="btn btn-block" id="sessionStart">Use this key</button>';
+        body.querySelector(".provider-back").onclick = () => openAgain(body, resolve);
+        body.querySelector("#sessionStart").onclick = () => {
+          const key = body.querySelector("#sessionApiKey").value.trim();
+          const model = body.querySelector("#sessionModel").value.trim();
+          const base = body.querySelector("#sessionBase").value.trim();
+          if (!key || !model || !base) {
+            App.toast("Enter the API key, model and base URL.");
+            return;
+          }
+          App.closeModal();
+          resolve({ provider:"byok", apiKey:key, llmModel:model, llmBaseUrl:base });
         };
-      });
-      App.openModal(body,{title:'Power this request'});
+      };
+
+      body.querySelector(".provider-cancel").onclick = () => {
+        App.closeModal();
+        resolve(null);
+      };
+      App.openModal(body, { title:"Power this request" });
     });
   }
-  return {open};
+
+  function openAgain(body, resolve) {
+    App.closeModal();
+    // Re-open a fresh chooser without creating a second unresolved promise.
+    const fresh = open();
+    fresh.then(value => resolve(value));
+  }
+
+  return { open };
 })();
