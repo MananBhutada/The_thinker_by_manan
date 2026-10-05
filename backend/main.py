@@ -12,6 +12,9 @@ English text
 """
 
 import sys
+import hashlib
+import hmac
+import secrets
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -21,6 +24,7 @@ from fastapi.staticfiles import StaticFiles
 # English text backend/ English text sys.path English textEnglish text routes/services English text
 sys.path.insert(0, str(Path(__file__).parent))
 
+import db  # noqa: E402
 from db import init_db  # noqa: E402
 from routes import archive, chat, config_api, decision, graph, modes, stats, tts  # noqa: E402
 
@@ -36,9 +40,54 @@ app = FastAPI(
     version="0.9.1",
 )
 
+_SESSION_COOKIE = "founderos_workspace"
+_SESSION_MAX_AGE = 60 * 60 * 24 * 365
+_SESSION_SECRET = os.environ.get("FOUNDEROS_SESSION_SECRET") or os.environ.get("SECRET_KEY") or "founderos-development-session-secret"
+
+
+def _sign_workspace(raw: str) -> str:
+    sig = hmac.new(_SESSION_SECRET.encode("utf-8"), raw.encode("utf-8"), hashlib.sha256).hexdigest()
+    return raw + "." + sig
+
+
+def _verify_workspace(value: str | None) -> str | None:
+    if not value or "." not in value:
+        return None
+    raw, sig = value.rsplit(".", 1)
+    if not raw or not sig:
+        return None
+    expected = hmac.new(_SESSION_SECRET.encode("utf-8"), raw.encode("utf-8"), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(sig, expected):
+        return None
+    return raw
+
+
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
-    response = await call_next(request)
+    raw_cookie = request.cookies.get(_SESSION_COOKIE)
+    workspace_id = _verify_workspace(raw_cookie)
+    new_cookie = False
+    if not workspace_id:
+        workspace_id = secrets.token_urlsafe(24)
+        new_cookie = True
+
+    token = db.set_workspace_id(workspace_id)
+    try:
+        response = await call_next(request)
+    finally:
+        db.reset_workspace_id(token)
+
+    if new_cookie:
+        response.set_cookie(
+            _SESSION_COOKIE,
+            _sign_workspace(workspace_id),
+            max_age=_SESSION_MAX_AGE,
+            httponly=True,
+            secure=request.url.scheme == "https",
+            samesite="lax",
+            path="/",
+        )
+
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
