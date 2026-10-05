@@ -59,5 +59,57 @@ def normalize_graph(data: Dict[str, Any]) -> Dict[str, Any]:
     root=data.get("root") if isinstance(data.get("root"),dict) else {}
     return {"root":{"title":str(root.get("title") or "Your Startup")[:120],"summary":str(root.get("summary") or "")[:300]},"nodes":nodes[:18],"edges":edges[:28],"insights":[str(x)[:300] for x in (data.get("insights") or [])[:6]],"questions":[str(x)[:300] for x in (data.get("questions") or [])[:6]]}
 
+
+def merge_graph(existing: Dict[str, Any], incoming: Dict[str, Any]) -> Dict[str, Any]:
+    """Add a new founder brain dump to the living graph instead of replacing it."""
+    existing = existing if isinstance(existing, dict) else {}
+    incoming = incoming if isinstance(incoming, dict) else {}
+    nodes = list(existing.get("nodes") or [])
+    edges = list(existing.get("edges") or [])
+    by_key = {str(n.get("title","")).strip().lower()+"|"+str(n.get("type","idea")).lower(): n for n in nodes}
+    id_map = {}
+    used_ids = {str(n.get("id")) for n in nodes}
+
+    for raw in incoming.get("nodes") or []:
+        key = str(raw.get("title","")).strip().lower()+"|"+str(raw.get("type","idea")).lower()
+        if key in by_key:
+            old = by_key[key]
+            id_map[raw.get("id")] = old.get("id")
+            new_details = str(raw.get("details") or "").strip()
+            if new_details and new_details not in str(old.get("details") or ""):
+                old["details"] = (str(old.get("details") or "").strip()+" "+new_details).strip()[:700]
+            if raw.get("confidence") and int(raw.get("confidence") or 0) > int(old.get("confidence") or 0):
+                old["confidence"] = raw.get("confidence")
+            continue
+
+        nid = str(raw.get("id") or "node")
+        base = nid
+        i = 2
+        while nid in used_ids:
+            nid = base + "-" + str(i)
+            i += 1
+        copy = dict(raw)
+        copy["id"] = nid
+        nodes.append(copy)
+        used_ids.add(nid)
+        by_key[key] = copy
+        id_map[raw.get("id")] = nid
+
+    edge_keys = {(e.get("source"),e.get("target"),e.get("relationship")) for e in edges}
+    for e in incoming.get("edges") or []:
+        s, t = id_map.get(e.get("source"), e.get("source")), id_map.get(e.get("target"), e.get("target"))
+        key = (s,t,e.get("relationship"))
+        if s and t and key not in edge_keys:
+            edges.append({**e,"source":s,"target":t})
+            edge_keys.add(key)
+
+    insights = list(dict.fromkeys([str(x) for x in (existing.get("insights") or []) + (incoming.get("insights") or [])]))[:10]
+    questions = list(dict.fromkeys([str(x) for x in (existing.get("questions") or []) + (incoming.get("questions") or [])]))[:10]
+    root = existing.get("root") or incoming.get("root") or {"title":"Your Startup","summary":""}
+    if not root.get("title") or root.get("title") == "Your Startup":
+        root = incoming.get("root") or root
+
+    return {"root":root,"nodes":nodes[:24],"edges":edges[:48],"insights":insights,"questions":questions}
+
 def extract_graph(text: str, config: Dict[str, Any]) -> Dict[str, Any]:
     return normalize_graph(call_openai_llm(GRAPH_PROMPT + text[:12000], config))
