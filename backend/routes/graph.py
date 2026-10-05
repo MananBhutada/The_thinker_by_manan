@@ -37,8 +37,18 @@ def _config(req):
             raise HTTPException(status_code=503, detail="FounderOS Free AI is not configured on this deployment yet.")
         return {
             "llm_api_key": key,
-            "llm_model": os.environ.get("FOUNDEROS_FREE_AI_MODEL", "qwen/qwen3.8-27b:free"),
-            "llm_base_url": os.environ.get("FOUNDEROS_FREE_AI_BASE_URL", "https://openrouter.ai/api/v1"),
+            "llm_model": os.environ.get(
+                "FOUNDEROS_FREE_AI_MODEL",
+                "nvidia/nemotron-3.5-lightning:free",
+            ),
+            "llm_base_url": os.environ.get(
+                "FOUNDEROS_FREE_AI_BASE_URL",
+                "https://openrouter.ai/api/v1",
+            ),
+            "llm_fallback_models": os.environ.get(
+                "FOUNDEROS_FREE_AI_FALLBACK_MODELS",
+                "openrouter/free",
+            ),
         }
     if not req.apiKey or not req.llmModel or not req.llmBaseUrl:
         raise HTTPException(status_code=402, detail="Add your API key, model and base URL for this session.")
