@@ -138,8 +138,11 @@ const Chat = (() => {
     if (busy) return;
     const text = $('inputText').value.trim();
     if (!text && !pendingImage) return;
+    const provider = await FounderProvider.open();
+    if (!provider) return;
+
     busy = true;
-    lastQuestion = text || '(English text)';
+    lastQuestion = text || '';
     const imgToSend = pendingImage;
     $('sendBtn').disabled = true;
     $('inputText').value = '';
@@ -152,9 +155,16 @@ const Chat = (() => {
     const thinking = appendThinking();
 
     try {
-      const extra = {};
+      const extra = {
+        provider: provider.provider
+      };
+      if (provider.provider === 'byok') {
+        extra.apiKey = provider.apiKey;
+        extra.llmModel = provider.llmModel;
+        extra.llmBaseUrl = provider.llmBaseUrl;
+      }
       if (imgToSend) extra.image = imgToSend;
-      const resp = await API.chat(text || 'English text', currentMode, extra);
+      const resp = await API.chat(text, currentMode, extra);
       thinking.remove();
       // auto English text
       const recognizedMode = resp.autoRecognized && resp.autoRecognized.mode;
