@@ -10,6 +10,7 @@ English text
 
 import json
 import sqlite3
+import contextvars
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
@@ -17,6 +18,7 @@ from typing import Any, Optional
 # SQLite English textEnglish text backend/ English textgitignore English text *.db
 DB_PATH = Path(__file__).parent / "choice.db"
 
+# Request-local workspace isolation. The HTTP middleware sets this for every request.\n_workspace_id = contextvars.ContextVar("founderos_workspace_id", default="local")\n\ndef set_workspace_id(workspace_id: str):\n    return _workspace_id.set(workspace_id or "local")\n\ndef reset_workspace_id(token):\n    _workspace_id.reset(token)\n\ndef current_workspace_id() -> str:\n    return _workspace_id.get()\n
 
 def get_conn() -> sqlite3.Connection:
     """English text SQLite English textEnglish textEnglish text"""
@@ -46,7 +48,7 @@ def init_db() -> None:
             CREATE INDEX IF NOT EXISTS idx_decisions_created_at ON decisions(created_at);
             CREATE INDEX IF NOT EXISTS idx_decisions_mode ON decisions(mode);
 
-            CREATE TABLE IF NOT EXISTS graph_state (\n                id INTEGER PRIMARY KEY CHECK (id = 1),\n                data TEXT NOT NULL,\n                updated_at TEXT NOT NULL\n            );\n\n            CREATE TABLE IF NOT EXISTS config (
+            CREATE TABLE IF NOT EXISTS graph_state (\n                id INTEGER PRIMARY KEY CHECK (id = 1),\n                data TEXT NOT NULL,\n                updated_at TEXT NOT NULL\n            );\n\n            CREATE TABLE IF NOT EXISTS founder_workspaces (\n                workspace_id TEXT PRIMARY KEY,\n                data TEXT NOT NULL,\n                updated_at TEXT NOT NULL\n            );\n            CREATE INDEX IF NOT EXISTS idx_founder_workspaces_updated_at ON founder_workspaces(updated_at);\n\n            CREATE TABLE IF NOT EXISTS config (
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL
             );
@@ -213,22 +215,38 @@ def _random_suffix() -> str:
     return "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
 
 
+def _empty_graph() -> dict:
+    return {"root": {"title": "Your Startup", "summary": ""}, "nodes": [], "edges": [], "insights": [], "questions": []}
+
+
 def save_graph(graph: dict) -> dict:
     payload = json.dumps(graph, ensure_ascii=False)
     now = datetime.now().isoformat()
+    workspace_id = current_workspace_id()
     with get_conn() as conn:
         conn.execute(
-            "INSERT OR REPLACE INTO graph_state (id, data, updated_at) VALUES (1, ?, ?)",
-            (payload, now),
+            """
+            INSERT INTO founder_workspaces (workspace_id, data, updated_at)
+            VALUES (?, ?, ?)
+            ON CONFLICT(workspace_id) DO UPDATE SET
+                data=excluded.data,
+                updated_at=excluded.updated_at
+            """,
+            (workspace_id, payload, now),
         )
     return graph
 
+
 def get_graph() -> dict:
+    workspace_id = current_workspace_id()
     with get_conn() as conn:
-        row = conn.execute("SELECT data FROM graph_state WHERE id = 1").fetchone()
+        row = conn.execute(
+            "SELECT data FROM founder_workspaces WHERE workspace_id = ?",
+            (workspace_id,),
+        ).fetchone()
     if not row:
-        return {"root": {"title": "Your Startup", "summary": ""}, "nodes": [], "edges": [], "insights": [], "questions": []}
+        return _empty_graph()
     try:
         return json.loads(row["data"])
     except (json.JSONDecodeError, TypeError):
-        return {"root": {"title": "Your Startup", "summary": ""}, "nodes": [], "edges": [], "insights": [], "questions": []}
+        return _empty_graph()
