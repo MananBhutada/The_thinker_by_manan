@@ -18,7 +18,18 @@ from typing import Any, Optional
 # SQLite English textEnglish text backend/ English textgitignore English text *.db
 DB_PATH = Path(__file__).parent / "choice.db"
 
-# Request-local workspace isolation. The HTTP middleware sets this for every request.\n_workspace_id = contextvars.ContextVar("founderos_workspace_id", default="local")\n\ndef set_workspace_id(workspace_id: str):\n    return _workspace_id.set(workspace_id or "local")\n\ndef reset_workspace_id(token):\n    _workspace_id.reset(token)\n\ndef current_workspace_id() -> str:\n    return _workspace_id.get()\n
+# Request-local workspace isolation. The HTTP middleware sets this for every request.
+_workspace_id = contextvars.ContextVar("founderos_workspace_id", default="local")
+
+def set_workspace_id(workspace_id: str):
+    return _workspace_id.set(workspace_id or "local")
+
+def reset_workspace_id(token):
+    _workspace_id.reset(token)
+
+def current_workspace_id() -> str:
+    return _workspace_id.get()
+
 
 def get_conn() -> sqlite3.Connection:
     """English text SQLite English textEnglish textEnglish text"""
@@ -48,7 +59,20 @@ def init_db() -> None:
             CREATE INDEX IF NOT EXISTS idx_decisions_created_at ON decisions(created_at);
             CREATE INDEX IF NOT EXISTS idx_decisions_mode ON decisions(mode);
 
-            CREATE TABLE IF NOT EXISTS graph_state (\n                id INTEGER PRIMARY KEY CHECK (id = 1),\n                data TEXT NOT NULL,\n                updated_at TEXT NOT NULL\n            );\n\n            CREATE TABLE IF NOT EXISTS founder_workspaces (\n                workspace_id TEXT PRIMARY KEY,\n                data TEXT NOT NULL,\n                updated_at TEXT NOT NULL\n            );\n            CREATE INDEX IF NOT EXISTS idx_founder_workspaces_updated_at ON founder_workspaces(updated_at);\n\n            CREATE TABLE IF NOT EXISTS config (
+            CREATE TABLE IF NOT EXISTS graph_state (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                data TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS founder_workspaces (
+                workspace_id TEXT PRIMARY KEY,
+                data TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_founder_workspaces_updated_at ON founder_workspaces(updated_at);
+
+            CREATE TABLE IF NOT EXISTS config (
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL
             );
