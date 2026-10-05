@@ -122,14 +122,31 @@ def _raise_llm_error(resp: httpx.Response) -> None:
     raise RuntimeError(f"LLM request failed ({resp.status_code}){': ' + detail if detail else ''}")
 
 
+def _candidate_models(config: Dict[str, Any]) -> list[str]:
+    """Return the primary model followed by optional provider fallbacks."""
+    primary = str(config.get("llm_model") or "").strip()
+    raw_fallbacks = config.get("llm_fallback_models") or []
+    if isinstance(raw_fallbacks, str):
+        raw_fallbacks = [item.strip() for item in raw_fallbacks.split(",")]
+    candidates = []
+    for model in [primary, *list(raw_fallbacks)]:
+        model = str(model or "").strip()
+        if model and model not in candidates:
+            candidates.append(model)
+    return candidates
+
+
 def call_openai_llm(prompt: str, config: Dict[str, Any], image: Optional[str] = None) -> Dict[str, Any]:
-    """Call OpenAI Responses API for OpenAI, Chat Completions for compatible providers."""
+    """Call OpenAI or an OpenAI-compatible provider, with optional model failover."""
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {config['llm_api_key']}",
     }
     base = config["llm_base_url"].rstrip("/")
     is_openai = "api.openai.com" in base
+    models = _candidate_models(config)
+    if not models:
+        raise RuntimeError("No LLM model is configured")
 
     if image and isinstance(image, str) and image.startswith("data:"):
         if is_openai:
@@ -145,44 +162,69 @@ def call_openai_llm(prompt: str, config: Dict[str, Any], image: Optional[str] = 
     else:
         user_content = prompt
 
-    if is_openai:
-        body = {
-            "model": config["llm_model"],
-            "input": [{"role": "user", "content": user_content if isinstance(user_content, list) else [
-                {"type": "input_text", "text": user_content}
-            ]}],
-        }
-        url = base + "/responses"
-    else:
-        body = {
-            "model": config["llm_model"],
-            "messages": [{"role": "user", "content": user_content}],
-            "temperature": 0.2,
-        }
-        url = _build_endpoint(base)
+    retryable_statuses = {402, 404, 408, 429, 500, 502, 503, 504}
+    last_error: Optional[Exception] = None
 
-    try:
-        with httpx.Client(timeout=_LLM_TIMEOUT) as client:
-            resp = client.post(url, headers=headers, json=body)
-    except httpx.RequestError as exc:
-        raise RuntimeError(f"Could not reach the LLM provider: {exc}") from exc
+    for index, model in enumerate(models):
+        if is_openai:
+            body = {
+                "model": model,
+                "input": [{"role": "user", "content": user_content if isinstance(user_content, list) else [
+                    {"type": "input_text", "text": user_content}
+                ]}],
+            }
+            url = base + "/responses"
+        else:
+            body = {
+                "model": model,
+                "messages": [{"role": "user", "content": user_content}],
+                "temperature": 0.2,
+            }
+            url = _build_endpoint(base)
 
-    if not resp.is_success:
-        _raise_llm_error(resp)
+        try:
+            with httpx.Client(timeout=_LLM_TIMEOUT) as client:
+                resp = client.post(url, headers=headers, json=body)
+        except httpx.RequestError as exc:
+            last_error = RuntimeError(f"Could not reach the LLM provider: {exc}")
+            if index < len(models) - 1:
+                print(f"[llm] model={model} request failed; trying fallback")
+                continue
+            raise last_error from exc
 
-    try:
-        data = resp.json()
-    except ValueError as exc:
-        raise RuntimeError("LLM provider returned invalid JSON") from exc
+        if not resp.is_success:
+            try:
+                _raise_llm_error(resp)
+            except RuntimeError as exc:
+                last_error = exc
+                if resp.status_code in retryable_statuses and index < len(models) - 1:
+                    print(f"[llm] model={model} returned {resp.status_code}; trying fallback")
+                    continue
+                raise
 
-    content = _response_text(data) if is_openai else (
-        (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
-    )
-    parsed = _parse_json_content(content)
-    if not isinstance(parsed, dict):
-        raise RuntimeError("LLM returned text instead of the required JSON structure")
-    return parsed
+        try:
+            data = resp.json()
+        except ValueError as exc:
+            last_error = RuntimeError("LLM provider returned invalid JSON")
+            if index < len(models) - 1:
+                print(f"[llm] model={model} returned invalid JSON; trying fallback")
+                continue
+            raise last_error from exc
 
+        content = _response_text(data) if is_openai else (
+            (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
+        )
+        parsed = _parse_json_content(content)
+        if isinstance(parsed, dict):
+            return parsed
+
+        last_error = RuntimeError("LLM returned text instead of the required JSON structure")
+        if index < len(models) - 1:
+            print(f"[llm] model={model} returned non-JSON output; trying fallback")
+            continue
+        raise last_error
+
+    raise last_error or RuntimeError("LLM request failed")
 
 # ─── Brief English textEnglish text API──────────────────────────────────────
 
