@@ -1,27 +1,57 @@
-"""Founder Graph API."""
+"""Founder Graph API.
+
+Extraction and node chat share one request-scoped provider resolver. BYOK values
+are accepted only for the current request and are never written to graph state.
+"""
 import os
 from fastapi import APIRouter, HTTPException
-import db
-from models.graph_schemas import GraphExtractRequest
-from services.graph_service import extract_graph, merge_graph
 
-router=APIRouter()
+import db
+from models.graph_schemas import (
+    GraphChatRequest,
+    GraphExtractRequest,
+    GraphPositionsRequest,
+    GraphProposalRequest,
+)
+from services.graph_service import (
+    apply_proposal,
+    build_node_context,
+    extract_graph,
+    merge_graph,
+    remove_node,
+    set_positions,
+    upgrade_graph,
+)
+import services.llm_service as _llm_service
+from services.llm_service import NoApiKeyError, call_llm
+
+_llm_service._LLM_TIMEOUT = max(getattr(_llm_service, "_LLM_TIMEOUT", 15.0), 75.0)
+
+router = APIRouter()
+
 
 def _config(req):
-    if req.provider=="free":
-        key=os.environ.get("FOUNDEROS_FREE_AI_API_KEY","")
+    if req.provider == "free":
+        key = os.environ.get("FOUNDEROS_FREE_AI_API_KEY", "")
         if not key:
             raise HTTPException(status_code=503, detail="FounderOS Free AI is not configured on this deployment yet.")
-        return {"llm_api_key":key,"llm_model":os.environ.get("FOUNDEROS_FREE_AI_MODEL","qwen/qwen3.8-27b:free"),"llm_base_url":os.environ.get("FOUNDEROS_FREE_AI_BASE_URL","https://openrouter.ai/api/v1")}
+        return {
+            "llm_api_key": key,
+            "llm_model": os.environ.get("FOUNDEROS_FREE_AI_MODEL", "qwen/qwen3.8-27b:free"),
+            "llm_base_url": os.environ.get("FOUNDEROS_FREE_AI_BASE_URL", "https://openrouter.ai/api/v1"),
+        }
     if not req.apiKey or not req.llmModel or not req.llmBaseUrl:
         raise HTTPException(status_code=402, detail="Add your API key, model and base URL for this session.")
-    return {"llm_api_key":req.apiKey,"llm_model":req.llmModel,"llm_base_url":req.llmBaseUrl}
+    return {"llm_api_key": req.apiKey, "llm_model": req.llmModel, "llm_base_url": req.llmBaseUrl}
+
 
 @router.post("/api/graph/extract")
 def extract(req: GraphExtractRequest):
+    config = _config(req)
     try:
-        incoming=extract_graph(req.text,_config(req))
-        graph=merge_graph(db.get_graph(),incoming)
+        current = db.get_graph()
+        incoming = extract_graph(req.text, config, existing=current)
+        graph = merge_graph(current, incoming)
         db.save_graph(graph)
         return graph
     except HTTPException:
@@ -29,6 +59,68 @@ def extract(req: GraphExtractRequest):
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc)[:500])
 
+
 @router.get("/api/graph")
 def get_graph():
-    return db.get_graph()
+    return upgrade_graph(db.get_graph())
+
+
+@router.post("/api/graph/chat")
+def chat_about_node(req: GraphChatRequest):
+    """Reason about the selected node using its surrounding graph context."""
+    config = _config(req)
+    graph = db.get_graph()
+    try:
+        context, used = build_node_context(
+            graph,
+            req.nodeId,
+            req.question,
+            [h.model_dump() for h in req.history],
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail="That node no longer exists in the graph.")
+    try:
+        result = call_llm(context, req.mode, config, language="en", allow_mock=False)
+    except NoApiKeyError:
+        raise HTTPException(status_code=402, detail="No LLM API key is configured.")
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)[:500])
+
+    from routes.chat import _try_build_brief
+    brief = _try_build_brief(result, mode=req.mode)
+    summary = result.get("summary") or result.get("conclusion") or ""
+    return {
+        "mode": req.mode,
+        "nodeId": req.nodeId or "root",
+        "reply": summary,
+        "brief": brief.model_dump() if brief else None,
+        "result": result,
+        "contextNodes": used,
+    }
+
+
+@router.post("/api/graph/proposal")
+def resolve_proposal(req: GraphProposalRequest):
+    try:
+        graph = apply_proposal(db.get_graph(), req.nodeId, req.action)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Proposal not found.")
+    db.save_graph(graph)
+    return graph
+
+
+@router.delete("/api/graph/node/{node_id}")
+def delete_node(node_id: str):
+    try:
+        graph = remove_node(db.get_graph(), node_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Node not found.")
+    db.save_graph(graph)
+    return graph
+
+
+@router.post("/api/graph/positions")
+def save_positions(req: GraphPositionsRequest):
+    graph = set_positions(db.get_graph(), req.positions)
+    db.save_graph(graph)
+    return {"ok": True}
