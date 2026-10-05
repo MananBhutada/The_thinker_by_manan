@@ -1,5 +1,5 @@
 /* FounderOS request-scoped AI provider chooser. Nothing is persisted client-side. */
-const FounderProvider = (() => {
+const FounderProvider = (() => {\n  let last = { provider:"free" };
   function open() {
     return new Promise(resolve => {
       const body = document.createElement("div");
@@ -14,7 +14,7 @@ const FounderProvider = (() => {
 
       body.querySelector('[data-provider="free"]').onclick = () => {
         App.closeModal();
-        resolve({ provider:"free" });
+        last = { provider:"free" };\n        resolve(last);
       };
 
       body.querySelector('[data-provider="byok"]').onclick = () => {
@@ -35,7 +35,7 @@ const FounderProvider = (() => {
             return;
           }
           App.closeModal();
-          resolve({ provider:"byok", apiKey:key, llmModel:model, llmBaseUrl:base });
+          last = { provider:"byok", apiKey:key, llmModel:model, llmBaseUrl:base };\n          resolve(last);
         };
       };
 
@@ -54,5 +54,5 @@ const FounderProvider = (() => {
     fresh.then(value => resolve(value));
   }
 
-  return { open };
+  async function get(opts={}) {\n    if (!opts.force && last && last.provider === "free") return last;\n    return open();\n  }\n  function current() { return last; }\n  function label(p) { return p && p.provider === "byok" ? "My API key" : "FounderOS Free AI"; }\n  function reset() { last = { provider:"free" }; }\n  return { open, get, current, label, reset };
 })();
