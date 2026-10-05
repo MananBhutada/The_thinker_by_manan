@@ -136,8 +136,18 @@ def chat(req: ChatRequest) -> ChatResponse:
     if req.provider == "free":
         overrides.update({
             "llm_api_key": os.environ.get("FOUNDEROS_FREE_AI_API_KEY", ""),
-            "llm_model": os.environ.get("FOUNDEROS_FREE_AI_MODEL", "qwen/qwen3.8-27b:free"),
-            "llm_base_url": os.environ.get("FOUNDEROS_FREE_AI_BASE_URL", "https://openrouter.ai/api/v1"),
+            "llm_model": os.environ.get(
+                "FOUNDEROS_FREE_AI_MODEL",
+                "nvidia/nemotron-3.5-lightning:free",
+            ),
+            "llm_base_url": os.environ.get(
+                "FOUNDEROS_FREE_AI_BASE_URL",
+                "https://openrouter.ai/api/v1",
+            ),
+            "llm_fallback_models": os.environ.get(
+                "FOUNDEROS_FREE_AI_FALLBACK_MODELS",
+                "openrouter/free",
+            ),
         })
     merged_config = _merge_overrides(get_effective_config(), overrides)
 
