@@ -251,6 +251,9 @@ const FounderWorkspace = (() => {
     $("fwFit").onclick=()=>FounderGraph.fit(true);$("fwZoomIn").onclick=()=>FounderGraph.zoomBy(1.3);$("fwZoomOut").onclick=()=>FounderGraph.zoomBy(1/1.3);
     $("fwRefresh").onclick=async()=>{await load();say("Map refreshed")};$("fwRootBtn").onclick=()=>FounderGraph.select("root",{source:"pointer"});
     $("fwEngine").onclick=async()=>{await FounderProvider.get({force:true});updateChrome();};$("fwIgnoredBtn").onclick=()=>{showIgnored=!showIgnored;apply(graph,{})};
+    renderLensBar();
+    $("fwInsightsBtn").onclick=()=>toggleInsights();
+    $("fwInsClose").onclick=()=>toggleInsights(false);
     $("fwPanelClose").onclick=()=>closePanel();$("fwPanelGrip").onclick=()=>$("fwPanel").classList.toggle("is-peek");
     document.querySelectorAll("[data-example]").forEach(b=>b.onclick=()=>{$("fwInput").value=b.dataset.example;autosize();$("fwInput").focus();});
     document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(document.querySelector(".modal-overlay.show"))return;if(panelOpen){e.preventDefault();closePanel();}});window.addEventListener("resize",()=>syncInsets());
