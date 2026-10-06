@@ -58,7 +58,7 @@ def test_landing_composer_opens_workspace(page):
     page.locator("#seedGo").click()
     page.wait_for_url("**/app", timeout=10000)
     assert page.url.rstrip("/").endswith("/app")
-    assert page.locator(".app-shell").is_visible()
+    assert page.locator(".shell").is_visible()
 
 
 def test_workspace_graph_first_shell(page):
