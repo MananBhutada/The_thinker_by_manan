@@ -19,7 +19,7 @@ import secrets
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 # English text backend/ English text sys.path English textEnglish text routes/services English text
@@ -96,7 +96,7 @@ async def security_headers(request: Request, call_next):
     response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
     if request.url.path.startswith("/api/"):
         response.headers["Cache-Control"] = "no-store"
-    elif request.url.path.startswith("/scripts/") or request.url.path.startswith("/styles/") or request.url.path == "/":
+    elif request.url.path.startswith("/scripts/") or request.url.path.startswith("/styles/") or request.url.path in ("/", "/app"):
         response.headers["Cache-Control"] = "no-cache, private, must-revalidate"
     return response
 
@@ -135,9 +135,19 @@ if FRONTEND_DIR.exists():
         app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
 
     @app.get("/")
-    def serve_index() -> FileResponse:
-        """English text"""
+    def serve_landing() -> FileResponse:
+        """Public introduction page. The graph workspace lives at /app."""
+        return FileResponse(str(FRONTEND_DIR / "landing.html"))
+
+    @app.get("/app")
+    def serve_workspace() -> FileResponse:
+        """The graph-first FounderOS workspace."""
         return FileResponse(str(FRONTEND_DIR / "index.html"))
+
+    @app.get("/app/")
+    def serve_workspace_slash() -> RedirectResponse:
+        # relative asset URLs in index.html only resolve from /app, never /app/
+        return RedirectResponse("/app", status_code=308)
 
     @app.get("/{full_path:path}")
     def serve_spa(full_path: str) -> FileResponse:
