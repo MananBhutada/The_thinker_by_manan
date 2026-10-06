@@ -32,9 +32,10 @@ router = APIRouter()
 
 def _config(req):
     if req.provider == "free":
+        # Free mode may run without a hosted key. The graph service has a
+        # deterministic extraction fallback, so the workspace remains usable
+        # when the deployment has no AI secret configured.
         key = os.environ.get("FOUNDEROS_FREE_AI_API_KEY", "")
-        if not key:
-            raise HTTPException(status_code=503, detail="FounderOS Free AI is not configured on this deployment yet.")
         return {
             "llm_api_key": key,
             "llm_model": (
