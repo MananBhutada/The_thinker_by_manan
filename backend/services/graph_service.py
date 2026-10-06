@@ -520,6 +520,9 @@ def build_node_context(graph: Dict[str, Any], node_id: Optional[str], question: 
                 "Details: %s" % (n["details"] or n["summary"] or "none recorded"), "Confidence: %s%%" % n["confidence"],
                 "Capital: %s" % _cap(n), "Evidence: %s" % ("; ".join(n["evidence"]) or "none recorded"),
                 "Assumptions: %s" % ("; ".join(n["assumptions"]) or "none recorded"), "Dependencies: %s" % ("; ".join(n["dependencies"]) or "none recorded")]
+        thoughts = [t for t in n.get("thoughts", []) if isinstance(t, dict) and not t.get("archived")]
+        if thoughts:
+            out += ["THOUGHT CONTENT INSIDE THIS SUB-NODE:"] + ["- %s%s" % (str(t.get("type") or "thought").upper() + ": ", str(t.get("content") or "")[:1200]) for t in thoughts[-12:]]
         if n.get("proposal"): out.append("NOTE: this node is an AI-proposed question awaiting the founder's decision, not a fact.")
     out.append(""); out.append("PARENT / STRUCTURAL CONTEXT:")
     chain, cur, guard = [], parent.get(sel_id), 0
