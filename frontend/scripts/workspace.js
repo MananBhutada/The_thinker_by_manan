@@ -5,6 +5,7 @@ const FounderWorkspace = (() => {
   let mode = "founder", busy = false, panelOpen = false, lastFocus = null, saveTimer = 0;
   const chats = new Map();
   let showIgnored = false;
+  let insOpen = false, insTab = "insights", searchTimer = 0, insightList = [];
   const reduced = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   const mobile = () => window.matchMedia && matchMedia("(max-width: 760px)").matches;
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
@@ -24,7 +25,7 @@ const FounderWorkspace = (() => {
     if (!hide.size) return graph;
     return Object.assign({}, graph, { nodes:graph.nodes.filter(n => !hide.has(n.id)), edges:graph.edges.filter(e => !hide.has(e.source) && !hide.has(e.target)) });
   }
-  function apply(g, opts={}) { graph = g || graph; const fresh = FounderGraph.setGraph(visibleGraph(), opts); updateChrome(); return fresh; }
+  function apply(g, opts={}) { graph = g || graph; const fresh = FounderGraph.setGraph(visibleGraph(), opts); if (panelOpen) { const pid = $("fwPanel").dataset.node; if (pid && !FounderGraph.node(pid)) closePanel(true); } updateChrome(); refreshInsights(); return fresh; }
   async function load() { try { apply(await API.getGraph(), {initial:true}); } catch(e) { toast("Could not load your map."); apply(graph,{initial:true}); } }
   function updateChrome() {
     const c = FounderGraph.count(); $("fwCount").textContent = graph.nodes.length ? graph.nodes.length+" nodes · "+c.links+" cross-links" : "";
@@ -134,8 +135,8 @@ const FounderWorkspace = (() => {
   }
   function bindPanel(id){const p=$("fwPanel");p.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>FounderGraph.select(b.dataset.go));p.querySelectorAll("[data-lens]").forEach(b=>b.onclick=()=>{mode=b.dataset.lens;p.querySelectorAll("[data-lens]").forEach(x=>{const on=x.dataset.lens===mode;x.classList.toggle("on",on);x.setAttribute("aria-checked",String(on));});});p.querySelectorAll("[data-prop]").forEach(b=>b.onclick=()=>resolveProposal(id,b.dataset.prop));p.querySelectorAll(".fp-q").forEach(b=>b.onclick=()=>ask(id,b.textContent));const input=$("fpInput");input.addEventListener("input",()=>{input.style.height="auto";input.style.height=Math.min(input.scrollHeight,110)+"px";});input.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();ask(id,input.value);}});$("fpSend").onclick=()=>ask(id,input.value);$("fpEngine").onclick=async()=>{const pv=await FounderProvider.get({force:true});updateChrome();if(pv)$("fpEngine").textContent=FounderProvider.label(pv);};const del=$("fpDelete");if(del)del.onclick=async()=>{const ok=window.App&&App.confirm?await App.confirm("Remove “"+titleOf(id)+"” from your map? Its children stay and move up a level."):confirm("Remove this node?");if(!ok)return;try{const g=await API.deleteGraphNode(id);closePanel();apply(g,{});say("Node removed");}catch(e){toast(e.message||"Could not remove");}};}
   function openPanel(id,opts={}){lastFocus=opts.source==="keyboard"?document.querySelector('.gn[data-id="'+CSS.escape(id)+'"]'):lastFocus;const wasOpen=panelOpen;panelOpen=true;const p=$("fwPanel");renderPanel(id);p.classList.add("is-open");p.setAttribute("aria-hidden","false");$("fwWorkspace").classList.add("has-panel");p.classList.remove("is-peek");syncInsets();if(opts.source==="keyboard"||opts.focusPanel)setTimeout(()=>$("fpTitle")&&$("fpTitle").focus({preventScroll:true}),40);if(!wasOpen)FounderGraph.focusOn(id);say("Selected "+titleOf(id));}
-  function closePanel(){if(!panelOpen)return;panelOpen=false;const p=$("fwPanel");p.classList.remove("is-open");p.setAttribute("aria-hidden","true");$("fwWorkspace").classList.remove("has-panel");syncInsets();if(FounderGraph.selected())FounderGraph.select(null,{silent:true,focus:false});if(lastFocus&&document.contains(lastFocus))lastFocus.focus({preventScroll:true});lastFocus=null;setTimeout(()=>FounderGraph.fit(true),reduced()?0:60);}
-  function syncInsets(){const r=$("fwStage").getBoundingClientRect();if(panelOpen&&!mobile())FounderGraph.setInsets({right:Math.min(430,r.width*.46)+12});else if(panelOpen&&mobile())FounderGraph.setInsets({bottom:Math.round(r.height*.58)+90,top:56});else FounderGraph.setInsets({});}
+  function closePanel(noFit){if(!panelOpen)return;panelOpen=false;const p=$("fwPanel");p.classList.remove("is-open");p.setAttribute("aria-hidden","true");$("fwWorkspace").classList.remove("has-panel");syncInsets();if(FounderGraph.selected())FounderGraph.select(null,{silent:true,focus:false});if(lastFocus&&document.contains(lastFocus))lastFocus.focus({preventScroll:true});lastFocus=null;setTimeout(()=>{if(!noFit)FounderGraph.fit(true);},reduced()?0:60);}
+  function syncInsets(){const r=$("fwStage").getBoundingClientRect();if(mobile()){const b=panelOpen?Math.round(r.height*.58)+90:(insOpen?Math.round(r.height*.52)+90:96);FounderGraph.setInsets({left:0,right:0,top:panelOpen?56:128,bottom:b});return;}FounderGraph.setInsets({left:insOpen?Math.min(350,r.width*.4)+26:0,right:panelOpen?Math.min(430,r.width*.46)+12:0,top:100,bottom:96});}
   async function resolveProposal(id,action){try{const g=await API.resolveProposal(id,action);apply(g,{});toast(({accept:"Accepted",reject:"Rejected",ignore:"Ignored"})[action]+" blind spot");if(action==="reject"||(action==="ignore"&&!showIgnored))closePanel();else FounderGraph.select(id,{focus:false});schedulePositionSave();}catch(e){toast(e.message||"Could not update");}}
   function renderThread(id){const t=$("fpThread");if(!t)return;const msgs=chats.get(id)||[];if(!msgs.length){t.innerHTML='<p class="fp-hint">Ask anything about this '+(id==="root"?"startup":"node")+". The coach reads its parents, links, assumptions and risks, not just its title.</p>";return;}t.innerHTML=msgs.map(m=>m.role==="user"?'<div class="fm fm-user"><p>'+esc(m.text)+"</p></div>":m.pending?'<div class="fm fm-coach is-pending"><span class="fp-dots" aria-label="Thinking"><i></i><i></i><i></i></span></div>':'<div class="fm fm-coach'+(m.error?" is-error":"")+'">'+coachHtml(m)+"</div>").join("");const sc=$("fpScroll");if(sc)requestAnimationFrame(()=>{const last=t.lastElementChild;if(last)sc.scrollTop=Math.max(0,last.offsetTop-120);});}
   function tagged(line){const m=/^\s*([A-Z][A-Z \/&-]{2,28}):\s*(.+)$/s.exec(line);return m?'<li><b class="fm-tag">'+esc(m[1].toLowerCase())+"</b> "+esc(m[2])+"</li>":"<li>"+esc(line)+"</li>";}
@@ -159,7 +160,86 @@ const FounderWorkspace = (() => {
       };
     });
   }
-  function init(){bindSidebar();
+
+  /* ── lenses, search, insights / funnel / shape, landing hand-off ── */
+  const FI = () => (typeof FounderInsights !== "undefined" ? FounderInsights : null);
+  function renderLensBar() {
+    const bar = $("fwLenses"); if (!bar || !FI()) return;
+    bar.innerHTML = FI().LENSES.map(l => '<button type="button" data-fl="' + l.id + '" class="' + (l.id === "brain" ? "on" : "") + '" aria-pressed="' + (l.id === "brain") + '" title="' + esc(l.hint) + '">' + esc(l.label) + "</button>").join("");
+    bar.querySelectorAll("[data-fl]").forEach(b => b.onclick = () => setLens(b.dataset.fl));
+  }
+  function setLens(name) {
+    const ids = FounderGraph.setLens(name);
+    document.querySelectorAll("[data-fl]").forEach(b => { const on = b.dataset.fl === name; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });
+    const l = FI().LENSES.find(x => x.id === name);
+    say(name === "brain" ? "Showing everything" : (l ? l.label : name) + " lens: " + ids.length + (ids.length === 1 ? " node" : " nodes") + " emphasised");
+  }
+  function runSearch(q) {
+    clearTimeout(searchTimer);
+    const has = !!q.trim();
+    if (has && panelOpen) closePanel(true);               // search takes over the view; Enter on a match reopens the coach
+    const ids = FounderGraph.search(q);
+    $("fwSearchClear").hidden = !has;
+    $("fwSearchMeta").textContent = has ? ids.length + (ids.length === 1 ? " match" : " matches") : "";
+    searchTimer = setTimeout(() => FounderGraph.fit(true, has && ids.length ? ids : undefined), 260);
+  }
+  function setHl(ids) { const got = FounderGraph.setHighlight(ids); $("fwHlClear").hidden = !got.length; return got; }
+  function showOnGraph(ids) {
+    const live = (ids || []).filter(id => FounderGraph.node(id));
+    if (!live.length) return;
+    if (panelOpen) closePanel(true);
+    setHl(live);
+    FounderGraph.fit(true, live);
+    say("Highlighted " + live.length + (live.length === 1 ? " node" : " nodes"));
+  }
+  function refreshInsights() {
+    if (!FI()) return;
+    try { insightList = FI().insights(visibleGraph()); } catch (e) { console.error("insights failed", e); insightList = []; }
+    const b = $("fwInsightsBtn"); if (b) b.textContent = "Insights" + (insightList.length ? " · " + insightList.length : "");
+    if (insOpen) renderInsights();
+  }
+  function toggleInsights(force) {
+    const open = typeof force === "boolean" ? force : !insOpen, d = $("fwInsights");
+    insOpen = open; d.classList.toggle("is-open", open); d.setAttribute("aria-hidden", String(!open)); if ("inert" in d) d.inert = !open;
+    const btn = $("fwInsightsBtn"); btn.setAttribute("aria-expanded", String(open)); btn.classList.toggle("on", open);
+    if (open) { if (mobile() && panelOpen) closePanel(true); renderInsights(); } else setHl(null);
+    syncInsets(); setTimeout(() => FounderGraph.fit(true), reduced() ? 0 : 90);
+  }
+  function renderInsights() {
+    const body = $("fiBody"); if (!body) return;
+    document.querySelectorAll("[data-itab]").forEach(b => { const on = b.dataset.itab === insTab; b.classList.toggle("on", on); b.setAttribute("aria-selected", String(on)); });
+    const g = visibleGraph();
+    if (!g.nodes.length) { body.innerHTML = '<p class="fi-empty">Nothing to analyse yet. Tell FounderOS what is on your mind and the structure will show up here.</p>'; return; }
+    body.innerHTML = insTab === "funnel" ? funnelHtml(g) : insTab === "shape" ? shapeHtml(g) : insightsHtml();
+    bindInsBody(g);
+  }
+  function insightsHtml() {
+    if (!insightList.length) return '<p class="fi-empty">No structural gaps found yet. This is graph-derived, so it gets sharper as the map grows. Add more of what you are thinking about.</p>';
+    return '<p class="fi-note">Questions drawn from the shape of your map. They are prompts, not facts.</p>' + insightList.map((it, i) =>
+      '<article class="fi-card k-' + esc(it.kind) + '"><span class="fi-kind">' + esc(it.label) + "</span><h4>" + esc(it.title) + "</h4><p>" + esc(it.body) + '</p><div class="fi-acts">' +
+      (it.ids.length ? '<button type="button" data-show="' + i + '">Show on graph</button>' : "") + '<button type="button" data-ask="' + i + '">Ask coach</button></div></article>').join("");
+  }
+  function funnelHtml(g) {
+    const f = FI().funnel(g), max = Math.max(1, ...f.stages.map(s => s.count));
+    return '<p class="fi-note">Where your thinking sits right now. Each node counts once, by its type and state. Nothing here is estimated.</p>' +
+      f.stages.map(s => '<button type="button" class="fi-stage" data-stage="' + s.id + '"' + (s.count ? "" : " disabled") + '><span>' + esc(s.label) + '</span><span class="fi-bar"><i style="width:' + Math.round(s.count / max * 100) + '%"></i></span><b>' + s.count + "</b><small>" + esc(s.blurb) + "</small></button>").join("") +
+      '<button type="button" class="fi-stage" disabled><span>Execution</span><span class="fi-bar"><i style="width:0"></i></span><b>–</b><small>Not tracked yet. FounderOS does not guess what is being executed.</small></button>' +
+      (f.pendingProposals ? '<p class="fi-note">' + f.pendingProposals + " AI blind spot" + (f.pendingProposals === 1 ? " is" : "s are") + " waiting for your decision and " + (f.pendingProposals === 1 ? "is" : "are") + " not counted.</p>" : "");
+  }
+  function shapeHtml(g) {
+    const A = FI().analyze(g), core = Object.keys(A.tier).filter(id => A.tier[id] === "core").sort((a, b) => A.importance[b] - A.importance[a]).slice(0, 5);
+    const pct = Math.round(A.stats.evidenceCoverage * 100);
+    let h = '<h3 class="fi-h">Carrying the most weight</h3>' + (core.length ? core.map(id => {
+      const br = A.bridges[id], d = A.degree[id];
+      return '<button type="button" class="fi-row-btn" data-go="' + esc(id) + '"><strong>' + esc(A.title(id)) + "</strong><span>" + (br ? "Bridge node · connects " + esc(br.slice(0, 3).join(", ")) : (d >= 4 ? "Highly connected · " : "Anchors its cluster · ") + d + " active " + (d === 1 ? "relationship" : "relationships")) + "</span></button>";
+    }).join("") : '<p class="fi-empty">Nothing stands out yet.</p>');
+    h += '<h3 class="fi-h">Clusters</h3>' + A.clusters.filter(c => c.size >= 2).map(c => '<button type="button" class="fi-row-btn" data-cl="' + esc(c.id) + '"><strong>' + esc(c.title) + "</strong><span>" + c.size + " thoughts</span></button>").join("");
+    h += '<h3 class="fi-h">Evidence</h3><p class="fi-note">' + A.stats.evidenceCount + " of " + A.stats.nodes + " nodes (" + pct + "%) carry evidence or are facts or metrics. " + A.stats.crossLinks + " cross-" + (A.stats.crossLinks === 1 ? "link connects" : "links connect") + " your clusters.</p>";
+    const per = Object.keys(A.tier).filter(id => A.tier[id] === "peripheral");
+    if (per.length) h += '<button type="button" class="fi-row-btn" data-periphery="1"><strong>Explore periphery</strong><span>' + per.length + " quiet " + (per.length === 1 ? "thought" : "thoughts") + " at the edge of the map</span></button>";
+    return h;
+  }
+  function init(){
     const must=(id)=>{const x=$(id);if(!x)throw new Error("Missing workspace element #"+id);return x;};
     must("fwSvg"); must("fwStage"); must("fwTip"); must("fwDock"); must("fwInput"); must("fwMapBtn");
     FounderGraph.init({svg:$("fwSvg"),stage:$("fwStage"),tip:$("fwTip"),graph});
@@ -172,6 +252,10 @@ const FounderWorkspace = (() => {
     $("fwFit").onclick=()=>FounderGraph.fit(true);$("fwZoomIn").onclick=()=>FounderGraph.zoomBy(1.3);$("fwZoomOut").onclick=()=>FounderGraph.zoomBy(1/1.3);
     $("fwRefresh").onclick=async()=>{await load();say("Map refreshed")};$("fwRootBtn").onclick=()=>FounderGraph.select("root",{source:"pointer"});
     $("fwEngine").onclick=async()=>{await FounderProvider.get({force:true});updateChrome();};$("fwIgnoredBtn").onclick=()=>{showIgnored=!showIgnored;apply(graph,{})};
+    renderLensBar();
+    $("fwInsightsBtn").onclick=()=>toggleInsights();
+    $("fwInsClose").onclick=()=>toggleInsights(false);
+    $("fwInsights").addEventListener("click",e=>{if(e.target.closest("#fwInsClose"))toggleInsights(false);});
     $("fwPanelClose").onclick=()=>closePanel();$("fwPanelGrip").onclick=()=>$("fwPanel").classList.toggle("is-peek");
     document.querySelectorAll("[data-example]").forEach(b=>b.onclick=()=>{$("fwInput").value=b.dataset.example;autosize();$("fwInput").focus();});
     document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(document.querySelector(".modal-overlay.show"))return;if(panelOpen){e.preventDefault();closePanel();}});window.addEventListener("resize",()=>syncInsets());

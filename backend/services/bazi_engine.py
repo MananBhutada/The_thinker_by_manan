@@ -67,7 +67,7 @@ _PLACE_RE = re.compile(r"(?:English text|English text|English text|English text)
 # English text2-8 English text + English text/English text/English text/English text
 _PLACE_FALLBACK_RE = re.compile(r"[\u4e00-\u9fa5]{2,8}(?:English text|English text|English text|English text)")
 # English textEnglish text JS English text
-_PUNCT_RE = re.compile(r"[]")
+_PUNCT_RE = re.compile(r"[，。！？；：、,.!?;:]")
 
 
 def parse(text: str) -> Dict[str, Any]:

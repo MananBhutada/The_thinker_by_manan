@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.1.0 - Graph-first workspace
+
+### Added
+
+- Intro page at `/` with an animated founder-graph preview; the first thought typed there is handed to the workspace at `/app`.
+- Lenses (Brain, Money, Product, People, Risk, Evidence, Sequence, Future), graph search (`/`), and an Insights drawer with Insights, Funnel and Shape tabs. All derived from the stored graph by the new `frontend/scripts/insights.js`.
+- Importance tiers (core / support / peripheral) from degree and betweenness, soft cluster halos with labels, global node repulsion, and a richer hover tooltip.
+- Node-level highlight from insights and funnel stages, with a Clear control.
+- `tests/frontend/insights.test.js` and `tests/test_landing_routes.py`.
+
+### Fixed
+
+- Selecting a node dimmed *every* node, including the selected one: `is-sel` / `is-nb` were styled but never applied.
+- A removed or merged node could leave a stale selection and coach panel behind; the workspace now clears both.
+- Closing the coach panel did not restore the graph's inset because insets were merged, not replaced.
+- `map.html` carried an inline script that the CSP blocks; it is now identical to `index.html`.
+- README, package name and description described the old BlindSpot app.
+
 ## v0.9.1 - 2026-08-17
 
 ### Changed
