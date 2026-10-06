@@ -17,6 +17,7 @@ import hmac
 import os
 import secrets
 from pathlib import Path
+from typing import Optional
 
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, RedirectResponse
@@ -51,7 +52,7 @@ def _sign_workspace(raw: str) -> str:
     return raw + "." + sig
 
 
-def _verify_workspace(value: str | None) -> str | None:
+def _verify_workspace(value: Optional[str]) -> Optional[str]:
     if not value or "." not in value:
         return None
     raw, sig = value.rsplit(".", 1)
