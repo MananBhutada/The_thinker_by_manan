@@ -55,13 +55,72 @@ function createDomain(title){const n={id:uid("d"),title:title.trim().slice(0,60)
 function createSubnode(domainId,title){const d=get(domainId),n={id:uid("s"),title:title.trim().slice(0,100),level:"subnode",type:"subnode",domain:d.title,state:"known",confidence:100,summary:title,details:"Founder-created sub-node.",thoughts:[],status:"active",source:"founder"};graph.nodes.push(n);graph.edges.push({source:d.id,target:n.id,kind:"structural",relationship:"contains",confidence:100});layoutGraph();return n}
 function addThought(subId,content,type="idea"){const n=get(subId);if(!n)return;n.thoughts=n.thoughts||[];n.thoughts.push({id:uid("t"),content,createdAt:new Date().toISOString(),archived:false,source:"founder",type})}
 
-function openNewThought(prefDomain="",prefSub=""){const ds=domainsList(),dVal=prefDomain||ds[0]?.id||"__new__";modalOpen("Capture a thought",'<div class="step"><span>01</span><div><b>Where does this belong?</b><small>Domains are business areas, not thoughts.</small></div></div><select id="mDomain">'+options(ds,dVal)+'<option value="__new__">＋ Create a new domain</option></select><div id="newDomainBox" class="hidden"><input id="mDomainName" placeholder="e.g. People, Policy, Marketing, Finance"></div><div class="step"><span>02</span><div><b>Which sub-node?</b><small>Sub-nodes hold the actual thinking and Coach context.</small></div></div><select id="mSub"></select><div id="newSubBox" class="hidden"><input id="mSubName" placeholder="e.g. Should we get a new HR policy?"></div><div class="step"><span>03</span><div><b>What are you thinking?</b><small>This becomes content inside the sub-node — it does not create another graph node.</small></div></div><select id="mType"><option value="decision">Decision</option><option value="problem">Problem</option><option value="idea">Idea</option><option value="risk">Risk</option><option value="question">Question</option><option value="plan">Future action</option><option value="fact">Fact</option><option value="assumption">Assumption</option></select><textarea id="mThought" rows="5" placeholder="Write the messy version. FounderOS keeps it as a thought inside the selected sub-node."></textarea><div class="helper">You can connect this sub-node to another domain or sub-node later with a dotted cross-link.</div>','<div class="modal-actions"><button data-close-modal>Cancel</button><button class="primary" id="saveThought">Add thought ↗</button></div>');
+const commonDomains=["People","Product","Policy","Marketing","Budget","Finance","Sales","Future Plan","Subscriptions","Customers","Operations","Legal","Strategy","Technology","Fundraising","Partnerships","Growth"];
+const commonSubnodes={
+People:["Hiring","Team","Roles & responsibilities","HR policy","Culture","Advisors"],
+Product:["MVP","Features","Roadmap","User experience","Technical debt","Product feedback"],
+Policy:["HR policy","Privacy policy","Terms & conditions","Compliance","Internal process","Security policy"],
+Marketing:["Brand","Content","Social media","Growth campaigns","Positioning","Go-to-market"],
+Budget:["Monthly budget","Runway","Operating costs","Hiring budget","Marketing budget","Cost cutting"],
+Finance:["Cash flow","Fundraising","Investments","Accounts","Burn rate","Financial planning"],
+Sales:["Pricing","Sales pipeline","Revenue","Sales process","Partnerships","Negotiations"],
+"Future Plan":["Next milestone","Expansion","New market","Long-term vision","Future ideas","Experiments"],
+Subscriptions:["Software subscriptions","Cloud costs","SaaS tools","Renewals","Vendor review"],
+Customers:["Target customer","Customer feedback","User research","Retention","Customer support","Key accounts"],
+Operations:["Processes","Vendors","Infrastructure","Automation","Daily operations","Quality"],
+Legal:["Company registration","Contracts","Taxes","IP","Compliance","Legal review"],
+Strategy:["Vision","Goals","Competitive strategy","Priorities","Key decisions","Risks"],
+Technology:["Architecture","Infrastructure","AI/ML","Security","Integrations","Technical roadmap"],
+Fundraising:["Investor outreach","Pitch","Valuation","Funding round","Use of funds","Investor pipeline"],
+Partnerships:["Potential partners","Strategic partnerships","Distribution","Integrations","Negotiations","Partner pipeline"],
+Growth:["Acquisition","Retention","Experiments","Channels","Metrics","Growth strategy"]
+};
+function openNewThought(prefDomain="",prefSub=""){
+const ds=domainsList(),existingDomainIds=new Set(ds.map(d=>d.id)),dVal=prefDomain||ds[0]?.id||"__custom_domain__";
+const domainOptions=ds.map(d=>({id:d.id,title:d.title})).concat(commonDomains.filter(x=>!ds.some(d=>d.title.toLowerCase()===x.toLowerCase())).map(x=>({id:"__suggested_domain__:"+x,title:x+" · suggested"})));
+modalOpen("Capture a thought",'<div class="step"><span>01</span><div><b>Where does this belong?</b><small>Choose an existing business area, use a suggested one, or create your own.</small></div></div><select id="mDomain">'+options(domainOptions,dVal)+'<option value="__custom_domain__">＋ Create my own domain</option></select><div id="newDomainBox" class="hidden"><input id="mDomainName" placeholder="Name your domain · e.g. Partnerships, Research, Hiring"></div><div class="step"><span>02</span><div><b>Which sub-node?</b><small>Pick an existing sub-node, use a common starting point, or name your own.</small></div></div><select id="mSub"></select><div id="newSubBox" class="hidden"><input id="mSubName" placeholder="Name your sub-node · e.g. Should we get a new HR policy?"></div><div class="step"><span>03</span><div><b>What are you thinking?</b><small>This becomes content inside the sub-node — it does not create another graph node.</small></div></div><select id="mType"><option value="decision">Decision</option><option value="problem">Problem</option><option value="idea">Idea</option><option value="risk">Risk</option><option value="question">Question</option><option value="plan">Future action</option><option value="fact">Fact</option><option value="assumption">Assumption</option></select><textarea id="mThought" rows="5" placeholder="Write the messy version. FounderOS keeps it as a thought inside the selected sub-node."></textarea><div class="helper">You can connect this sub-node to another domain or sub-node later with a dotted cross-link.</div>','<div class="modal-actions"><button data-close-modal>Cancel</button><button class="primary" id="saveThought">Add thought ↗</button></div>');
 const d=$("#mDomain"),s=$("#mSub"),db=$("#newDomainBox"),sb=$("#newSubBox");
-function refreshSubs(){const cs=subnodes().filter(n=>parentOf(n.id)===d.value);s.innerHTML=options(cs,prefSub||cs[0]?.id||"__new__")+'<option value="__new__">＋ Create a new sub-node</option>';sb.classList.toggle("hidden",s.value!=="__new__")}
-d.onchange=()=>{db.classList.toggle("hidden",d.value!=="__new__");if(d.value!=="__new__")refreshSubs();else{s.innerHTML='<option value="__new__">＋ Create a new sub-node</option>';sb.classList.remove("hidden")}};s.onchange=()=>sb.classList.toggle("hidden",s.value!=="__new__");refreshSubs();
-$("#saveThought").onclick=()=>{const content=$("#mThought").value.trim();if(!content){alert("Write the thought first.");return}let domain=d.value==="__new__"?null:get(d.value);if(!domain){const name=$("#mDomainName").value.trim();if(!name){alert("Name the domain.");return}domain=createDomain(name)}let sub=s.value==="__new__"?null:get(s.value);if(!sub){const name=$("#mSubName").value.trim();if(!name){alert("Name the sub-node.");return}sub=createSubnode(domain.id,name)}addThought(sub.id,content,$("#mType").value);selected=sub.id;modalClose();page="map";renderAll();inspect(sub.id);persist()}
+function refreshSubs(){
+let domainTitle="";
+if(d.value.startsWith("__suggested_domain__:"))domainTitle=d.value.slice("__suggested_domain__:".length);else{const chosen=get(d.value);domainTitle=chosen?.title||""}
+const actual=get(d.value);
+const existing=subnodes().filter(n=>parentOf(n.id)===d.value);
+const suggestions=(commonSubnodes[domainTitle]||[]).filter(name=>!existing.some(n=>n.title.toLowerCase()===name.toLowerCase())).map(name=>({id:"__suggested_sub__:"+name,title:name+" · suggested"}));
+s.innerHTML=options(existing.concat(suggestions),prefSub&&existing.some(n=>n.id===prefSub)?prefSub:suggestions[0]?.id||existing[0]?.id||"__custom_subnode__")+'<option value="__custom_subnode__">＋ Name my own sub-node</option>';
+sb.classList.toggle("hidden",s.value!=="__custom_subnode__");
 }
-
+d.onchange=()=>{db.classList.toggle("hidden",!d.value.startsWith("__custom_domain__"));prefSub="";refreshSubs()};
+s.onchange=()=>sb.classList.toggle("hidden",s.value!=="__custom_subnode__");
+refreshSubs();
+$("#saveThought").onclick=()=>{
+const content=$("#mThought").value.trim();
+if(!content){alert("Write the thought first.");return}
+let domain=null;
+if(d.value==="__custom_domain__"){
+const name=$("#mDomainName").value.trim();
+if(!name){alert("Name the domain.");$("#mDomainName").focus();return}
+domain=createDomain(name);
+}else if(d.value.startsWith("__suggested_domain__:")){
+domain=createDomain(d.value.slice("__suggested_domain__:".length));
+}else{
+domain=get(d.value);
+}
+if(!domain){alert("Choose a domain.");return}
+let sub=null;
+if(s.value==="__custom_subnode__"){
+const name=$("#mSubName").value.trim();
+if(!name){alert("Name the sub-node.");$("#mSubName").focus();return}
+sub=createSubnode(domain.id,name);
+}else if(s.value.startsWith("__suggested_sub__:")){
+sub=createSubnode(domain.id,s.value.slice("__suggested_sub__:".length));
+}else{
+sub=get(s.value);
+}
+if(!sub){alert("Choose or name a sub-node.");return}
+addThought(sub.id,content,$("#mType").value);
+selected=sub.id;modalClose();page="map";renderAll();inspect(sub.id);persist()
+}
+}
 function archiveThought(subId,tid){const n=get(subId),t=n?.thoughts?.find(x=>x.id===tid);if(!t)return;t.archived=true;persist();renderAll();inspect(subId)}
 function restoreThought(subId,tid){const n=get(subId),t=n?.thoughts?.find(x=>x.id===tid);if(!t)return;t.archived=false;persist();showPage("archive")}
 
