@@ -19,7 +19,7 @@ MAX_EDGES = 160
 NODE_TYPES = {
     "goal", "idea", "initiative", "problem", "customer", "product", "market", "decision", "option",
     "risk", "dependency", "constraint", "fact", "assumption", "metric", "experiment", "unknown",
-    "investment", "cost", "revenue", "runway", "future_plan", "people",
+    "investment", "cost", "revenue", "runway", "future_plan", "people", "domain", "subnode",
 }
 NODE_STATES = {"known", "committed", "estimated", "hypothetical", "assumption", "unknown"}
 SEMANTIC_RELS = {
@@ -118,6 +118,21 @@ def _normalize_node(raw: Dict[str, Any], nid: str, created_from: str = "") -> Di
     if not summary and details:
         summary = re.split(r"(?<=[.!?])\s", details, maxsplit=1)[0][:140]
     proposal = bool(raw.get("proposal"))
+    raw_thoughts = raw.get("thoughts") if isinstance(raw.get("thoughts"), list) else []
+    thoughts = []
+    for item in raw_thoughts[:40]:
+        if not isinstance(item, dict):
+            continue
+        thoughts.append({
+            "id": str(item.get("id") or "")[:80],
+            "content": str(item.get("content") or "").strip()[:4000],
+            "createdAt": str(item.get("createdAt") or "")[:80],
+            "archived": bool(item.get("archived", False)),
+            "source": str(item.get("source") or "founder")[:20],
+        })
+    level = str(raw.get("level") or ("domain" if ntype == "domain" else "subnode" if ntype == "subnode" else "legacy")).strip().lower()[:20]
+    if level not in {"domain", "subnode", "legacy"}:
+        level = "legacy"
     node = {
         "id": nid,
         "title": str(raw.get("title") or "Untitled")[:120],
@@ -137,6 +152,9 @@ def _normalize_node(raw: Dict[str, Any], nid: str, created_from: str = "") -> Di
         "createdFrom": str(raw.get("createdFrom") or created_from)[:200],
         "proposal": proposal,
         "status": "proposed" if proposal else str(raw.get("status") or "active")[:16],
+        "level": level,
+        "thoughts": thoughts,
+        "archived": bool(raw.get("archived", False)),
     }
     pos = raw.get("pos")
     if isinstance(pos, (list, tuple)) and len(pos) == 2 and all(isinstance(v, (int, float)) for v in pos):
