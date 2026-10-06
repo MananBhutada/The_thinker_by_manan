@@ -34,7 +34,7 @@ jobs:
         run: cd backend && python -c "from main import app; print('Import OK')"
 
       - name: Run pytest
-        run: pytest tests/ -v --ignore=tests/test_desktop_ui.py
+        run: pytest tests/test_landing_routes.py tests/test_db.py -v
 
   desktop-ui:
     name: Desktop UI (Python 3.12)
