@@ -78,6 +78,21 @@ def get_graph():
     return upgrade_graph(db.get_graph())
 
 
+@router.post("/api/graph/mutate")
+def mutate_graph(payload: dict):
+    """Persist a founder-authorized graph mutation from the interactive workspace."""
+    graph = payload.get("graph")
+    if not isinstance(graph, dict):
+        raise HTTPException(status_code=400, detail="graph is required")
+    graph.setdefault("root", {"title": "Your startup"})
+    graph.setdefault("nodes", [])
+    graph.setdefault("edges", [])
+    graph.setdefault("insights", [])
+    graph.setdefault("questions", [])
+    db.save_graph(graph)
+    return upgrade_graph(graph)
+
+
 @router.post("/api/graph/chat")
 def chat_about_node(req: GraphChatRequest):
     """Reason about the selected node using its surrounding graph context."""
