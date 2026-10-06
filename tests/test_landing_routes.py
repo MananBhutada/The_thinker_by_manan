@@ -18,7 +18,9 @@ def test_workspace_route_serves_graph_first_app():
     with TestClient(main.app) as client:
         response = client.get("/app")
     assert response.status_code == 200
-    assert 'class="app-shell founder-os"' in response.text
+    assert '<title>FounderOS — Think in systems</title>' in response.text
+        assert '/app/assets/main.js' in response.text
+        assert '/app/style.css' in response.text
     assert 'id="fwSvg"' in response.text
     assert 'id="fwInput"' in response.text
     assert 'id="fwInsightsBtn"' in response.text
