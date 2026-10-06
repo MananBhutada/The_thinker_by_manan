@@ -239,6 +239,7 @@ const FounderWorkspace = (() => {
     if (per.length) h += '<button type="button" class="fi-row-btn" data-periphery="1"><strong>Explore periphery</strong><span>' + per.length + " quiet " + (per.length === 1 ? "thought" : "thoughts") + " at the edge of the map</span></button>";
     return h;
   }
+  function init(){
     const must=(id)=>{const x=$(id);if(!x)throw new Error("Missing workspace element #"+id);return x;};
     must("fwSvg"); must("fwStage"); must("fwTip"); must("fwDock"); must("fwInput"); must("fwMapBtn");
     FounderGraph.init({svg:$("fwSvg"),stage:$("fwStage"),tip:$("fwTip"),graph});
