@@ -94,4 +94,4 @@ canvas.ondblclick=e=>{const r=canvas.getBoundingClientRect(),p=world(e.clientX-r
 canvas.onpointerdown=e=>{const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;drag=nodeAt(x,y);last={x,y};moved=false;panning=!drag};
 canvas.onpointermove=e=>{const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;if(drag){const n=get(drag),p=world(x,y);n.x=p.x;n.y=p.y;moved=true;draw()}else if(panning){panX+=x-last.x;panY+=y-last.y;last={x,y};draw()}};
 canvas.onpointerup=()=>{if(drag&&!moved)nodeClick(drag);if(drag&&moved)savePositions();drag=null;panning=false};window.onresize=resize;
-(async()=>{try{graph=migrate(await api("/api/graph"));ensurePositions();renderAll();resize();fit();if((graph.root.title||"Your Startup")==="Your Startup")setTimeout(startupSettings,250)}catch(e){console.warn(e);renderAll();resize()}})();
+(async()=>{try{graph=migrate(await api("/api/graph"));ensurePositions();renderAll();resize();fit();if(/^(your startup|your startup name)$/i.test(graph.root.title||""))setTimeout(startupSettings,250)}catch(e){console.warn(e);renderAll();resize()}})();
