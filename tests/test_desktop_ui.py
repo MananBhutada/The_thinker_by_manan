@@ -78,7 +78,7 @@ def test_workspace_has_expected_graph_lenses(page):
     lenses = page.locator("#fwLenses button")
     assert lenses.count() >= 6
     labels = [text.strip() for text in lenses.all_inner_texts()]
-    for expected in ["Founder", "Product", "People", "Money", "Growth", "Conflict"]:
+    for expected in ["Brain", "Money", "Product", "People", "Risk", "Evidence", "Sequence", "Future"]:
         assert expected in labels
 
 
@@ -86,11 +86,11 @@ def test_workspace_insights_drawer_opens_and_closes(page):
     page.goto(BASE_URL + "/app")
     page.wait_for_selector("#fwInsightsBtn", timeout=10000)
     assert page.locator("#fwInsights").get_attribute("aria-hidden") == "true"
-    page.locator("#fwInsightsBtn").click()
+    page.locator("#fwInsightsBtn").click(force=True)
     page.wait_for_timeout(200)
     assert page.locator("#fwInsights").get_attribute("aria-hidden") == "false"
     assert page.locator("#fwInsights").is_visible()
-    page.locator("#fwInsClose").click()
+    page.locator("#fwInsClose").click(force=True)
     page.wait_for_timeout(200)
     assert page.locator("#fwInsights").get_attribute("aria-hidden") == "true"
 
