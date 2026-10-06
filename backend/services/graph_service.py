@@ -19,7 +19,7 @@ MAX_EDGES = 160
 NODE_TYPES = {
     "goal", "idea", "initiative", "problem", "customer", "product", "market", "decision", "option",
     "risk", "dependency", "constraint", "fact", "assumption", "metric", "experiment", "unknown",
-    "investment", "cost", "revenue", "runway", "future_plan", "people",
+    "investment", "cost", "revenue", "runway", "future_plan", "people", "domain", "subnode",
 }
 NODE_STATES = {"known", "committed", "estimated", "hypothetical", "assumption", "unknown"}
 SEMANTIC_RELS = {
@@ -118,6 +118,21 @@ def _normalize_node(raw: Dict[str, Any], nid: str, created_from: str = "") -> Di
     if not summary and details:
         summary = re.split(r"(?<=[.!?])\s", details, maxsplit=1)[0][:140]
     proposal = bool(raw.get("proposal"))
+    raw_thoughts = raw.get("thoughts") if isinstance(raw.get("thoughts"), list) else []
+    thoughts = []
+    for item in raw_thoughts[:40]:
+        if not isinstance(item, dict):
+            continue
+        thoughts.append({
+            "id": str(item.get("id") or "")[:80],
+            "content": str(item.get("content") or "").strip()[:4000],
+            "createdAt": str(item.get("createdAt") or "")[:80],
+            "archived": bool(item.get("archived", False)),
+            "source": str(item.get("source") or "founder")[:20],
+        })
+    level = str(raw.get("level") or ("domain" if ntype == "domain" else "subnode" if ntype == "subnode" else "legacy")).strip().lower()[:20]
+    if level not in {"domain", "subnode", "legacy"}:
+        level = "legacy"
     node = {
         "id": nid,
         "title": str(raw.get("title") or "Untitled")[:120],
@@ -137,6 +152,9 @@ def _normalize_node(raw: Dict[str, Any], nid: str, created_from: str = "") -> Di
         "createdFrom": str(raw.get("createdFrom") or created_from)[:200],
         "proposal": proposal,
         "status": "proposed" if proposal else str(raw.get("status") or "active")[:16],
+        "level": level,
+        "thoughts": thoughts,
+        "archived": bool(raw.get("archived", False)),
     }
     pos = raw.get("pos")
     if isinstance(pos, (list, tuple)) and len(pos) == 2 and all(isinstance(v, (int, float)) for v in pos):
@@ -502,6 +520,9 @@ def build_node_context(graph: Dict[str, Any], node_id: Optional[str], question: 
                 "Details: %s" % (n["details"] or n["summary"] or "none recorded"), "Confidence: %s%%" % n["confidence"],
                 "Capital: %s" % _cap(n), "Evidence: %s" % ("; ".join(n["evidence"]) or "none recorded"),
                 "Assumptions: %s" % ("; ".join(n["assumptions"]) or "none recorded"), "Dependencies: %s" % ("; ".join(n["dependencies"]) or "none recorded")]
+        thoughts = [t for t in n.get("thoughts", []) if isinstance(t, dict) and not t.get("archived")]
+        if thoughts:
+            out += ["THOUGHT CONTENT INSIDE THIS SUB-NODE:"] + ["- %s%s" % (str(t.get("type") or "thought").upper() + ": ", str(t.get("content") or "")[:1200]) for t in thoughts[-12:]]
         if n.get("proposal"): out.append("NOTE: this node is an AI-proposed question awaiting the founder's decision, not a fact.")
     out.append(""); out.append("PARENT / STRUCTURAL CONTEXT:")
     chain, cur, guard = [], parent.get(sel_id), 0
