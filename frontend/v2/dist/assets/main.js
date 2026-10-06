@@ -5,7 +5,7 @@ const typeFor={People:"people",Product:"product",Policy:"constraint",Marketing:"
 const api=async(path,opt={})=>{const r=await fetch(path,{...opt,headers:{"Content-Type":"application/json","Accept":"application/json",...(opt.headers||{})}}),t=await r.text();let d=null;try{d=t?JSON.parse(t):null}catch{d=t}if(!r.ok){const e=new Error(d?.detail||d?.message||r.statusText);e.status=r.status;throw e}return d};
 let graph={root:{title:"Your Startup",summary:"",objective:""},nodes:[],edges:[],insights:[],questions:[]},selected="root",page="map",query="",scale=1,panX=0,panY=0,drag=null,panning=false,last={x:0,y:0},moved=false,connectMode=false,connectFrom=null,provider={provider:"free"},chat=[],saving=false;
 
-document.body.innerHTML=\`
+document.body.innerHTML=`
 <div class="shell"><aside class="rail"><div class="brand"><i>F</i><div><b>FounderOS</b><small>Think in connections.</small></div></div>
 <button class="new" id="newThought">＋ New thought</button><nav><button class="nav active" data-page="map">⌘ <span>Map</span></button><button class="nav" data-page="insights">◌ <span>Insights</span></button><button class="nav" data-page="archive">▤ <span>Archive</span></button></nav>
 <div class="rail-bottom"><button class="nav" id="startupSettings">⚙ <span>Startup</span></button><button class="nav" id="provider">✦ <span id="providerLabel">FounderOS AI</span></button><button class="nav" id="shortcuts">? <span>Shortcuts</span></button></div></aside>
