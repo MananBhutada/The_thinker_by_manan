@@ -255,6 +255,7 @@ const FounderWorkspace = (() => {
     renderLensBar();
     $("fwInsightsBtn").onclick=()=>toggleInsights();
     $("fwInsClose").onclick=()=>toggleInsights(false);
+    $("fwInsights").addEventListener("click",e=>{if(e.target.closest("#fwInsClose"))toggleInsights(false);});
     $("fwPanelClose").onclick=()=>closePanel();$("fwPanelGrip").onclick=()=>$("fwPanel").classList.toggle("is-peek");
     document.querySelectorAll("[data-example]").forEach(b=>b.onclick=()=>{$("fwInput").value=b.dataset.example;autosize();$("fwInput").focus();});
     document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(document.querySelector(".modal-overlay.show"))return;if(panelOpen){e.preventDefault();closePanel();}});window.addEventListener("resize",()=>syncInsets());
