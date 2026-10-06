@@ -32,6 +32,7 @@ from routes import archive, chat, config_api, decision, graph, modes, stats, tts
 
 # English textchoice-skill/frontend/
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
+FRONTEND_V2_DIR = FRONTEND_DIR / "v2" / "dist"
 
 # English text
 init_db()
@@ -143,7 +144,15 @@ if FRONTEND_DIR.exists():
     @app.get("/app")
     def serve_workspace() -> FileResponse:
         """The graph-first FounderOS workspace."""
-        return FileResponse(str(FRONTEND_DIR / "index.html"))
+        return FileResponse(str(FRONTEND_V2_DIR / "index.html") if (FRONTEND_V2_DIR / "index.html").exists() else str(FRONTEND_DIR / "index.html"))
+
+    @app.get("/app/style.css")
+    def serve_v2_style() -> FileResponse:
+        return FileResponse(str(FRONTEND_V2_DIR / "style.css"))
+
+    @app.get("/app/assets/{asset_path:path}")
+    def serve_v2_asset(asset_path: str) -> FileResponse:
+        return FileResponse(str(FRONTEND_V2_DIR / "assets" / asset_path))
 
     @app.get("/app/")
     def serve_workspace_slash() -> RedirectResponse:
