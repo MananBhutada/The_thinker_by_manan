@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#07090e">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="FounderOS turns scattered founder thoughts into a living map of decisions, dependencies, risks, money and ideas.">
+<title>FounderOS · Your brain is not a roadmap</title>
+<link rel="stylesheet" href="styles/landing.css?v=1">
+</head>
+<body>
+<a class="skip" href="#hero">Skip to content</a>
+<header class="nav">
+  <a class="brand" href="/" aria-label="FounderOS home"><i></i>FounderOS</a>
+  <nav aria-label="Primary"><a href="#how">How it works</a><a href="#network">Why a graph</a><a class="nav-cta" href="/app">Open workspace</a></nav>
+</header>
+
+<main>
+<section class="hero" id="hero">
+  <div class="hero-copy">
+    <p class="eyebrow">For founders whose brains move faster than their roadmap</p>
+    <h1>Your brain is not a&nbsp;roadmap.</h1>
+    <p class="lede">You have 15 ideas, 6 decisions, 3 risks, 2 people to hire and somehow they're all connected. <strong>FounderOS turns that mess into a living map.</strong></p>
+    <form class="composer" id="seedForm" novalidate>
+      <label for="seedText">What's currently taking up space in your head?</label>
+      <textarea id="seedText" rows="3" maxlength="12000" placeholder="We're building X, but I'm worried about Y. I want to hire Z. We might raise money. I'm not sure whether…"></textarea>
+      <div class="composer-row">
+        <button type="submit" class="btn-primary" id="seedGo">Map My Founder Brain <span aria-hidden="true">→</span></button>
+        <a class="btn-ghost" href="#how">See How It Works</a>
+      </div>
+      <button type="button" class="link-example" id="seedExample">No idea where to start? Try the PulseSense example</button>
+    </form>
+  </div>
+  <div class="hero-graph" aria-hidden="false">
+    <svg id="previewGraph" viewBox="0 0 640 540" role="img" aria-label="Animated preview of a founder graph: a startup connected to product, money, people, market and legal clusters, with cross-links appearing between them."></svg>
+    <p class="graph-cap">Drag nothing. Click nothing. This is what your thinking looks like once it's visible.</p>
+  </div>
+</section>
+
+<section class="band" id="problem">
+  <div class="wrap narrow">
+    <h2>Founders don't think in checklists.</h2>
+    <p>You jump from <em>product</em> to <em>hiring</em> to <em>funding</em> to <em>a customer call</em> to <em>legal</em> to another product idea, to something you suddenly remembered three weeks ago.</p>
+    <ul class="jump" aria-label="Examples of thoughts jumping between topics"><li>Product</li><li>Hiring</li><li>Funding</li><li>Customer</li><li>Legal</li><li>Another idea</li><li>That thing from 3 weeks ago</li></ul>
+    <p>FounderOS keeps all of those thoughts visible, without forcing them into a rigid sequence.</p>
+  </div>
+</section>
+
+<section class="band alt" id="how">
+  <div class="wrap">
+    <h2>Dump. Map. Explore. Decide what deserves attention.</h2>
+    <ol class="steps">
+      <li><span class="n">01</span><h3>Dump</h3><p>Write naturally.</p><blockquote>“I want to launch the sensor product, but I'm not sure we can afford another engineer. We also need compliance approval and I don't know whether we should raise money first.”</blockquote></li>
+      <li><span class="n">02</span><h3>Map</h3><p>FounderOS pulls out Product, Engineering, Hiring, Money, Compliance, Funding, risks, decisions and unknowns, then connects them. It merges into your existing map; it never starts over.</p></li>
+      <li><span class="n">03</span><h3>Explore</h3><p>Click any node. Ask about it. See its relationships, dependencies, assumptions and the questions nobody has answered yet. Switch lenses to see only money, risk or evidence.</p></li>
+      <li><span class="n">04</span><h3>Decide</h3><p>FounderOS doesn't decide for you. AI suggestions are labelled as proposals, and nothing becomes a fact on your map until you accept it.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="band" id="network">
+  <div class="wrap narrow">
+    <h2>Your startup isn't a checklist. It's a network.</h2>
+    <p>Your product, people, money, customers, risks, decisions, experiments and weird 2&nbsp;AM ideas all influence each other. FounderOS makes that network visible, so you can see which decision touches seven others, which assumption nothing has tested, and which idea has no customer.</p>
+    <ul class="asks"><li>What dominates my attention?</li><li>What is isolated?</li><li>What depends on what?</li><li>What have I actually validated?</li><li>What am I not seeing?</li></ul>
+  </div>
+</section>
+
+<section class="band cta">
+  <div class="wrap narrow">
+    <h2>You don't need another task manager.</h2>
+    <p>You need to see why everything in your head is connected.</p>
+    <a class="btn-primary" href="#hero" id="toTop">Map My Founder Brain <span aria-hidden="true">→</span></a>
+  </div>
+</section>
+</main>
+
+<footer class="foot"><span>FounderOS</span><span>Your graph belongs to your workspace. AI helps; you decide.</span><a href="/app">Open workspace</a></footer>
+<script src="scripts/landing.js?v=1"></script>
+</body>
+</html>
