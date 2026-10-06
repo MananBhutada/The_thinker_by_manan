@@ -7,6 +7,7 @@
 <meta name="color-scheme" content="dark">
 <title>FounderOS · Think in systems</title>
 <link rel="stylesheet" href="styles/workspace.css?v=4">
+<link rel="stylesheet" href="styles/graph-extras.css?v=1">
 <style>
 html,body{margin:0;height:100%;background:#0a0c11}.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}.modal-overlay{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.62);z-index:100}.modal-overlay.show{display:grid}.modal{width:min(520px,calc(100% - 32px));max-height:80vh;overflow:auto;border:1px solid rgba(255,255,255,.14);border-radius:18px;background:#11151d;color:#e8ebf3;padding:20px}.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:120;padding:10px 14px;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:#11151d;color:#e8ebf3;opacity:0;pointer-events:none;transition:opacity .2s}.toast.show{opacity:1}
 </style>
@@ -29,13 +30,18 @@ html,body{margin:0;height:100%;background:#0a0c11}.sr-only{position:absolute!imp
           <button type="button" class="fw-icon" id="menuToggle" aria-label="Open menu">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
           </button>
-          <div class="fw-brand"><h1>FounderOS</h1><p>Your company, mapped as you think.</p></div>
+          <div class="fw-brand"><h1><a class="fw-home" href="/" title="Back to the FounderOS intro">FounderOS</a></h1><p>Your company, mapped as you think.</p></div>
           <div class="fw-spacer"></div><span class="fw-count" id="fwCount"></span>
+          <button type="button" class="fw-pill" id="fwInsightsBtn" aria-expanded="false" aria-controls="fwInsights">Insights</button>
           <button type="button" class="fw-pill" id="fwIgnoredBtn" hidden></button>
           <button type="button" class="fw-pill fw-engine" id="fwEngine">FounderOS Free AI</button>
           <button type="button" class="fw-icon" id="fwRefresh" aria-label="Refresh map">↻</button>
           <button type="button" class="fw-root-btn" id="fwRootBtn" aria-label="Open startup context"><span id="fwRootName">Your startup</span></button>
         </header>
+        <div class="fw-bar">
+          <div class="fw-lenses" id="fwLenses" role="group" aria-label="Graph lens: change what the map emphasises"></div>
+          <div class="fw-search" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="fwSearch" type="search" placeholder="Search your graph  ( / )" autocomplete="off" aria-label="Search your graph" maxlength="80"><span class="fw-search-meta" id="fwSearchMeta" aria-hidden="true"></span><button type="button" id="fwSearchClear" hidden aria-label="Clear search">×</button></div>
+        </div>
         <div class="fw-empty" id="fwEmpty">
           <p class="fw-empty-title">Start with the messy version.</p>
           <p class="fw-empty-sub">Say everything on your mind at once. Money, people, product, fears, half-ideas. FounderOS keeps it messy and makes it visible.</p>
@@ -44,6 +50,10 @@ html,body{margin:0;height:100%;background:#0a0c11}.sr-only{position:absolute!imp
         <div class="fw-controls" role="group" aria-label="Graph controls"><button type="button" id="fwZoomIn" aria-label="Zoom in">+</button><button type="button" id="fwZoomOut" aria-label="Zoom out">−</button><button type="button" id="fwFit" aria-label="Fit graph">⌗</button></div>
         <div class="fw-legend" aria-hidden="true"><span><i class="lg-solid"></i>belongs to</span><span><i class="lg-dash"></i>cross-link</span><span><i class="lg-dot"></i>AI blind spot</span></div>
         <form class="fw-dock" id="fwDock" novalidate><label for="fwInput" class="sr-only">Tell FounderOS what's on your mind</label><textarea id="fwInput" rows="1" maxlength="12000" placeholder="Tell FounderOS what’s on your mind…" spellcheck="true"></textarea><button type="submit" class="fw-map" id="fwMapBtn"><span>Map</span> →</button><div class="fw-dock-status" id="fwDockStatus" hidden role="status"></div><div class="fw-dock-error" id="fwDockError" hidden role="alert"></div></form>
+        <aside class="fw-insights" id="fwInsights" aria-hidden="true" aria-label="Graph insights, funnel and shape">
+          <div class="fi-head"><div class="fi-tabs" role="tablist"><button type="button" role="tab" data-itab="insights" class="on">Insights</button><button type="button" role="tab" data-itab="funnel">Funnel</button><button type="button" role="tab" data-itab="shape">Shape</button></div><button type="button" class="fi-clear" id="fwHlClear" hidden>Clear highlight</button><button type="button" class="fi-x" id="fwInsClose" aria-label="Close insights">×</button></div>
+          <div class="fi-body" id="fiBody"></div>
+        </aside>
       </div>
       <aside class="fw-panel" id="fwPanel" role="complementary" aria-label="Selected node and contextual coach" aria-hidden="true"></aside>
       <div class="fw-panel-chrome"><button type="button" class="fw-panel-grip" id="fwPanelGrip" aria-label="Expand or collapse panel"><i></i></button><button type="button" class="fw-panel-close" id="fwPanelClose" aria-label="Close panel">×</button></div>
@@ -56,7 +66,8 @@ html,body{margin:0;height:100%;background:#0a0c11}.sr-only{position:absolute!imp
 <script src="scripts/boot.js?v=2"></script>
 <script src="scripts/api.js?v=12"></script>
 <script src="scripts/provider.js?v=5"></script>
-<script src="scripts/graph.js?v=10"></script>
-<script src="scripts/workspace.js?v=6"></script>
+<script src="scripts/insights.js?v=1"></script>
+<script src="scripts/graph.js?v=11"></script>
+<script src="scripts/workspace.js?v=7"></script>
 </body>
 </html>
