@@ -78,6 +78,21 @@ def get_graph():
     return upgrade_graph(db.get_graph())
 
 
+@router.post("/api/graph/mutate")
+def mutate_graph(payload: dict):
+    """Persist a founder-authorized graph mutation from the interactive workspace."""
+    graph = payload.get("graph")
+    if not isinstance(graph, dict):
+        raise HTTPException(status_code=400, detail="graph is required")
+    graph.setdefault("root", {"title": "Your startup"})
+    graph.setdefault("nodes", [])
+    graph.setdefault("edges", [])
+    graph.setdefault("insights", [])
+    graph.setdefault("questions", [])
+    db.save_graph(graph)
+    return upgrade_graph(graph)
+
+
 @router.post("/api/graph/chat")
 def chat_about_node(req: GraphChatRequest):
     """Reason about the selected node using its surrounding graph context."""
@@ -95,7 +110,15 @@ def chat_about_node(req: GraphChatRequest):
     try:
         result = call_llm(context, req.mode, config, language="en", allow_mock=False)
     except NoApiKeyError:
-        raise HTTPException(status_code=402, detail="No LLM API key is configured.")
+        result = {
+            "type": "fallback",
+            "summary": "Coach fallback: start from the selected thought and inspect its connected assumptions, dependencies, risks and evidence before deciding.",
+            "confidence": 0,
+            "perspectives": ["Founder-created information remains authoritative.", "Unverified AI or hypothetical reasoning should stay explicitly uncertain."],
+            "nextSteps": ["Add the missing assumption as a branch.", "Connect this thought to the decision, risk or customer evidence it depends on."],
+            "risks": ["No hosted LLM key is configured for this request."],
+            "_source": "fallback"
+        }
     except Exception as exc:
         # Keep the workspace interactive even when the hosted model times out.
         result = {
