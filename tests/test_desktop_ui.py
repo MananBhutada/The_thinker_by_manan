@@ -63,43 +63,32 @@ def test_landing_composer_opens_workspace(page):
 
 def test_workspace_graph_first_shell(page):
     page.goto(BASE_URL + "/app")
-    page.wait_for_selector(".fw-stage", timeout=10000)
-    assert page.locator(".app-shell.founder-os").is_visible()
-    assert page.locator("#fwSvg").is_visible()
-    assert page.locator("#fwInput").is_visible()
-    assert page.locator("#fwMapBtn").is_visible()
-    assert page.locator("#fwSearch").is_visible()
-    assert page.locator("#fwInsightsBtn").is_visible()
+    page.wait_for_selector("#canvas", timeout=10000)
+    assert page.locator(".shell").is_visible()
+    assert page.locator(".graph canvas").is_visible()
+    assert page.locator("#input").is_visible()
+    assert page.locator("#map").is_visible()
+    assert page.locator("#search").is_visible()
 
 
-def test_workspace_has_expected_graph_lenses(page):
+def test_workspace_is_clean_graph_first_ui(page):
     page.goto(BASE_URL + "/app")
-    page.wait_for_selector("#fwLenses", timeout=10000)
-    lenses = page.locator("#fwLenses button")
-    assert lenses.count() >= 6
-    labels = [text.strip() for text in lenses.all_inner_texts()]
-    for expected in ["Brain", "Money", "Product", "People", "Risk", "Evidence", "Sequence", "Future"]:
-        assert expected in labels
+    assert page.locator(".rail").is_visible()
+    assert page.locator(".composer").is_visible()
+    assert page.locator(".inspector").count() == 1
+    assert page.locator(".fw-stage").count() == 0
+    assert page.locator("#fwSvg").count() == 0
 
 
-def test_workspace_insights_drawer_opens_and_closes(page):
+def test_workspace_graph_controls_work(page):
     page.goto(BASE_URL + "/app")
-    page.wait_for_selector("#fwInsightsBtn", timeout=10000)
-    assert page.locator("#fwInsights").get_attribute("aria-hidden") == "true"
-    page.locator("#fwInsightsBtn").click(force=True)
-    page.wait_for_timeout(200)
-    assert page.locator("#fwInsights").get_attribute("aria-hidden") == "false"
-    assert page.locator("#fwInsights").is_visible()
-    assert page.locator("#fwInsClose").is_visible()
-    assert page.locator("[data-itab='insights']").is_visible()
-    assert page.locator("[data-itab='funnel']").is_visible()
-    assert page.locator("[data-itab='shape']").is_visible()
+    page.wait_for_selector("#canvas", timeout=10000)
+    page.locator("#fit").click()
+    page.locator("#search").fill("runway")
+    assert page.locator("#search").input_value() == "runway"
 
 
-def test_workspace_menu_exposes_archive_and_settings(page):
+def test_workspace_example_populates_composer(page):
     page.goto(BASE_URL + "/app")
-    page.wait_for_selector("#menuToggle", timeout=10000)
-    page.locator("#menuToggle").click()
-    page.wait_for_timeout(200)
-    assert page.locator(".sidebar .nav-item[data-tab='archive']").count() == 1
-    assert page.locator(".sidebar .nav-item[data-tab='settings']").count() == 1
+    page.locator("[data-example]").first.click()
+    assert len(page.locator("#input").input_value()) > 20
