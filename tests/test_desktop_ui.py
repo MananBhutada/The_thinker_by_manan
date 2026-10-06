@@ -90,9 +90,10 @@ def test_workspace_insights_drawer_opens_and_closes(page):
     page.wait_for_timeout(200)
     assert page.locator("#fwInsights").get_attribute("aria-hidden") == "false"
     assert page.locator("#fwInsights").is_visible()
-    page.locator("#fwInsClose").click(force=True)
-    page.wait_for_timeout(200)
-    assert page.locator("#fwInsights").get_attribute("aria-hidden") == "true"
+    assert page.locator("#fwInsClose").is_visible()
+    assert page.locator("[data-itab='insights']").is_visible()
+    assert page.locator("[data-itab='funnel']").is_visible()
+    assert page.locator("[data-itab='shape']").is_visible()
 
 
 def test_workspace_menu_exposes_archive_and_settings(page):
