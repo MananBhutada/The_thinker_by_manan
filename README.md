@@ -1,45 +1,31 @@
-# BlindSpot AI
+# FounderOS
 
-BlindSpot AI is an AI-powered decision reflection tool that helps people identify blind spots in their reasoning before acting.
+**For founders whose brains move faster than their roadmap.**
 
-It does **not** choose for the user. Instead, it stress-tests a decision by surfacing assumptions, overlooked factors, conflicting priorities, uncertainty, missing information, and useful follow-up questions.
+FounderOS turns a messy dump of founder thinking into a living network of ideas, decisions, money, people, products, risks, assumptions and unknowns. The graph is the product. AI is contextual help around it: it extracts, connects and questions, but it never decides for you and never turns a guess into a fact.
 
-## Why BlindSpot AI?
+## What you get
 
-People often evaluate a decision from the perspective they already prefer. BlindSpot AI deliberately introduces friction into that reasoning process:
-- **Assumptions** — What are you taking for granted?
-- **Blind spots** — What important factor might be missing from the current framing?
-- **Trade-offs** — What does each option improve, and what does it cost?
-- **Conflicts** — Which goals or values are pulling in opposite directions?
-- **Missing information** — What should you verify before committing?
-- **Reflection questions** — What question would most improve the quality of the decision?
-
-## How it works
-
-1. The user describes a decision in natural language.
-2. The system routes the request through a decision-analysis mode.
-3. AI analyzes the reasoning from multiple perspectives instead of producing a simple recommendation.
-4. The result is presented as a structured decision brief.
-5. The user keeps full ownership of the final decision.
-
-## Current modes
-
-| Mode | Purpose |
+| Surface | What it does |
 | --- | --- |
-| **Auto** | Select the most useful analysis approach automatically. |
-| **Reason** | Examine benefits, risks, trade-offs, reversibility, and opportunity cost. |
-| **Random** | Use randomness as a reflection device for low-stakes choices, not as evidence. |
-| **Nature** | Add current environmental context as an alternative perspective. |
-| **Dialogue** | Ask reflective questions that help expose the user's own reasoning. |
-| **Traditional** | Provide a clearly labeled traditional-culture perspective for reflection only. |
+| `/` Intro page | Explains the idea in ten seconds, previews the graph, and hands your first thought to the workspace. |
+| `/app` Workspace | A force-directed founder graph: curved edges, importance-sized nodes, emergent clusters, drag / zoom / pan, hover and selection neighbourhoods. |
+| Contextual coach | Click any node and chat. The model receives that node's graph context (parents, cross-links, assumptions, evidence, capital), not just its title. |
+| Lenses | Brain · Money · Product · People · Risk · Evidence · Sequence · Future. Same graph, different emphasis. |
+| Search | Press `/`. Matches highlight, neighbours stay visible, everything else dims. Enter opens the coach on the first match. |
+| Insights | Graph-derived questions: structural gaps, orphaned ideas, overloaded nodes, unresolved dependencies, untested assumptions, loose thoughts. Always phrased as questions. |
+| Funnel | Where your thinking sits (thought, question, assumption, evidence, experiment, decision, commitment), computed from node type and state. Nothing is estimated. |
+| Shape | Bridge nodes, clusters, evidence coverage, and "Explore periphery". |
 
-## Tech stack
+AI-proposed blind spots are visibly distinct (dotted, labelled) and stay proposals until you Accept, Ignore or Reject them. A question you ask yourself is founder context, not an AI proposal.
 
-- **Backend:** Python, FastAPI, SQLite, Pydantic, HTTPX
-- **Frontend:** HTML, CSS, JavaScript with no build step
-- **AI:** Any OpenAI-compatible chat-completions API
-- **Speech:** Browser Speech API and optional Edge TTS
-- **Testing:** pytest and Playwright
+## Architecture
+
+- **Backend:** FastAPI. Graph API in `backend/routes/graph.py`, extraction / merge / node-context in `backend/services/graph_service.py`.
+- **Workspace isolation:** a signed `founderos_workspace` cookie scopes every graph. SQLite locally, PostgreSQL when `DATABASE_URL` is set.
+- **LLM:** any OpenAI-compatible endpoint. The hosted "Free AI" path uses OpenRouter with a primary model plus fallbacks, and a deterministic extractor keeps *Map* working if the model is unreachable. Keys stay server-side or are used per request (BYOK) and never stored.
+- **Frontend:** plain HTML / CSS / JS, no build step. `graph.js` (SVG force layout), `insights.js` (pure analytics, unit-testable in Node), `workspace.js` (UI), `landing.js`.
+- **CSP:** `script-src 'self'`. No inline scripts anywhere.
 
 ## Run locally
 
@@ -47,35 +33,22 @@ People often evaluate a decision from the perspective they already prefer. Blind
     cd backend
     python main.py
 
-Then open `http://127.0.0.1:8010/`.
+Open `http://127.0.0.1:8010/`.
 
-For real AI analysis, configure an OpenAI-compatible API key through the application settings or environment variables. Without a key, the application can run in Demo mode with clearly labeled mock results.
+## Configuration
 
-## Environment variables
+| Variable | Purpose |
+| --- | --- |
+| `FOUNDEROS_FREE_AI_API_KEY` | Key for the hosted Free AI path (server-side only). |
+| `FOUNDEROS_FREE_AI_MODEL` / `_BASE_URL` / `_FALLBACK_MODELS` | Override the default model, endpoint and fallbacks. |
+| `FOUNDEROS_SESSION_SECRET` | Signs workspace cookies. **Set this in production.** |
+| `DATABASE_URL` | Optional PostgreSQL store; SQLite is used otherwise. |
 
-    CHOICE_LLM_API_KEY=your_api_key
-    CHOICE_LLM_MODEL=gpt-4o-mini
-    CHOICE_LLM_BASE_URL=https://api.openai.com/v1
+## Tests
 
-## Safety and boundaries
+    node tests/frontend/insights.test.js      # graph analytics, lenses, funnel
+    python -m pytest tests/test_landing_routes.py
 
-BlindSpot AI is a decision-support tool, not an autonomous decision-maker. It should not replace qualified professional advice for medical, legal, financial, employment, or other high-stakes decisions.
+## Credits and licence
 
-AI output can be incomplete or wrong. The purpose of the system is to improve the user's reasoning process, not to create false certainty.
-
-## Repository structure
-
-- `frontend/` — web interface and client-side rendering
-- `backend/` — FastAPI application, routing, AI services, and persistence
-- `scripts/` — CLI and packaging utilities
-- `tests/` — automated tests
-- `docs/` — documentation and demo assets
-- `skills/choice-assistant/` — bundled decision-support skill
-
-## License
-
-MIT. See [LICENSE](LICENSE).
-
----
-
-Built as a hackathon prototype for **THE BLIND SPOT**: help people see what their reasoning may be missing before they decide.
+MIT. See [LICENSE](LICENSE) and [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md) for upstream copyright and the projects this builds on.
