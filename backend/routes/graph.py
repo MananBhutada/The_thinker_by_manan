@@ -35,19 +35,13 @@ def _config(req):
         # Free mode may run without a hosted key. The graph service has a
         # deterministic extraction fallback, so the workspace remains usable
         # when the deployment has no AI secret configured.
-        key = os.environ.get("FOUNDEROS_FREE_AI_API_KEY", "")
+        from config import get_effective_config
+        stored = get_effective_config()
+        key = os.environ.get("FOUNDEROS_FREE_AI_API_KEY", "") or stored.get("llm_api_key", "")
         return {
             "llm_api_key": key,
-            "llm_model": (
-                os.environ.get("FOUNDEROS_FREE_AI_MODEL", "").strip()
-                if os.environ.get("FOUNDEROS_FREE_AI_MODEL", "").strip()
-                not in {"qwen/qwen3.8-27b:free", "qwen/qwen3.8-27b"}
-                else "nvidia/nemotron-3.5-lightning:free"
-            ),
-            "llm_base_url": os.environ.get(
-                "FOUNDEROS_FREE_AI_BASE_URL",
-                "https://openrouter.ai/api/v1",
-            ),
+            "llm_model": (os.environ.get("FOUNDEROS_FREE_AI_MODEL", "").strip() or stored.get("llm_model", "").strip() or "nvidia/nemotron-3.5-super:free"),
+            "llm_base_url": os.environ.get("FOUNDEROS_FREE_AI_BASE_URL", "") or stored.get("llm_base_url", "") or "https://openrouter.ai/api/v1",
             "llm_fallback_models": os.environ.get(
                 "FOUNDEROS_FREE_AI_FALLBACK_MODELS",
                 "openrouter/free",
