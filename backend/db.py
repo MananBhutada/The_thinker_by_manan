@@ -131,6 +131,111 @@ def init_db() -> None:
                 PRIMARY KEY (workspace_id, key)
             );
 
+
+            CREATE TABLE IF NOT EXISTS workspaces (
+                workspace_id TEXT PRIMARY KEY REFERENCES founder_workspaces(workspace_id) ON DELETE CASCADE,
+                startup_title TEXT NOT NULL DEFAULT 'Your Startup',
+                summary TEXT NOT NULL DEFAULT '',
+                objective TEXT NOT NULL DEFAULT '',
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+
+            CREATE TABLE IF NOT EXISTS domains (
+                id TEXT PRIMARY KEY,
+                workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id) ON DELETE CASCADE,
+                title TEXT NOT NULL,
+                type TEXT,
+                metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+                x DOUBLE PRECISION NOT NULL DEFAULT 0,
+                y DOUBLE PRECISION NOT NULL DEFAULT 0,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+            CREATE INDEX IF NOT EXISTS idx_domains_workspace ON domains(workspace_id);
+
+            CREATE TABLE IF NOT EXISTS subnodes (
+                id TEXT PRIMARY KEY,
+                workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id) ON DELETE CASCADE,
+                domain_id TEXT NOT NULL REFERENCES domains(id) ON DELETE CASCADE,
+                title TEXT NOT NULL,
+                type TEXT,
+                metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+                x DOUBLE PRECISION NOT NULL DEFAULT 0,
+                y DOUBLE PRECISION NOT NULL DEFAULT 0,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+            CREATE INDEX IF NOT EXISTS idx_subnodes_workspace_domain ON subnodes(workspace_id, domain_id);
+
+            CREATE TABLE IF NOT EXISTS thoughts (
+                id TEXT PRIMARY KEY,
+                workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id) ON DELETE CASCADE,
+                subnode_id TEXT NOT NULL REFERENCES subnodes(id) ON DELETE CASCADE,
+                content TEXT NOT NULL,
+                type TEXT NOT NULL DEFAULT 'idea',
+                source TEXT NOT NULL DEFAULT 'founder',
+                archived BOOLEAN NOT NULL DEFAULT FALSE,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                metadata JSONB NOT NULL DEFAULT '{}'::jsonb
+            );
+            CREATE INDEX IF NOT EXISTS idx_thoughts_workspace_subnode_created
+                ON thoughts(workspace_id, subnode_id, created_at DESC);
+
+            CREATE TABLE IF NOT EXISTS graph_edges (
+                id BIGSERIAL PRIMARY KEY,
+                workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id) ON DELETE CASCADE,
+                source_id TEXT NOT NULL,
+                target_id TEXT NOT NULL,
+                kind TEXT NOT NULL DEFAULT 'semantic',
+                relationship TEXT,
+                confidence INTEGER,
+                metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+                UNIQUE(workspace_id, source_id, target_id, kind)
+            );
+            CREATE INDEX IF NOT EXISTS idx_graph_edges_workspace ON graph_edges(workspace_id);
+
+            CREATE TABLE IF NOT EXISTS workspace_state (
+                workspace_id TEXT PRIMARY KEY REFERENCES workspaces(workspace_id) ON DELETE CASCADE,
+                data JSONB NOT NULL DEFAULT '{}'::jsonb,
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+
+            CREATE TABLE IF NOT EXISTS chat_sessions (
+                session_id TEXT PRIMARY KEY,
+                workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id) ON DELETE CASCADE,
+                context_node_id TEXT,
+                title TEXT NOT NULL DEFAULT 'Founder Coach',
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+            CREATE INDEX IF NOT EXISTS idx_chat_sessions_workspace_updated
+                ON chat_sessions(workspace_id, updated_at DESC);
+
+            CREATE TABLE IF NOT EXISTS chat_messages (
+                id BIGSERIAL PRIMARY KEY,
+                workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id) ON DELETE CASCADE,
+                session_id TEXT NOT NULL REFERENCES chat_sessions(session_id) ON DELETE CASCADE,
+                role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
+                content TEXT NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                metadata JSONB NOT NULL DEFAULT '{}'::jsonb
+            );
+            CREATE INDEX IF NOT EXISTS idx_chat_messages_session_created
+                ON chat_messages(session_id, created_at ASC);
+
+            CREATE TABLE IF NOT EXISTS ai_proposals (
+                id TEXT PRIMARY KEY,
+                workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id) ON DELETE CASCADE,
+                node_id TEXT,
+                proposal JSONB NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending',
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                resolved_at TIMESTAMPTZ
+            );
+            CREATE INDEX IF NOT EXISTS idx_ai_proposals_workspace_status
+                ON ai_proposals(workspace_id, status);
+
             CREATE TABLE IF NOT EXISTS graph_state (
                 workspace_id TEXT PRIMARY KEY REFERENCES founder_workspaces(workspace_id) ON DELETE CASCADE,
                 data JSONB NOT NULL,
@@ -139,6 +244,13 @@ def init_db() -> None:
             """
         )
         _upgrade_legacy_postgres_schema(conn)
+
+        # Backfill normalized workspace rows from any legacy JSONB graph documents.
+        legacy_rows = conn.execute("SELECT workspace_id, data, updated_at FROM founder_workspaces").fetchall()
+        for legacy in legacy_rows:
+            exists = conn.execute("SELECT 1 FROM workspaces WHERE workspace_id = %s", (legacy["workspace_id"],)).fetchone()
+            if not exists and isinstance(legacy["data"], dict):
+                _sync_structured_workspace(conn, legacy["workspace_id"], legacy["data"], legacy["updated_at"] or datetime.now(timezone.utc))
 
 
 # ---------------------------------------------------------------------------
@@ -371,11 +483,228 @@ def _empty_graph() -> dict:
     }
 
 
+def _sync_structured_workspace(conn, workspace_id: str, graph: dict, now: datetime) -> None:
+    """Materialize the graph document into normalized FounderOS tables."""
+    root = graph.get("root") or {}
+    conn.execute(
+        """
+        INSERT INTO workspaces (workspace_id, startup_title, summary, objective, updated_at)
+        VALUES (%s, %s, %s, %s, %s)
+        ON CONFLICT (workspace_id) DO UPDATE SET
+            startup_title = EXCLUDED.startup_title,
+            summary = EXCLUDED.summary,
+            objective = EXCLUDED.objective,
+            updated_at = EXCLUDED.updated_at
+        """,
+        (
+            workspace_id,
+            str(root.get("title") or "Your Startup"),
+            str(root.get("summary") or ""),
+            str(root.get("objective") or ""),
+            now,
+        ),
+    )
+
+    nodes = graph.get("nodes") if isinstance(graph.get("nodes"), list) else []
+    domains = [n for n in nodes if n.get("level") == "domain"]
+    subnodes = [n for n in nodes if n.get("level") == "subnode"]
+    valid_domain_ids = {str(n.get("id")) for n in domains if n.get("id")}
+    valid_subnode_ids = {str(n.get("id")) for n in subnodes if n.get("id")}
+
+    conn.execute("DELETE FROM thoughts WHERE workspace_id = %s", (workspace_id,))
+    conn.execute("DELETE FROM subnodes WHERE workspace_id = %s", (workspace_id,))
+    conn.execute("DELETE FROM domains WHERE workspace_id = %s", (workspace_id,))
+    conn.execute("DELETE FROM graph_edges WHERE workspace_id = %s", (workspace_id,))
+
+    for n in domains:
+        conn.execute(
+            """
+            INSERT INTO domains
+                (id, workspace_id, title, type, metadata, x, y, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                n["id"], workspace_id, n.get("title") or "Untitled domain",
+                n.get("type"), Jsonb({k: v for k, v in n.items() if k not in {"id","title","type","level","x","y"}}),
+                float(n.get("x") or 0), float(n.get("y") or 0), now,
+            ),
+        )
+
+    for n in subnodes:
+        parent_id = next(
+            (e.get("source") for e in (graph.get("edges") or [])
+             if e.get("kind") == "structural" and e.get("target") == n.get("id")
+             and e.get("source") in valid_domain_ids),
+            None,
+        )
+        if not parent_id:
+            continue
+        conn.execute(
+            """
+            INSERT INTO subnodes
+                (id, workspace_id, domain_id, title, type, metadata, x, y, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                n["id"], workspace_id, parent_id, n.get("title") or "Untitled sub-node",
+                n.get("type"), Jsonb({k: v for k, v in n.items() if k not in {"id","title","type","level","domain","thoughts","x","y"}}),
+                float(n.get("x") or 0), float(n.get("y") or 0), now,
+            ),
+        )
+        for t in n.get("thoughts") or []:
+            if not t.get("id") or not t.get("content"):
+                continue
+            conn.execute(
+                """
+                INSERT INTO thoughts
+                    (id, workspace_id, subnode_id, content, type, source, archived, created_at, metadata)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    t["id"], workspace_id, n["id"], str(t.get("content") or ""),
+                    str(t.get("type") or "idea"), str(t.get("source") or "founder"),
+                    bool(t.get("archived")), _parse_timestamp(t.get("createdAt") or now),
+                    Jsonb({k: v for k, v in t.items() if k not in {"id","content","type","source","archived","createdAt"}}),
+                ),
+            )
+
+    valid_ids = valid_domain_ids | valid_subnode_ids | {"root"}
+    for e in graph.get("edges") or []:
+        if not e.get("source") or not e.get("target"):
+            continue
+        if e.get("source") not in valid_ids or e.get("target") not in valid_ids:
+            continue
+        conn.execute(
+            """
+            INSERT INTO graph_edges
+                (workspace_id, source_id, target_id, kind, relationship, confidence, metadata)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (workspace_id, source_id, target_id, kind) DO UPDATE SET
+                relationship = EXCLUDED.relationship,
+                confidence = EXCLUDED.confidence,
+                metadata = EXCLUDED.metadata
+            """,
+            (
+                workspace_id, e["source"], e["target"], str(e.get("kind") or "semantic"),
+                e.get("relationship"), e.get("confidence"),
+                Jsonb({k: v for k, v in e.items() if k not in {"source","target","kind","relationship","confidence"}}),
+            ),
+        )
+
+    conn.execute(
+        """
+        INSERT INTO workspace_state (workspace_id, data, updated_at)
+        VALUES (%s, %s, %s)
+        ON CONFLICT (workspace_id) DO UPDATE SET
+            data = EXCLUDED.data,
+            updated_at = EXCLUDED.updated_at
+        """,
+        (
+            workspace_id,
+            Jsonb({
+                "insights": graph.get("insights") or [],
+                "questions": graph.get("questions") or [],
+            }),
+            now,
+        ),
+    )
+
+
+def _load_structured_graph(conn, workspace_id: str) -> Optional[dict]:
+    workspace = conn.execute(
+        "SELECT startup_title, summary, objective FROM workspaces WHERE workspace_id = %s",
+        (workspace_id,),
+    ).fetchone()
+    if not workspace:
+        return None
+
+    domain_rows = conn.execute(
+        "SELECT * FROM domains WHERE workspace_id = %s ORDER BY created_at ASC, id ASC",
+        (workspace_id,),
+    ).fetchall()
+    sub_rows = conn.execute(
+        "SELECT * FROM subnodes WHERE workspace_id = %s ORDER BY created_at ASC, id ASC",
+        (workspace_id,),
+    ).fetchall()
+    thought_rows = conn.execute(
+        "SELECT * FROM thoughts WHERE workspace_id = %s ORDER BY created_at ASC, id ASC",
+        (workspace_id,),
+    ).fetchall()
+    edge_rows = conn.execute(
+        "SELECT source_id, target_id, kind, relationship, confidence, metadata FROM graph_edges WHERE workspace_id = %s ORDER BY id ASC",
+        (workspace_id,),
+    ).fetchall()
+    state = conn.execute(
+        "SELECT data FROM workspace_state WHERE workspace_id = %s",
+        (workspace_id,),
+    ).fetchone()
+
+    thoughts_by_subnode = {}
+    for t in thought_rows:
+        item = dict(t.get("metadata") or {})
+        item.update({
+            "id": t["id"],
+            "content": t["content"],
+            "type": t["type"],
+            "source": t["source"],
+            "archived": bool(t["archived"]),
+            "createdAt": _timestamp_to_iso(t["created_at"]),
+        })
+        thoughts_by_subnode.setdefault(t["subnode_id"], []).append(item)
+
+    domains_by_id = {}
+    nodes = []
+    for d in domain_rows:
+        item = dict(d.get("metadata") or {})
+        item.update({
+            "id": d["id"], "title": d["title"], "type": d["type"],
+            "level": "domain", "x": d["x"], "y": d["y"],
+            "thoughts": [],
+        })
+        domains_by_id[d["id"]] = item
+        nodes.append(item)
+
+    for s in sub_rows:
+        item = dict(s.get("metadata") or {})
+        item.update({
+            "id": s["id"], "title": s["title"], "type": s["type"],
+            "level": "subnode", "domain": domains_by_id.get(s["domain_id"], {}).get("title", ""),
+            "x": s["x"], "y": s["y"],
+            "thoughts": thoughts_by_subnode.get(s["id"], []),
+        })
+        nodes.append(item)
+
+    edges = []
+    for e in edge_rows:
+        item = dict(e.get("metadata") or {})
+        item.update({
+            "source": e["source_id"], "target": e["target_id"],
+            "kind": e["kind"], "relationship": e["relationship"],
+            "confidence": e["confidence"],
+        })
+        edges.append(item)
+
+    return {
+        "root": {
+            "title": workspace["startup_title"],
+            "summary": workspace["summary"],
+            "objective": workspace["objective"],
+        },
+        "nodes": nodes,
+        "edges": edges,
+        "insights": (state["data"] or {}).get("insights", []) if state else [],
+        "questions": (state["data"] or {}).get("questions", []) if state else [],
+    }
+
+
 def save_graph(graph: dict) -> dict:
     workspace_id = current_workspace_id()
     now = datetime.now(timezone.utc)
-
     with get_conn() as conn:
+        _ensure_workspace(conn, workspace_id)
+        _sync_structured_workspace(conn, workspace_id, graph, now)
+        # Keep the legacy JSONB document as a compatibility snapshot during the
+        # transition. Normalized tables are the source of truth for new reads.
         conn.execute(
             """
             INSERT INTO founder_workspaces (workspace_id, data, updated_at)
@@ -391,11 +720,11 @@ def save_graph(graph: dict) -> dict:
 
 def get_graph() -> dict:
     with get_conn() as conn:
+        structured = _load_structured_graph(conn, current_workspace_id())
+        if structured is not None:
+            return structured
         row = conn.execute(
-            """
-            SELECT data FROM founder_workspaces
-            WHERE workspace_id = %s
-            """,
+            "SELECT data FROM founder_workspaces WHERE workspace_id = %s",
             (current_workspace_id(),),
         ).fetchone()
 
@@ -409,6 +738,114 @@ def get_graph() -> dict:
         return json.loads(raw)
     except (json.JSONDecodeError, TypeError):
         return _empty_graph()
+
+
+def create_chat_session(context_node_id: Optional[str] = None, title: str = "Founder Coach") -> dict:
+    session_id = f"chat_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}_{_random_suffix()}"
+    now = datetime.now(timezone.utc)
+    with get_conn() as conn:
+        _ensure_workspace(conn, current_workspace_id())
+        conn.execute(
+            """
+            INSERT INTO chat_sessions
+                (session_id, workspace_id, context_node_id, title, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (session_id, current_workspace_id(), context_node_id, title, now, now),
+        )
+    return {"sessionId": session_id, "contextNodeId": context_node_id, "title": title, "createdAt": now.isoformat(), "updatedAt": now.isoformat()}
+
+
+def get_or_create_chat_session(session_id: Optional[str] = None, context_node_id: Optional[str] = None, title: str = "Founder Coach") -> dict:
+    if session_id:
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM chat_sessions WHERE session_id = %s AND workspace_id = %s",
+                (session_id, current_workspace_id()),
+            ).fetchone()
+        if row:
+            return {
+                "sessionId": row["session_id"], "contextNodeId": row["context_node_id"],
+                "title": row["title"], "createdAt": _timestamp_to_iso(row["created_at"]),
+                "updatedAt": _timestamp_to_iso(row["updated_at"]),
+            }
+    return create_chat_session(context_node_id, title)
+
+
+def save_chat_message(session_id: str, role: str, content: str, metadata: Optional[dict] = None) -> dict:
+    if role not in {"user", "assistant", "system"}:
+        raise ValueError("invalid chat role")
+    now = datetime.now(timezone.utc)
+    with get_conn() as conn:
+        row = conn.execute(
+            """
+            INSERT INTO chat_messages
+                (workspace_id, session_id, role, content, created_at, metadata)
+            SELECT workspace_id, %s, %s, %s, %s, %s
+            FROM chat_sessions
+            WHERE session_id = %s AND workspace_id = %s
+            RETURNING id, created_at
+            """,
+            (session_id, role, content, now, Jsonb(metadata or {}), session_id, current_workspace_id()),
+        ).fetchone()
+        if not row:
+            raise ValueError("chat session not found")
+        conn.execute(
+            "UPDATE chat_sessions SET updated_at = %s WHERE session_id = %s AND workspace_id = %s",
+            (now, session_id, current_workspace_id()),
+        )
+    return {"id": row["id"], "role": role, "content": content, "createdAt": _timestamp_to_iso(row["created_at"])}
+
+
+def list_chat_messages(session_id: str, limit: int = 200) -> list[dict]:
+    with get_conn() as conn:
+        rows = conn.execute(
+            """
+            SELECT id, role, content, created_at, metadata
+            FROM chat_messages
+            WHERE session_id = %s AND workspace_id = %s
+            ORDER BY created_at ASC, id ASC
+            LIMIT %s
+            """,
+            (session_id, current_workspace_id(), limit),
+        ).fetchall()
+    return [
+        {
+            "id": r["id"], "role": r["role"], "content": r["content"],
+            "createdAt": _timestamp_to_iso(r["created_at"]), "metadata": r["metadata"] or {},
+        }
+        for r in rows
+    ]
+
+
+def list_chat_sessions(context_node_id: Optional[str] = None, limit: int = 50) -> list[dict]:
+    with get_conn() as conn:
+        if context_node_id is None:
+            rows = conn.execute(
+                """
+                SELECT * FROM chat_sessions
+                WHERE workspace_id = %s
+                ORDER BY updated_at DESC LIMIT %s
+                """,
+                (current_workspace_id(), limit),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """
+                SELECT * FROM chat_sessions
+                WHERE workspace_id = %s AND context_node_id = %s
+                ORDER BY updated_at DESC LIMIT %s
+                """,
+                (current_workspace_id(), context_node_id, limit),
+            ).fetchall()
+    return [
+        {
+            "sessionId": r["session_id"], "contextNodeId": r["context_node_id"],
+            "title": r["title"], "createdAt": _timestamp_to_iso(r["created_at"]),
+            "updatedAt": _timestamp_to_iso(r["updated_at"]),
+        }
+        for r in rows
+    ]
 
 
 def healthcheck() -> None:
