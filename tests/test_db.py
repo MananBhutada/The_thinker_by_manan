@@ -140,3 +140,28 @@ def test_config_crud():
     # delete English text get English text
     db.delete_config_value("llm_api_key")
     assert db.get_config_value("llm_api_key", default="<deleted>") == "<deleted>"
+
+
+def test_workspace_data_is_isolated():
+    """Graph, config and decisions cannot cross workspace boundaries."""
+    first = db.set_workspace_id("workspace_alpha")
+    try:
+        db.save_graph({
+            "root": {"title": "Alpha Startup", "summary": ""},
+            "nodes": [],
+            "edges": [],
+            "insights": [],
+            "questions": [],
+        })
+        db.set_config_value("llm_api_key", "alpha-secret")
+        db.save_decision(_make_decision(question="alpha-only"))
+    finally:
+        db.reset_workspace_id(first)
+
+    second = db.set_workspace_id("workspace_beta")
+    try:
+        assert db.get_graph()["root"]["title"] == "Your Startup"
+        assert db.get_config_value("llm_api_key") is None
+        assert db.count_decisions() == 0
+    finally:
+        db.reset_workspace_id(second)
