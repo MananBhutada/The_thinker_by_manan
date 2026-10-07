@@ -24,7 +24,7 @@ if str(BACKEND_DIR) not in sys.path:
 import db
 
 
-def migrate(sqlite_path: Path, allow_existing: bool = False) -> None:
+def migrate(sqlite_path: Path, allow_existing: bool = False) -> dict:
     if not sqlite_path.exists():
         raise FileNotFoundError(f"SQLite database not found: {sqlite_path}")
 
