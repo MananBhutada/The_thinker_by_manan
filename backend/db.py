@@ -61,8 +61,37 @@ def _ensure_workspace(conn, workspace_id: Optional[str] = None) -> str:
     return workspace_id
 
 
+def _upgrade_legacy_postgres_schema(conn) -> None:
+    """Upgrade the earlier optional-Postgres schema in place."""
+    columns = conn.execute(
+        """
+        SELECT column_name, data_type
+        FROM information_schema.columns
+        WHERE table_name = 'founder_workspaces'
+        """
+    ).fetchall()
+    column_types = {row["column_name"]: row["data_type"] for row in columns}
+
+    if column_types.get("data") == "text":
+        conn.execute(
+            """
+            ALTER TABLE founder_workspaces
+            ALTER COLUMN data TYPE JSONB USING data::jsonb
+            """
+        )
+
+    if column_types.get("updated_at") == "text":
+        conn.execute(
+            """
+            ALTER TABLE founder_workspaces
+            ALTER COLUMN updated_at TYPE TIMESTAMPTZ
+            USING updated_at::timestamptz
+            """
+        )
+
+
 def init_db() -> None:
-    """Create the PostgreSQL schema if it does not already exist."""
+    """Create or upgrade the PostgreSQL schema."""
     with get_conn() as conn:
         conn.execute(
             """
@@ -109,6 +138,7 @@ def init_db() -> None:
             );
             """
         )
+        _upgrade_legacy_postgres_schema(conn)
 
 
 # ---------------------------------------------------------------------------
