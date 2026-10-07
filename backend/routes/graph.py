@@ -4,6 +4,7 @@ Extraction and node chat share one request-scoped provider resolver. BYOK values
 are accepted only for the current request and are never written to graph state.
 """
 import os
+from typing import Optional
 from fastapi import APIRouter, HTTPException
 
 import db
@@ -162,7 +163,7 @@ def chat_about_node(req: GraphChatRequest):
 
 
 @router.get("/api/graph/chat/sessions")
-def list_chat_sessions(nodeId: str | None = None):
+def list_chat_sessions(nodeId: Optional[str] = None):
     """List persisted coach conversations for this workspace."""
     return {"sessions": db.list_chat_sessions(nodeId, limit=50)}
 
