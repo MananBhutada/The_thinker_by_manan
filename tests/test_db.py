@@ -6,8 +6,6 @@ English text
   - config English text CRUD
 """
 
-import sqlite3
-
 import db
 
 
@@ -24,16 +22,20 @@ def _make_decision(question: str = "English text", mode: str = "random", **overr
     return payload
 
 
-def test_init_db_creates_two_tables():
-    """init_db English text decisions English text config English text"""
-    # conftest.py English text init_dbEnglish text
+def test_init_db_creates_core_postgres_tables():
+    """The PostgreSQL schema contains the core FounderOS tables."""
     with db.get_conn() as conn:
         tables = {
-            row["name"]
-            for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+            row["table_name"]
+            for row in conn.execute(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                """
+            ).fetchall()
         }
-    assert "decisions" in tables
-    assert "config" in tables
+    assert {"founder_workspaces", "decisions", "config"} <= tables
 
 
 def test_save_and_get_decision():
