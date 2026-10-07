@@ -165,3 +165,47 @@ def test_workspace_data_is_isolated():
         assert db.count_decisions() == 0
     finally:
         db.reset_workspace_id(second)
+
+
+def test_structured_workspace_tables_persist_graph_entities():
+    graph = {
+        "root": {"title": "Structured Startup", "summary": "summary", "objective": "objective"},
+        "nodes": [
+            {"id": "d_test", "title": "Product", "level": "domain", "type": "domain", "x": 10, "y": 20},
+            {"id": "s_test", "title": "MVP", "level": "subnode", "type": "subnode", "x": 30, "y": 40,
+             "thoughts": [{"id": "t_test", "content": "Ship the smallest useful version", "type": "plan",
+                           "source": "founder", "archived": False, "createdAt": "2026-01-01T00:00:00+00:00"}]},
+        ],
+        "edges": [{"source": "root", "target": "d_test", "kind": "structural", "relationship": "contains", "confidence": 100},
+                  {"source": "d_test", "target": "s_test", "kind": "structural", "relationship": "contains", "confidence": 100}],
+        "insights": ["test insight"], "questions": ["test question"],
+    }
+    db.save_graph(graph)
+    with db.get_conn() as conn:
+        assert conn.execute("SELECT COUNT(*) AS n FROM workspaces WHERE workspace_id = %s", (db.current_workspace_id(),)).fetchone()["n"] == 1
+        assert conn.execute("SELECT COUNT(*) AS n FROM domains WHERE workspace_id = %s", (db.current_workspace_id(),)).fetchone()["n"] == 1
+        assert conn.execute("SELECT COUNT(*) AS n FROM subnodes WHERE workspace_id = %s", (db.current_workspace_id(),)).fetchone()["n"] == 1
+        assert conn.execute("SELECT COUNT(*) AS n FROM thoughts WHERE workspace_id = %s", (db.current_workspace_id(),)).fetchone()["n"] == 1
+        assert conn.execute("SELECT COUNT(*) AS n FROM graph_edges WHERE workspace_id = %s", (db.current_workspace_id(),)).fetchone()["n"] == 2
+    restored = db.get_graph()
+    assert restored["root"]["title"] == "Structured Startup"
+    assert restored["nodes"][1]["thoughts"][0]["content"] == "Ship the smallest useful version"
+
+
+def test_chat_sessions_and_messages_are_workspace_scoped():
+    session = db.create_chat_session("s_test", "MVP Coach")
+    db.save_chat_message(session["sessionId"], "user", "How should I scope the MVP?")
+    db.save_chat_message(session["sessionId"], "assistant", "Start with one painful workflow.")
+    messages = db.list_chat_messages(session["sessionId"])
+    assert [m["role"] for m in messages] == ["user", "assistant"]
+
+    other = db.set_workspace_id("workspace_chat_other")
+    try:
+        assert db.list_chat_sessions() == []
+        try:
+            db.list_chat_messages(session["sessionId"])
+            assert False, "cross-workspace chat access should not return messages"
+        except Exception:
+            pass
+    finally:
+        db.reset_workspace_id(other)
