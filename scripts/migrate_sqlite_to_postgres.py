@@ -15,7 +15,13 @@ from pathlib import Path
 import psycopg
 from psycopg.types.json import Jsonb
 
-from backend import db
+import sys
+
+BACKEND_DIR = Path(__file__).resolve().parents[1] / "backend"
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+
+import db
 
 
 def migrate(sqlite_path: Path, allow_existing: bool = False) -> None:
