@@ -18,7 +18,7 @@ import secrets
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -120,6 +120,31 @@ def health() -> dict:
     """Return API and database health."""
     db.healthcheck()
     return {"name": "FounderOS API", "status": "ok", "database": "postgresql", "version": "0.9.1"}
+
+
+# Temporary, explicitly-secret migration bridge for deployments that cannot access
+# the Render service shell. Remove this route after the one-time migration succeeds.
+_MIGRATION_TOKEN = os.environ.get("FOUNDEROS_MIGRATION_TOKEN", "").strip()
+
+
+@app.get("/api/admin/migrate-sqlite")
+def migrate_legacy_sqlite(token: str) -> dict:
+    """One-time, token-protected SQLite -> PostgreSQL migration."""
+    if not _MIGRATION_TOKEN or not hmac.compare_digest(token, _MIGRATION_TOKEN):
+        raise HTTPException(status_code=404, detail="Not found")
+
+    sqlite_path = Path(__file__).parent / "choice.db"
+    if not sqlite_path.exists():
+        raise HTTPException(status_code=404, detail="Legacy SQLite database not found")
+
+    from scripts.migrate_sqlite_to_postgres import migrate
+
+    try:
+        summary = migrate(sqlite_path)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Migration failed: {exc}") from exc
+
+    return {"status": "ok", "migration": summary}
 
 
 # ─── English text ──────────────────────────────────────────────
