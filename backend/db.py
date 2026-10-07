@@ -379,3 +379,9 @@ def get_graph() -> dict:
         return json.loads(raw)
     except (json.JSONDecodeError, TypeError):
         return _empty_graph()
+
+
+def healthcheck() -> None:
+    """Raise if the PostgreSQL datastore is unreachable."""
+    with get_conn() as conn:
+        conn.execute("SELECT 1")
