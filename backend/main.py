@@ -24,6 +24,7 @@ from fastapi.staticfiles import StaticFiles
 
 # English text backend/ English text sys.path English textEnglish text routes/services English text
 sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import db  # noqa: E402
 from db import init_db  # noqa: E402
