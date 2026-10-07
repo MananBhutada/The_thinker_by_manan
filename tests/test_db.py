@@ -202,10 +202,6 @@ def test_chat_sessions_and_messages_are_workspace_scoped():
     other = db.set_workspace_id("workspace_chat_other")
     try:
         assert db.list_chat_sessions() == []
-        try:
-            db.list_chat_messages(session["sessionId"])
-            assert False, "cross-workspace chat access should not return messages"
-        except Exception:
-            pass
+        assert db.list_chat_messages(session["sessionId"]) == []
     finally:
         db.reset_workspace_id(other)
