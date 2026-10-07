@@ -89,9 +89,10 @@ def mutate_graph(payload: dict):
 
 @router.post("/api/graph/chat")
 def chat_about_node(req: GraphChatRequest):
-    """Reason about the selected node using its surrounding graph context."""
+    """Reason about a graph node and persist the full conversation."""
     config = _config(req)
     graph = db.get_graph()
+    context_node_id = req.nodeId or "root"
     try:
         context, used = build_node_context(
             graph,
@@ -101,6 +102,21 @@ def chat_about_node(req: GraphChatRequest):
         )
     except KeyError:
         raise HTTPException(status_code=404, detail="That node no longer exists in the graph.")
+
+    session = db.get_or_create_chat_session(
+        req.sessionId,
+        context_node_id,
+        title="Founder Coach",
+    )
+    prior = db.list_chat_messages(session["sessionId"], limit=40)
+    # The database is authoritative. The request history is only used for a
+    # brand-new session so refreshes cannot silently reset the conversation.
+    history = req.history if not prior else [
+        {"role": "user" if m["role"] == "user" else "coach", "text": m["content"]}
+        for m in prior[-12:]
+    ]
+    db.save_chat_message(session["sessionId"], "user", req.question, {"nodeId": context_node_id})
+
     try:
         result = call_llm(context, req.mode, config, language="en", allow_mock=False)
     except NoApiKeyError:
@@ -113,8 +129,7 @@ def chat_about_node(req: GraphChatRequest):
             "risks": ["No hosted LLM key is configured for this request."],
             "_source": "fallback"
         }
-    except Exception as exc:
-        # Keep the workspace interactive even when the hosted model times out.
+    except Exception:
         result = {
             "type": "auto",
             "summary": "The hosted coach is temporarily unavailable. I can still help you reason from the graph once the model responds.",
@@ -131,14 +146,37 @@ def chat_about_node(req: GraphChatRequest):
     from routes.chat import _try_build_brief
     brief = _try_build_brief(result, mode=req.mode)
     summary = result.get("summary") or result.get("conclusion") or ""
+    assistant_text = summary or "No response."
+    db.save_chat_message(
+        session["sessionId"],
+        "assistant",
+        assistant_text,
+        {"mode": req.mode, "nodeId": context_node_id, "result": result},
+    )
     return {
         "mode": req.mode,
-        "nodeId": req.nodeId or "root",
-        "reply": summary,
+        "nodeId": context_node_id,
+        "sessionId": session["sessionId"],
+        "reply": assistant_text,
         "brief": brief.model_dump() if brief else None,
         "result": result,
         "contextNodes": used,
     }
+
+
+@router.get("/api/graph/chat/sessions")
+def list_chat_sessions(nodeId: str | None = None):
+    """List persisted coach conversations for this workspace."""
+    return {"sessions": db.list_chat_sessions(nodeId, limit=50)}
+
+
+@router.get("/api/graph/chat/{session_id}")
+def get_chat_history(session_id: str):
+    """Return one persisted coach conversation."""
+    sessions = db.list_chat_sessions(limit=100)
+    if not any(s["sessionId"] == session_id for s in sessions):
+        raise HTTPException(status_code=404, detail="Chat session not found.")
+    return {"session": next(s for s in sessions if s["sessionId"] == session_id), "messages": db.list_chat_messages(session_id)}
 
 
 @router.post("/api/graph/proposal")
