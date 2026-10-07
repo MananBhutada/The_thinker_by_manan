@@ -1,7 +1,6 @@
-"""English text - FastAPI English text
+"""FounderOS FastAPI application.
 
-English text
-  1. English text SQLitechoice.db
+PostgreSQL is the runtime datastore; DATABASE_URL must be configured.
   2. English text 6 English text API English text
   3. English textfrontend/
   4. English text 8010 English text
@@ -118,8 +117,9 @@ app.include_router(tts.router)
 
 @app.get("/api/health")
 def health() -> dict:
-    """English text"""
-    return {"name": "English text API", "status": "ok", "version": "0.9.1"}
+    """Return API and database health."""
+    db.healthcheck()
+    return {"name": "FounderOS API", "status": "ok", "database": "postgresql", "version": "0.9.1"}
 
 
 # ─── English text ──────────────────────────────────────────────
