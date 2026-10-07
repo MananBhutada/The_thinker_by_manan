@@ -93,28 +93,25 @@ def chat_about_node(req: GraphChatRequest):
     config = _config(req)
     graph = db.get_graph()
     context_node_id = req.nodeId or "root"
-    try:
-        context, used = build_node_context(
-            graph,
-            req.nodeId,
-            req.question,
-            [h.model_dump() for h in req.history],
-        )
-    except KeyError:
-        raise HTTPException(status_code=404, detail="That node no longer exists in the graph.")
-
     session = db.get_or_create_chat_session(
         req.sessionId,
         context_node_id,
         title="Founder Coach",
     )
     prior = db.list_chat_messages(session["sessionId"], limit=40)
-    # The database is authoritative. The request history is only used for a
-    # brand-new session so refreshes cannot silently reset the conversation.
     history = req.history if not prior else [
         {"role": "user" if m["role"] == "user" else "coach", "text": m["content"]}
         for m in prior[-12:]
     ]
+    try:
+        context, used = build_node_context(
+            graph,
+            req.nodeId,
+            req.question,
+            history,
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail="That node no longer exists in the graph.")
     db.save_chat_message(session["sessionId"], "user", req.question, {"nodeId": context_node_id})
 
     try:
