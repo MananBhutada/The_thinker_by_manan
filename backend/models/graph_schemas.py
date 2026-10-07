@@ -24,6 +24,7 @@ class GraphChatRequest(_ProviderFields):
     question: str = Field(..., min_length=1, max_length=2000)
     mode: Literal["founder", "product", "people", "money", "growth", "conflict"] = "founder"
     history: List[GraphChatTurn] = Field(default_factory=list, max_length=12)
+    sessionId: Optional[str] = Field(default=None, max_length=128)
 
 
 class GraphProposalRequest(BaseModel):
