@@ -29,6 +29,7 @@ def migrate(sqlite_path: Path, allow_existing: bool = False) -> dict:
         raise FileNotFoundError(f"SQLite database not found: {sqlite_path}")
 
     db.init_db()
+    summary = {"workspaces": 0, "decisions": 0, "config": 0}
 
     with psycopg.connect(db.DATABASE_URL) as target:
         existing = target.execute("SELECT COUNT(*) AS n FROM founder_workspaces").fetchone()[0]
@@ -55,6 +56,7 @@ def migrate(sqlite_path: Path, allow_existing: bool = False) -> dict:
                     """,
                     (row["workspace_id"], Jsonb(_json_load(row["data"])), row["updated_at"]),
                 )
+            summary["workspaces"] = len(workspace_rows)
 
             if _table_exists(source, "decisions"):
                 target.execute(
@@ -97,6 +99,7 @@ def migrate(sqlite_path: Path, allow_existing: bool = False) -> dict:
                             Jsonb(_json_load(row["dialogue_history"])) if row["dialogue_history"] else None,
                         ),
                     )
+                summary["decisions"] = len(decisions)
 
             if _table_exists(source, "config"):
                 target.execute(
@@ -118,8 +121,10 @@ def migrate(sqlite_path: Path, allow_existing: bool = False) -> dict:
                         """,
                         (row["key"], Jsonb(_json_load(row["value"]))),
                     )
+                summary["config"] = len(configs)
 
     print(f"Migrated {len(workspace_rows)} workspace graph(s) from {sqlite_path}")
+    return summary
 
 
 def _table_exists(conn: sqlite3.Connection, table: str) -> bool:
