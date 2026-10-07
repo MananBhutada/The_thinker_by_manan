@@ -3,3 +3,4 @@ uvicorn
 httpx
 pydantic
 edge-tts
+psycopg[binary]==3.2.3

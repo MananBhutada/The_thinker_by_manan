@@ -6,8 +6,6 @@ English text
   - config English text CRUD
 """
 
-import sqlite3
-
 import db
 
 
@@ -24,16 +22,20 @@ def _make_decision(question: str = "English text", mode: str = "random", **overr
     return payload
 
 
-def test_init_db_creates_two_tables():
-    """init_db English text decisions English text config English text"""
-    # conftest.py English text init_dbEnglish text
+def test_init_db_creates_core_postgres_tables():
+    """The PostgreSQL schema contains the core FounderOS tables."""
     with db.get_conn() as conn:
         tables = {
-            row["name"]
-            for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+            row["table_name"]
+            for row in conn.execute(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                """
+            ).fetchall()
         }
-    assert "decisions" in tables
-    assert "config" in tables
+    assert {"founder_workspaces", "decisions", "config"} <= tables
 
 
 def test_save_and_get_decision():
@@ -138,3 +140,28 @@ def test_config_crud():
     # delete English text get English text
     db.delete_config_value("llm_api_key")
     assert db.get_config_value("llm_api_key", default="<deleted>") == "<deleted>"
+
+
+def test_workspace_data_is_isolated():
+    """Graph, config and decisions cannot cross workspace boundaries."""
+    first = db.set_workspace_id("workspace_alpha")
+    try:
+        db.save_graph({
+            "root": {"title": "Alpha Startup", "summary": ""},
+            "nodes": [],
+            "edges": [],
+            "insights": [],
+            "questions": [],
+        })
+        db.set_config_value("llm_api_key", "alpha-secret")
+        db.save_decision(_make_decision(question="alpha-only"))
+    finally:
+        db.reset_workspace_id(first)
+
+    second = db.set_workspace_id("workspace_beta")
+    try:
+        assert db.get_graph()["root"]["title"] == "Your Startup"
+        assert db.get_config_value("llm_api_key") is None
+        assert db.count_decisions() == 0
+    finally:
+        db.reset_workspace_id(second)

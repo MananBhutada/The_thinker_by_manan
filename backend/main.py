@@ -1,7 +1,6 @@
-"""English text - FastAPI English text
+"""FounderOS FastAPI application.
 
-English text
-  1. English text SQLitechoice.db
+PostgreSQL is the runtime datastore; DATABASE_URL must be configured.
   2. English text 6 English text API English text
   3. English textfrontend/
   4. English text 8010 English text
@@ -19,12 +18,13 @@ import secrets
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 # English text backend/ English text sys.path English textEnglish text routes/services English text
 sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import db  # noqa: E402
 from db import init_db  # noqa: E402
@@ -118,8 +118,34 @@ app.include_router(tts.router)
 
 @app.get("/api/health")
 def health() -> dict:
-    """English text"""
-    return {"name": "English text API", "status": "ok", "version": "0.9.1"}
+    """Return API and database health."""
+    db.healthcheck()
+    return {"name": "FounderOS API", "status": "ok", "database": "postgresql", "version": "0.9.1"}
+
+
+# Temporary, explicitly-secret migration bridge for deployments that cannot access
+# the Render service shell. Remove this route after the one-time migration succeeds.
+_MIGRATION_TOKEN = os.environ.get("FOUNDEROS_MIGRATION_TOKEN", "").strip()
+
+
+@app.get("/api/admin/migrate-sqlite")
+def migrate_legacy_sqlite(token: str) -> dict:
+    """One-time, token-protected SQLite -> PostgreSQL migration."""
+    if not _MIGRATION_TOKEN or not hmac.compare_digest(token, _MIGRATION_TOKEN):
+        raise HTTPException(status_code=404, detail="Not found")
+
+    sqlite_path = Path(__file__).parent / "choice.db"
+    if not sqlite_path.exists():
+        raise HTTPException(status_code=404, detail="Legacy SQLite database not found")
+
+    from scripts.migrate_sqlite_to_postgres import migrate
+
+    try:
+        summary = migrate(sqlite_path)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Migration failed: {exc}") from exc
+
+    return {"status": "ok", "migration": summary}
 
 
 # ─── English text ──────────────────────────────────────────────

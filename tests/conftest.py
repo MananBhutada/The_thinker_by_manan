@@ -20,8 +20,12 @@ import db  # noqa: E402
 
 @pytest.fixture(autouse=True)
 def isolate_paths(tmp_path, monkeypatch):
-    """English text choice.db English text config.jsonEnglish text init_db"""
-    monkeypatch.setattr(db, "DB_PATH", tmp_path / "test_choice.db")
+    """Give every test an isolated PostgreSQL workspace and config file."""
     monkeypatch.setattr(config_mod, "CONFIG_FILE_PATH", tmp_path / "config.json")
     db.init_db()
-    yield
+    workspace_id = "test_" + tmp_path.name
+    token = db.set_workspace_id(workspace_id)
+    try:
+        yield
+    finally:
+        db.reset_workspace_id(token)
