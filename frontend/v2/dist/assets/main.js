@@ -3,7 +3,7 @@ const palette={People:"#63d9c6",Product:"#8e82ff",Policy:"#f3b96a",Marketing:"#f
 const domains=["People","Product","Policy","Marketing","Budget","Finance","Sales","Future Plan","Subscriptions","Customers","Operations","Legal","Strategy"];
 const typeFor={People:"people",Product:"product",Policy:"constraint",Marketing:"initiative",Budget:"cost",Finance:"investment",Sales:"initiative","Future Plan":"future_plan",Subscriptions:"cost",Customers:"customer",Operations:"initiative",Legal:"constraint",Strategy:"goal",Other:"idea"};
 const api=async(path,opt={})=>{const r=await fetch(path,{...opt,headers:{"Content-Type":"application/json","Accept":"application/json",...(opt.headers||{})}}),t=await r.text();let d=null;try{d=t?JSON.parse(t):null}catch{d=t}if(!r.ok){const e=new Error(d?.detail||d?.message||r.statusText);e.status=r.status;throw e}return d};
-let graph={root:{title:"Your Startup",summary:"",objective:""},nodes:[],edges:[],insights:[],questions:[]},selected="root",page="map",query="",scale=1,panX=0,panY=0,drag=null,panning=false,last={x:0,y:0},moved=false,connectMode=false,connectFrom=null,provider={provider:"free"},chat=[],chatSessionId=null,saving=false;
+let dragOffset=null;\nlet graph={root:{title:"Your Startup",summary:"",objective:""},nodes:[],edges:[],insights:[],questions:[]},selected="root",page="map",query="",scale=1,panX=0,panY=0,drag=null,panning=false,last={x:0,y:0},moved=false,connectMode=false,connectFrom=null,provider={provider:"free"},chat=[],chatSessionId=null,saving=false;
 let account=null;
 
 document.body.innerHTML=`
@@ -43,7 +43,18 @@ function draw(){if(!ctx)return;ctx.clearRect(0,0,canvas.clientWidth,canvas.clien
 graph.edges.forEach((e,i)=>{const a=m.get(e.source),b=m.get(e.target);if(!a||!b)return;const A=screen(a),B=screen(b),dx=(b.x||0)-(a.x||0),dy=(b.y||0)-(a.y||0),l=Math.hypot(dx,dy)||1,bend=(i%2?1:-1)*Math.min(65,Math.abs(dx+dy)/5),C=screen({x:(a.x+b.x)/2-dy/l*bend,y:(a.y+b.y)/2+dx/l*bend});ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.quadraticCurveTo(C.x,C.y,B.x,B.y);const active=selected===e.source||selected===e.target||connectFrom===e.source||connectFrom===e.target;ctx.strokeStyle=active?"rgba(151,137,255,.82)":e.kind==="semantic"||e.kind==="proposal"?"rgba(111,190,220,.42)":"rgba(120,130,150,.23)";ctx.lineWidth=active?2.2:1.1;ctx.setLineDash(e.kind==="semantic"||e.kind==="proposal"?[5,7]:[]);ctx.stroke();ctx.setLineDash([])});
 [root,...domainsList(),...subnodes()].forEach(n=>{const s=screen(n),r=radius(n),sel=n.id===selected,match=!query||n.title.toLowerCase().includes(query)||visibleThoughts(n).some(t=>t.content.toLowerCase().includes(query)),dim=query&&!match;ctx.save();if(dim)ctx.globalAlpha=.1;if(sel){ctx.shadowBlur=34;ctx.shadowColor="#8b7cff"}ctx.beginPath();ctx.arc(s.x,s.y,r,0,Math.PI*2);ctx.fillStyle=n.level==="domain"?"#10151b":"#0f131b";ctx.fill();ctx.lineWidth=sel?2.6:1.25;ctx.strokeStyle=n.id==="root"?"#9a8cff":familyColor(n);ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle="#eef0f6";ctx.font=(sel?"650 ":"520 ")+(n.id==="root"?14:n.level==="domain"?13:12)+"px Inter,system-ui,sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText((n.id==="root"?n.title:n.title.length>22?n.title.slice(0,21)+"…":n.title),s.x,s.y);if(n.id==="root"){ctx.font="10px Inter";ctx.fillStyle="#777f8e";ctx.fillText("(your startup)",s.x,s.y+18)}else{ctx.font="9px Inter";ctx.fillStyle="#747d8d";ctx.fillText(n.level==="domain"?"DOMAIN":visibleThoughts(n).length+" thoughts",s.x,s.y+r+13)}ctx.restore()})}
 function fit(animate=true){const ns=[get("root"),...nodes()],xs=ns.map(n=>n.x||0),ys=ns.map(n=>n.y||0),bw=Math.max(...xs)-Math.min(...xs),bh=Math.max(...ys)-Math.min(...ys),targetScale=Math.min(1.15,Math.max(.52,Math.min((canvas.clientWidth-240)/(bw+260),(canvas.clientHeight-200)/(bh+220)))),targetPanX=-(Math.min(...xs)+Math.max(...xs))/2*targetScale,targetPanY=-(Math.min(...ys)+Math.max(...ys))/2*targetScale;cameraTo(targetPanX,targetPanY,targetScale,animate)}
-function cameraTo(tx,ty,ts=scale,animate=true){if(!animate){panX=tx;panY=ty;scale=ts;draw();return}const sx=panX,sy=panY,ss=scale,t0=performance.now(),dur=320;const step=now=>{const p=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-p,3);panX=sx+(tx-sx)*e;panY=sy+(ty-sy)*e;scale=ss+(ts-ss)*e;draw();if(p<1)requestAnimationFrame(step)};requestAnimationFrame(step)}
+let cameraFrame=0;
+function cameraTo(tx,ty,ts=scale,animate=true){
+  if(cameraFrame)cancelAnimationFrame(cameraFrame);
+  if(!animate){panX=tx;panY=ty;scale=ts;draw();return}
+  const sx=panX,sy=panY,ss=scale,t0=performance.now(),dur=320;
+  const step=now=>{
+    const p=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-p,3);
+    panX=sx+(tx-sx)*e;panY=sy+(ty-sy)*e;scale=ss+(ts-ss)*e;draw();
+    if(p<1)cameraFrame=requestAnimationFrame(step);else cameraFrame=0;
+  };
+  cameraFrame=requestAnimationFrame(step);
+}
 async function persist(){if(saving)return;saving=true;try{await api("/api/graph/mutate",{method:"POST",body:JSON.stringify({graph})});draw()}catch(e){console.warn("persist",e)}finally{saving=false}}
 async function savePositions(){try{await api("/api/graph/positions",{method:"POST",body:JSON.stringify({positions:Object.fromEntries(nodes().map(n=>[n.id,[n.x||0,n.y||0]]))})})}catch{}}
 function nodeAt(x,y){for(const n of [get("root"),...nodes()].reverse()){const s=screen(n);if(Math.hypot(x-s.x,y-s.y)<radius(n)+10)return n.id}return null}
@@ -165,11 +176,58 @@ function startupSettings(){const current=graph.root.title&&graph.root.title!=="Y
 async function chooseProvider(){try{const cfg=await api("/api/config");if(cfg.hasLlm){provider={provider:"free"};$("#providerLabel").textContent="FounderOS AI · connected";alert("FounderOS AI is connected to the server-side model.");return}}catch{}const key=prompt("No server-side model is configured. Enter an OpenAI-compatible API key for this session.");if(!key)return;provider={provider:"byok",apiKey:key,llmModel:prompt("Model","qwen/qwen3.5-27b:free")||"qwen/qwen3.5-27b:free",llmBaseUrl:prompt("Base URL","https://openrouter.ai/api/v1")||"https://openrouter.ai/api/v1"};$("#providerLabel").textContent="AI · session key"}
 
 $("#composer").onsubmit=e=>{e.preventDefault();const t=input.value.trim();if(t)mapQuick(t);input.value=""};$("#newThought").onclick=()=>openNewThought(domainFor(selected)?.id||"",subnodeFor(selected)?.id||"");$("#startupSettings").onclick=startupSettings;$("#provider").onclick=chooseProvider;$(".avatar").onclick=openProfile;$("#close").onclick=()=>inspector.classList.remove("open");$("#fit").onclick=fit;$("#branchTool").onclick=()=>{const n=get(selected);if(n?.level==="subnode")openNewThought(domainFor(selected)?.id,"");else if(n?.level==="domain")openNewThought(selected,"");else openNewThought()};$("#connectTool").onclick=enterConnect;$("#focusTool").onclick=()=>{const n=get(selected);if(n)cameraTo(-n.x*scale,-n.y*scale,scale,true)};$("#layoutTool").onclick=()=>{layoutGraph();fit(true);savePositions();persist()};$$("[data-page]").forEach(b=>b.onclick=()=>showPage(b.dataset.page));$("#search").oninput=e=>{query=e.target.value.toLowerCase();if(page!=="map")showPage("map");draw()};$("#shortcuts").onclick=()=>alert("Click a domain → sub-nodes. Click a sub-node → its thoughts + Coach. Double-click a domain to add a sub-node. Drag nodes. Wheel zooms. Select Connect, then click two nodes. / searches.");input.oninput=()=>{input.style.height="auto";input.style.height=Math.min(150,input.scrollHeight)+"px"};
-canvas.onwheel=e=>{e.preventDefault();const r=canvas.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,b=world(mx,my),z=Math.exp(-e.deltaY*.001),nextScale=Math.max(.35,Math.min(2.2,scale*z));panX=mx-(canvas.clientWidth/2+b.x*nextScale);panY=my-(canvas.clientHeight/2+b.y*nextScale);scale=nextScale;draw()};
-canvas.ondblclick=e=>{const r=canvas.getBoundingClientRect(),p=world(e.clientX-r.left,e.clientY-r.top),d=domainsList().find(n=>Math.hypot((n.x||0)-p.x,(n.y||0)-p.y)<75);openNewThought(d?.id||domainFor(selected)?.id||"")};
-canvas.onpointerdown=e=>{const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,isPanGesture=e.button===1||e.button===2||e.shiftKey;if(isPanGesture){drag=null;panning=true;last={x,y};moved=false;canvas.setPointerCapture?.(e.pointerId);return}drag=nodeAt(x,y);last={x,y};moved=false;panning=!drag;canvas.setPointerCapture?.(e.pointerId)};
-canvas.onpointermove=e=>{const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;if(drag){const n=get(drag),p=world(x,y);if(n){n.x=p.x;n.y=p.y;moved=true;draw()}}else if(panning){panX+=x-last.x;panY+=y-last.y;last={x,y};moved=true;draw()}};
-canvas.onpointerup=e=>{if(drag&&!moved)nodeClick(drag);if(drag&&moved)savePositions();drag=null;panning=false;canvas.releasePointerCapture?.(e.pointerId)};
-canvas.onpointercancel=()=>{drag=null;panning=false};
+canvas.onwheel=e=>{
+  e.preventDefault();
+  if(cameraFrame)cancelAnimationFrame(cameraFrame);
+  const r=canvas.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
+  const before=world(mx,my),factor=Math.exp(-e.deltaY*.001),nextScale=Math.max(.35,Math.min(2.2,scale*factor));
+  panX=mx-(canvas.clientWidth/2+before.x*nextScale);
+  panY=my-(canvas.clientHeight/2+before.y*nextScale);
+  draw();
+};
+canvas.ondblclick=e=>{
+  const r=canvas.getBoundingClientRect(),p=world(e.clientX-r.left,e.clientY-r.top);
+  const d=domainsList().find(n=>Math.hypot((n.x||0)-p.x,(n.y||0)-p.y)<75);
+  openNewThought(d?.id||domainFor(selected)?.id||"");
+};
+canvas.onpointerdown=e=>{
+  e.preventDefault();
+  const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+  if(e.button!==0&&e.button!==1&&e.button!==2&&!e.shiftKey)return;
+  if(cameraFrame)cancelAnimationFrame(cameraFrame);
+  const panGesture=e.button===1||e.button===2||e.shiftKey;
+  if(panGesture){
+    drag=null;panning=true;last={x,y};moved=false;
+  }else{
+    drag=nodeAt(x,y);panning=!drag;last={x,y};moved=false;
+    if(drag){
+      const n=get(drag),p=world(x,y);
+      dragOffset={x:(n?.x||0)-p.x,y:(n?.y||0)-p.y};
+    }
+  }
+  canvas.setPointerCapture(e.pointerId);
+};
+canvas.onpointermove=e=>{
+  if(!drag&&!panning)return;
+  e.preventDefault();
+  const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+  if(drag){
+    const n=get(drag),p=world(x,y);
+    if(n){n.x=p.x+(dragOffset?.x||0);n.y=p.y+(dragOffset?.y||0);moved=true;draw();}
+  }else if(panning){
+    panX+=x-last.x;panY+=y-last.y;last={x,y};moved=true;draw();
+  }
+};
+canvas.onpointerup=e=>{
+  e.preventDefault();
+  if(drag&&!moved)nodeClick(drag);
+  if(drag&&moved)savePositions();
+  try{canvas.releasePointerCapture(e.pointerId)}catch{}
+  drag=null;panning=false;dragOffset=null;
+};
+canvas.onpointercancel=e=>{
+  try{canvas.releasePointerCapture(e.pointerId)}catch{}
+  drag=null;panning=false;dragOffset=null;
+};
 canvas.oncontextmenu=e=>e.preventDefault();window.onresize=resize;
 (async()=>{try{await loadAccount();graph=migrate(await api("/api/graph"));ensurePositions();renderAll();resize();fit();if(/^(your startup|your startup name)$/i.test(graph.root.title||""))setTimeout(startupSettings,250)}catch(e){console.warn(e);renderAll();resize()}})();
