@@ -15,7 +15,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-import db
+from backend import db
 
 router = APIRouter(prefix="/api/auth")
 COOKIE = "founderos_auth"
