@@ -19,6 +19,8 @@ def page():
     p = sync_playwright().start()
     b = p.chromium.launch()
     pg = b.new_page(viewport={"width": 1280, "height": 800})
+    pg.on("pageerror", lambda exc: print("FOUNDEROS PAGEERROR:", exc))
+    pg.on("console", lambda msg: print("FOUNDEROS CONSOLE:", msg.type, msg.text))
     yield pg
     pg.close()
     b.close()
