@@ -12,8 +12,8 @@ from typing import Any, Dict
 
 from fastapi import APIRouter, HTTPException
 
-import db
-from models.schemas import DecisionPatch, DecisionSave
+from backend import db
+from backend.models.schemas import DecisionPatch, DecisionSave
 
 router = APIRouter()
 
