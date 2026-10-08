@@ -22,8 +22,8 @@ from typing import Any, Dict, Optional
 
 import httpx
 
-from config import get_effective_config, has_llm_config
-from models.schemas import Brief
+from backend.config import get_effective_config, has_llm_config
+from backend.models.schemas import Brief
 
 _LLM_TIMEOUT = 20.0
 
@@ -457,7 +457,7 @@ def _mock_brief(question: str, mode: str, language: str = "zh-CN") -> Dict[str, 
 def _get_values() -> Dict[str, int]:
     """English text preferences English textrational English text"""
     try:
-        from config import get_preferences
+        from backend.config import get_preferences
 
         prefs = get_preferences()
         values = prefs.get("values")
@@ -469,7 +469,7 @@ def _get_values() -> Dict[str, int]:
 
 
 def _build_mode_prompt(question: str, mode: str, has_image: bool = False) -> str:
-    from services.prompts import founder as founder_prompt
+    from backend.services.prompts import founder as founder_prompt
     focus = mode if mode in {"founder", "product", "people", "money", "growth", "conflict"} else "founder"
     prompt = founder_prompt(question, focus)
     if has_image:
@@ -517,7 +517,7 @@ def _mock_fengshui(question: str, language: str = "zh-CN") -> Dict[str, Any]:
     """
     is_en = language == "en"
     try:
-        from services.bazi_engine import analyze
+        from backend.services.bazi_engine import analyze
 
         bazi = analyze(question)
     except ImportError:
