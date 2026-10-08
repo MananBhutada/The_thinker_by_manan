@@ -8,7 +8,7 @@ from typing import Any, Dict
 
 from fastapi import APIRouter
 
-import db
+from backend import db
 
 router = APIRouter()
 
