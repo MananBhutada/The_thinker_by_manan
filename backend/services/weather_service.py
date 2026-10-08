@@ -18,7 +18,7 @@ from typing import Any, Dict, Optional
 
 import httpx
 
-from config import get_effective_config, has_weather_config
+from backend.config import get_effective_config, has_weather_config
 
 _TIMEOUT = 8.0
 
