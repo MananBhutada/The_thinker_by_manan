@@ -7,14 +7,14 @@ import os
 from typing import Optional
 from fastapi import APIRouter, HTTPException
 
-import db
-from models.graph_schemas import (
+from backend import db
+from backend.models.graph_schemas import (
     GraphChatRequest,
     GraphExtractRequest,
     GraphPositionsRequest,
     GraphProposalRequest,
 )
-from services.graph_service import (
+from backend.services.graph_service import (
     apply_proposal,
     build_node_context,
     extract_graph,
@@ -23,8 +23,8 @@ from services.graph_service import (
     set_positions,
     upgrade_graph,
 )
-import services.llm_service as _llm_service
-from services.llm_service import NoApiKeyError, call_llm
+import backend.services.llm_service as _llm_service
+from backend.services.llm_service import NoApiKeyError, call_llm
 
 _llm_service._LLM_TIMEOUT = min(max(getattr(_llm_service, "_LLM_TIMEOUT", 20.0), 8.0), 25.0)
 
@@ -36,7 +36,7 @@ def _config(req):
         # Free mode may run without a hosted key. The graph service has a
         # deterministic extraction fallback, so the workspace remains usable
         # when the deployment has no AI secret configured.
-        from config import get_effective_config
+        from backend.config import get_effective_config
         stored = get_effective_config()
         key = os.environ.get("FOUNDEROS_FREE_AI_API_KEY", "") or stored.get("llm_api_key", "")
         return {
@@ -141,7 +141,7 @@ def chat_about_node(req: GraphChatRequest):
             "_source": "fallback",
         }
 
-    from routes.chat import _try_build_brief
+    from backend.routes.chat import _try_build_brief
     brief = _try_build_brief(result, mode=req.mode)
     summary = result.get("summary") or result.get("conclusion") or ""
     assistant_text = summary or "No response."
