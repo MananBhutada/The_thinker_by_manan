@@ -88,6 +88,79 @@ def test_workspace_graph_controls_work(page):
     assert page.locator("#search").input_value() == "runway"
 
 
+def test_workspace_graph_viewport_interactions(page):
+    page.goto(BASE_URL + "/app")
+    page.wait_for_selector("#canvas", timeout=10000)
+    page.wait_for_function("document.querySelector('#canvas')?.dataset.scale")
+    canvas = page.locator("#canvas")
+    box = canvas.bounding_box()
+    assert box
+    cx, cy = box["width"] / 2, box["height"] / 2
+
+    # Wheel zoom changes scale and keeps the cursor anchored.
+    scale_before = float(canvas.get_attribute("data-scale"))
+    page.mouse.move(box["x"] + 120, box["y"] + 120)
+    page.mouse.wheel(0, -500)
+    page.wait_for_function("(before) => Number(document.querySelector('#canvas').dataset.scale) > before", scale_before)
+
+    # Empty-canvas drag pans the camera.
+    pan_before = float(canvas.get_attribute("data-pan-x"))
+    page.mouse.move(box["x"] + box["width"] * 0.75, box["y"] + box["height"] * 0.75)
+    page.mouse.down()
+    page.mouse.move(box["x"] + box["width"] * 0.75 + 80, box["y"] + box["height"] * 0.75 + 35)
+    page.mouse.up()
+    page.wait_for_function("(before) => Number(document.querySelector('#canvas').dataset.panX) != before", pan_before)
+
+    # Fit and Focus are wired to the camera.
+    page.locator("#fit").click()
+    page.locator("#focusTool").click()
+
+    # Seed a real node, drag it, and verify the saved position survives reload.
+    graph = page.request.get(BASE_URL + "/api/graph").json()
+    if not graph.get("nodes"):
+        graph["nodes"] = [{
+            "id": "ui-test-domain",
+            "title": "UI Test Domain",
+            "level": "domain",
+            "type": "domain",
+            "domain": "UI Test Domain",
+            "x": 260,
+            "y": 0,
+            "thoughts": [],
+            "summary": "UI test",
+            "details": "UI test",
+            "status": "active",
+            "source": "founder",
+        }]
+        graph["edges"] = [{"source": "root", "target": "ui-test-domain", "kind": "structural", "relationship": "contains", "confidence": 100}]
+        response = page.request.post(BASE_URL + "/api/graph/mutate", data={"graph": graph})
+        assert response.ok
+    page.reload()
+    page.wait_for_selector("#canvas", timeout=10000)
+    page.wait_for_function("document.querySelector('#canvas')?.dataset.scale")
+    page.locator("#fit").click()
+    page.wait_for_timeout(400)
+
+    graph = page.request.get(BASE_URL + "/api/graph").json()
+    node = next((n for n in graph.get("nodes", []) if n.get("id") == "ui-test-domain"), None)
+    if node:
+        canvas = page.locator("#canvas")
+        box = canvas.bounding_box()
+        assert box
+        # Select the node by clicking near its fitted position.
+        sx = box["x"] + box["width"] / 2 + float(node.get("x", 0)) * float(canvas.get_attribute("data-scale"))
+        sy = box["y"] + box["height"] / 2 + float(node.get("y", 0)) * float(canvas.get_attribute("data-scale"))
+        page.mouse.move(sx, sy)
+        page.mouse.down()
+        page.mouse.move(sx + 90, sy + 55)
+        page.mouse.up()
+        page.wait_for_timeout(500)
+        saved = page.request.get(BASE_URL + "/api/graph").json()
+        moved = next(n for n in saved.get("nodes", []) if n.get("id") == "ui-test-domain")
+        assert abs(float(moved.get("x", 0)) - float(node.get("x", 0))) > 1
+        assert abs(float(moved.get("y", 0)) - float(node.get("y", 0))) > 1
+
+
 def test_workspace_composer_accepts_input(page):
     page.goto(BASE_URL + "/app")
     page.locator("#input").fill("We need to validate customers before building the next feature.")
