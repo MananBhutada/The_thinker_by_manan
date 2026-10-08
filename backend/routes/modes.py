@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 from fastapi import APIRouter
 
-from services.modes_data import MODES, QUICK_QUESTIONS
+from backend.services.modes_data import MODES, QUICK_QUESTIONS
 
 router = APIRouter()
 
