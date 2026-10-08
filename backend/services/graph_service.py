@@ -10,7 +10,7 @@ import re
 import time
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from services.llm_service import call_openai_llm
+from backend.services.llm_service import call_openai_llm
 
 ROOT_ID = "root"
 MAX_NODES = 80
