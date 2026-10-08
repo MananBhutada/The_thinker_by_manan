@@ -1,6 +1,6 @@
 """Founder Coach modes."""
 from typing import List, Optional
-from models.schemas import ModeMeta
+from backend.models.schemas import ModeMeta
 
 MODES = [
     ModeMeta(id="auto", name="Auto", icon="A", color="#317d78", description="Route your startup situation to the most useful founder lens"),
