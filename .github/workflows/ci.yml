@@ -89,6 +89,9 @@ jobs:
           python scripts/validate_package.py
           python scripts/choice_assistant.py --help
 
+      - name: Check frontend JavaScript syntax
+        run: node --check frontend/v2/dist/assets/main.js
+
       - name: Start backend
         run: |
           python backend/main.py > "$RUNNER_TEMP/decision-brief-backend.log" 2>&1 &
