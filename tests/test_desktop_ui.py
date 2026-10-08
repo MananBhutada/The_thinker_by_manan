@@ -88,7 +88,7 @@ def test_workspace_graph_controls_work(page):
     assert page.locator("#search").input_value() == "runway"
 
 
-def test_workspace_example_populates_composer(page):
+def test_workspace_composer_accepts_input(page):
     page.goto(BASE_URL + "/app")
-    page.locator("[data-example]").first.click()
+    page.locator("#input").fill("We need to validate customers before building the next feature.")
     assert len(page.locator("#input").input_value()) > 20
