@@ -19,8 +19,6 @@ def page():
     p = sync_playwright().start()
     b = p.chromium.launch()
     pg = b.new_page(viewport={"width": 1280, "height": 800})
-    pg.on("pageerror", lambda exc: print("FOUNDEROS PAGEERROR:", exc))
-    pg.on("console", lambda msg: print("FOUNDEROS CONSOLE:", msg.type, msg.text))
     yield pg
     pg.close()
     b.close()
@@ -65,7 +63,6 @@ def test_landing_composer_opens_workspace(page):
 
 def test_workspace_graph_first_shell(page):
     page.goto(BASE_URL + "/app")
-    print("FOUNDEROS BODY:", page.locator("body").inner_text())
     page.wait_for_selector("#canvas", timeout=10000)
     assert page.locator(".shell").is_visible()
     assert page.locator(".graph canvas").is_visible()
