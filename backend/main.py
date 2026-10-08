@@ -24,7 +24,7 @@ from fastapi.staticfiles import StaticFiles
 # English text backend/ English text sys.path English textEnglish text routes/services English text
 import db  # noqa: E402
 from db import init_db  # noqa: E402
-from routes import archive, chat, config_api, decision, graph, modes, stats, tts  # noqa: E402
+from routes import archive, auth, chat, config_api, decision, graph, modes, stats, tts  # noqa: E402
 
 # English textchoice-skill/frontend/
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
@@ -70,6 +70,18 @@ async def security_headers(request: Request, call_next):
         workspace_id = secrets.token_urlsafe(24)
         new_cookie = True
 
+    # Once authenticated, the workspace cookie is only valid for workspaces
+    # owned by that account. On login, move the browser to the user's latest
+    # workspace instead of ever exposing another user's graph.
+    auth_user_id = db.get_user_id_from_auth_token(request.cookies.get("founderos_auth"))
+    if auth_user_id and not db.workspace_owned_by_user(workspace_id, auth_user_id):
+        owned = db.get_user_workspaces(auth_user_id)
+        if owned:
+            workspace_id = owned[0]["workspaceId"]
+            new_cookie = True
+        else:
+            db.claim_workspace_for_user(workspace_id, auth_user_id)
+
     token = db.set_workspace_id(workspace_id)
     try:
         response = await call_next(request)
@@ -99,6 +111,7 @@ async def security_headers(request: Request, call_next):
     return response
 
 # ─── API English text ───────────────────────────────────────────────────
+app.include_router(auth.router)
 app.include_router(chat.router)
 app.include_router(graph.router)
 app.include_router(modes.router)
