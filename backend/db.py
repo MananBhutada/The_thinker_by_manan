@@ -929,6 +929,19 @@ def revoke_auth_session(raw_token: Optional[str]) -> None:
 def claim_workspace_for_user(workspace_id: str, user_id: str) -> bool:
     with get_conn() as conn:
         _ensure_workspace(conn, workspace_id)
+        conn.execute(
+            """
+            INSERT INTO workspaces (workspace_id, startup_title, summary, objective)
+            SELECT workspace_id,
+                   COALESCE(data->'root'->>'title', 'Your Startup'),
+                   COALESCE(data->'root'->>'summary', ''),
+                   COALESCE(data->'root'->>'objective', '')
+            FROM founder_workspaces
+            WHERE workspace_id = %s
+            ON CONFLICT (workspace_id) DO NOTHING
+            """,
+            (workspace_id,),
+        )
         row = conn.execute("SELECT owner_user_id FROM workspaces WHERE workspace_id = %s", (workspace_id,)).fetchone()
         if not row:
             return False
