@@ -63,6 +63,7 @@ def test_landing_composer_opens_workspace(page):
 
 def test_workspace_graph_first_shell(page):
     page.goto(BASE_URL + "/app")
+    print("FOUNDEROS BODY:", page.locator("body").inner_text())
     page.wait_for_selector("#canvas", timeout=10000)
     assert page.locator(".shell").is_visible()
     assert page.locator(".graph canvas").is_visible()
