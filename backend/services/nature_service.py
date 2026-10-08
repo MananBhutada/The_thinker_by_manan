@@ -9,14 +9,14 @@ English text
 
 from typing import Any, Dict, List, Optional
 
-from config import get_effective_config, has_llm_config
-from services.llm_service import NoApiKeyError, call_openai_llm
-from services.weather_service import get_current_weather
+from backend.config import get_effective_config, has_llm_config
+from backend.services.llm_service import NoApiKeyError, call_openai_llm
+from backend.services.weather_service import get_current_weather
 
 # ponytail: nature_signal English textImportError English text None
 # English textEnglish text services/nature_signal.py English text build_signals
 try:
-    from services.nature_signal import build as build_signals
+    from backend.services.nature_signal import build as build_signals
 except ImportError:
     build_signals = None
 
