@@ -83,7 +83,7 @@ def get_effective_config() -> Dict[str, Any]:
     English textEnglish text api_keyEnglish text
     """
     # English text SQLite English textEnglish text
-    from db import get_all_config
+    from backend.db import get_all_config
 
     cfg: Dict[str, Any] = {k: "" for k in CONFIG_KEYS}
 
@@ -122,7 +122,7 @@ def save_api_keys_to_db(config: Dict[str, Any]) -> Dict[str, Any]:
 
     English text None English text
     """
-    from db import set_config_value
+    from backend.db import set_config_value
 
     for k in CONFIG_KEYS:
         val = config.get(k)
@@ -191,7 +191,7 @@ DEFAULT_PREFS: Dict[str, Any] = {
 
 def get_preferences() -> Dict[str, Any]:
     """English textEnglish text + SQLiteEnglish textEnglish text"""
-    from db import get_config_value
+    from backend.db import get_config_value
 
     prefs = dict(DEFAULT_PREFS)
     stored = get_config_value("preferences", {})
@@ -205,7 +205,7 @@ def get_preferences() -> Dict[str, Any]:
 
 def save_preferences(prefs: Dict[str, Any]) -> Dict[str, Any]:
     """English text SQLite"""
-    from db import set_config_value
+    from backend.db import set_config_value
 
     current = get_preferences()
     current.update({k: v for k, v in prefs.items() if k in PREF_KEYS})
