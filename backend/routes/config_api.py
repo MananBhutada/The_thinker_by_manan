@@ -15,9 +15,9 @@ from typing import Any, Dict
 
 from fastapi import APIRouter
 
-import config as config_mod
-import db
-from models.schemas import ConfigUpdate, PreferencesUpdate
+from backend import config as config_mod
+from backend import db
+from backend.models.schemas import ConfigUpdate, PreferencesUpdate
 
 router = APIRouter()
 
