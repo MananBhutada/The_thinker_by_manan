@@ -132,6 +132,22 @@ def init_db() -> None:
             );
 
 
+            CREATE TABLE IF NOT EXISTS users (
+                user_id TEXT PRIMARY KEY,
+                email TEXT NOT NULL UNIQUE,
+                password_hash TEXT NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+
+            CREATE TABLE IF NOT EXISTS auth_sessions (
+                session_id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                expires_at TIMESTAMPTZ NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_auth_sessions_user ON auth_sessions(user_id);
+            CREATE INDEX IF NOT EXISTS idx_auth_sessions_expires ON auth_sessions(expires_at);
+
             CREATE TABLE IF NOT EXISTS workspaces (
                 workspace_id TEXT PRIMARY KEY REFERENCES founder_workspaces(workspace_id) ON DELETE CASCADE,
                 startup_title TEXT NOT NULL DEFAULT 'Your Startup',
@@ -244,6 +260,8 @@ def init_db() -> None:
             """
         )
         _upgrade_legacy_postgres_schema(conn)
+        conn.execute("ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS owner_user_id TEXT REFERENCES users(user_id) ON DELETE SET NULL")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_workspaces_owner ON workspaces(owner_user_id)")
 
         # Backfill normalized workspace rows from any legacy JSONB graph documents.
         legacy_rows = conn.execute("SELECT workspace_id, data, updated_at FROM founder_workspaces").fetchall()
@@ -852,3 +870,83 @@ def healthcheck() -> None:
     """Raise if the PostgreSQL datastore is unreachable."""
     with get_conn() as conn:
         conn.execute("SELECT 1")
+
+
+# ---------------------------------------------------------------------------
+# Authentication / account ownership
+# ---------------------------------------------------------------------------
+
+def create_user(email: str, password_hash: str) -> dict:
+    import secrets
+    user_id = f"user_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}_{_random_suffix()}"
+    now = datetime.now(timezone.utc)
+    with get_conn() as conn:
+        conn.execute(
+            "INSERT INTO users (user_id, email, password_hash, created_at) VALUES (%s, %s, %s, %s)",
+            (user_id, email.lower().strip(), password_hash, now),
+        )
+    return {"userId": user_id, "email": email.lower().strip(), "createdAt": now.isoformat()}
+
+def get_user_by_email(email: str) -> Optional[dict]:
+    with get_conn() as conn:
+        return conn.execute("SELECT user_id, email, password_hash, created_at FROM users WHERE email = %s", (email.lower().strip(),)).fetchone()
+
+def get_user(user_id: str) -> Optional[dict]:
+    with get_conn() as conn:
+        row = conn.execute("SELECT user_id, email, created_at FROM users WHERE user_id = %s", (user_id,)).fetchone()
+    if not row:
+        return None
+    return {"userId": row["user_id"], "email": row["email"], "createdAt": _timestamp_to_iso(row["created_at"])}
+
+def create_auth_session(user_id: str, ttl_days: int = 30) -> str:
+    import secrets, hashlib
+    from datetime import timedelta
+    raw = secrets.token_urlsafe(32)
+    token = hashlib.sha256(raw.encode("utf-8")).hexdigest()
+    now = datetime.now(timezone.utc)
+    expires = now + timedelta(days=ttl_days)
+    with get_conn() as conn:
+        conn.execute("INSERT INTO auth_sessions (session_id, user_id, created_at, expires_at) VALUES (%s, %s, %s, %s)", (token, user_id, now, expires))
+    return raw
+
+def get_user_id_from_auth_token(raw_token: Optional[str]) -> Optional[str]:
+    if not raw_token:
+        return None
+    import hashlib
+    token = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+    with get_conn() as conn:
+        row = conn.execute("SELECT user_id FROM auth_sessions WHERE session_id = %s AND expires_at > NOW()", (token,)).fetchone()
+    return row["user_id"] if row else None
+
+def revoke_auth_session(raw_token: Optional[str]) -> None:
+    if not raw_token:
+        return
+    import hashlib
+    token = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+    with get_conn() as conn:
+        conn.execute("DELETE FROM auth_sessions WHERE session_id = %s", (token,))
+
+def claim_workspace_for_user(workspace_id: str, user_id: str) -> bool:
+    with get_conn() as conn:
+        _ensure_workspace(conn, workspace_id)
+        row = conn.execute("SELECT owner_user_id FROM workspaces WHERE workspace_id = %s", (workspace_id,)).fetchone()
+        if not row:
+            return False
+        owner = row["owner_user_id"]
+        if owner is None:
+            conn.execute("UPDATE workspaces SET owner_user_id=%s, updated_at=NOW() WHERE workspace_id=%s", (user_id, workspace_id))
+            return True
+        return owner == user_id
+
+def workspace_owned_by_user(workspace_id: str, user_id: str) -> bool:
+    with get_conn() as conn:
+        row = conn.execute("SELECT owner_user_id FROM workspaces WHERE workspace_id=%s", (workspace_id,)).fetchone()
+    return bool(row and row["owner_user_id"] == user_id)
+
+def get_user_workspaces(user_id: str) -> list[dict]:
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT workspace_id, startup_title, summary, objective, created_at, updated_at FROM workspaces WHERE owner_user_id=%s ORDER BY updated_at DESC",
+            (user_id,),
+        ).fetchall()
+    return [{"workspaceId":r["workspace_id"],"title":r["startup_title"],"summary":r["summary"],"objective":r["objective"],"createdAt":_timestamp_to_iso(r["created_at"]),"updatedAt":_timestamp_to_iso(r["updated_at"])} for r in rows]
