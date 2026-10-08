@@ -17,6 +17,13 @@ import secrets
 from pathlib import Path
 from typing import Optional
 
+# Support both package startup (`uvicorn backend.main:app`) and the legacy
+# backend-directory startup used by local/CI checks (`python main.py`).
+import sys
+BACKEND_PARENT = Path(__file__).resolve().parent.parent
+if str(BACKEND_PARENT) not in sys.path:
+    sys.path.insert(0, str(BACKEND_PARENT))
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
