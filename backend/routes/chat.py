@@ -14,12 +14,12 @@ import os
 
 from fastapi import APIRouter, HTTPException
 
-import db
-from config import get_effective_config, get_preferences
-from models.schemas import Brief, ChatRequest, ChatResponse
-from services.llm_service import NoApiKeyError, call_llm
-from services.mode_recognizer import explain as explain_mode
-from services.nature_service import generate_nature_brief
+from backend import db
+from backend.config import get_effective_config, get_preferences
+from backend.models.schemas import Brief, ChatRequest, ChatResponse
+from backend.services.llm_service import NoApiKeyError, call_llm
+from backend.services.mode_recognizer import explain as explain_mode
+from backend.services.nature_service import generate_nature_brief
 
 router = APIRouter()
 
