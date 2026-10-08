@@ -22,9 +22,9 @@ from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 # English text backend/ English text sys.path English textEnglish text routes/services English text
-import db  # noqa: E402
-from db import init_db  # noqa: E402
-from routes import archive, auth, chat, config_api, decision, graph, modes, stats, tts  # noqa: E402
+from backend import db  # noqa: E402
+from backend.db import init_db  # noqa: E402
+from backend.routes import archive, auth, chat, config_api, decision, graph, modes, stats, tts  # noqa: E402
 
 # English textchoice-skill/frontend/
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
