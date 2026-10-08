@@ -11,3 +11,15 @@
 #canvas{touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;}
 #canvas:active{cursor:grabbing;}
 .graph-tools{z-index:5;}
+
+.auth-tabs{display:flex;gap:6px;margin-bottom:18px;padding:4px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.025)}
+.auth-tabs button{flex:1;border:0;background:transparent;color:#8d94a3;padding:9px;border-radius:9px;cursor:pointer}
+.auth-tabs button.active{background:rgba(139,124,255,.14);color:#f0eff8}
+.auth-error{min-height:18px;margin-top:10px;color:#ff8798;font-size:12px}
+.profile-card{display:flex;align-items:center;gap:14px;padding:4px 0 20px}
+.profile-avatar{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(139,124,255,.16);border:1px solid rgba(139,124,255,.35);font-size:20px;font-weight:700}
+.profile-section{border-top:1px solid rgba(255,255,255,.07);padding-top:18px}
+.workspace-list{display:grid;gap:7px;margin-top:10px}
+.workspace-row{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.02);color:#eceef4;border-radius:10px;padding:11px 12px;cursor:pointer}
+.workspace-row:hover{background:rgba(255,255,255,.05)}
+.workspace-row small{color:#737b8b}
