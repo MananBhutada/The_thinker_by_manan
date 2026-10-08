@@ -17,9 +17,9 @@ from typing import Any, Dict, List
 
 from fastapi import APIRouter
 
-import db
-from models.schemas import Stats
-from services.modes_data import MODES
+from backend import db
+from backend.models.schemas import Stats
+from backend.services.modes_data import MODES
 
 router = APIRouter()
 
